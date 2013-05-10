@@ -820,31 +820,6 @@
             </components:layout>
         </components:LayoutWidgetContainer>
 
-        <s:HGroup right="10" bottom="10"
-                  gap="10"
-                  verticalAlign="bottom">
-            <components:LayoutWidgetContainer id="attributionVisibleToggle"
-                                              horizontalCenter="0"
-                                              inclusionChange="updateAttributionVisible()"
-                                              label="{resourceManager.getString('BuilderStrings', 'attributionVisible')}"
-                                              skinClass="com.esri.builder.skins.IncludeOnlyLayoutWidgetWireframeSkin"
-                                              verticalCenter="0">
-                <components:layout>
-                    <s:HorizontalLayout verticalAlign="middle"/>
-                </components:layout>
-            </components:LayoutWidgetContainer>
-
-            <components:LayoutWidgetContainer id="overviewMapContainer"
-                                              editClick="editOverviewMapWidget()"
-                                              inclusionChange="updateOverviewMapWidgetInclusion(event)"
-                                              label="{resourceManager.getString('BuilderStrings', 'overviewMap.widgetLabel')}"
-                                              skinClass="com.esri.builder.skins.LayoutWidgetWireframeSkin">
-                <components:layout>
-                    <s:VerticalLayout horizontalAlign="center"/>
-                </components:layout>
-            </components:LayoutWidgetContainer>
-        </s:HGroup>
-
         <components:LayoutWidgetContainer id="staticImageContainer"
                                           left="10" bottom="115"
                                           editClick="editStaticImageWidget()"
@@ -856,16 +831,70 @@
             </components:layout>
         </components:LayoutWidgetContainer>
 
-        <components:LayoutWidgetContainer id="coordinateContainer"
-                                          left="10" bottom="10"
-                                          editClick="editCoordinateWidget()"
-                                          inclusionChange="updateCoordinateWidgetInclusion(event)"
-                                          label="{resourceManager.getString('BuilderStrings', 'layoutView.coordinates')}"
-                                          skinClass="com.esri.builder.skins.LayoutWidgetWireframeSkin">
-            <components:layout>
-                <s:HorizontalLayout verticalAlign="middle"/>
-            </components:layout>
-        </components:LayoutWidgetContainer>
+        <s:Group left="0" right="0" bottom="0"
+                 layoutDirection="ltr">
+            <s:HGroup right="10" bottom="10"
+                      gap="10"
+                      verticalAlign="bottom">
+                <components:LayoutWidgetContainer id="attributionVisibleToggle"
+                                                  horizontalCenter="0"
+                                                  inclusionChange="updateAttributionVisible()"
+                                                  label="{resourceManager.getString('BuilderStrings', 'attributionVisible')}"
+                                                  skinClass="com.esri.builder.skins.IncludeOnlyLayoutWidgetWireframeSkin"
+                                                  verticalCenter="0">
+                    <components:layout>
+                        <s:HorizontalLayout verticalAlign="middle"/>
+                    </components:layout>
+                </components:LayoutWidgetContainer>
+
+                <components:LayoutWidgetContainer id="overviewMapContainer"
+                                                  editClick="editOverviewMapWidget()"
+                                                  inclusionChange="updateOverviewMapWidgetInclusion(event)"
+                                                  label="{resourceManager.getString('BuilderStrings', 'overviewMap.widgetLabel')}"
+                                                  skinClass="com.esri.builder.skins.LayoutWidgetWireframeSkin">
+                    <components:layout>
+                        <s:VerticalLayout horizontalAlign="center"/>
+                    </components:layout>
+                </components:LayoutWidgetContainer>
+            </s:HGroup>
+
+            <components:LayoutWidgetContainer id="coordinateContainer"
+                                              left="10" bottom="10"
+                                              editClick="editCoordinateWidget()"
+                                              inclusionChange="updateCoordinateWidgetInclusion(event)"
+                                              label="{resourceManager.getString('BuilderStrings', 'layoutView.coordinates')}"
+                                              skinClass="com.esri.builder.skins.LayoutWidgetWireframeSkin">
+                <components:layout>
+                    <s:HorizontalLayout verticalAlign="middle"/>
+                </components:layout>
+            </components:LayoutWidgetContainer>
+
+            <!--SCALE BAR-->
+            <s:Group left="10" bottom="65">
+                <s:Rect left="0" right="0" top="0" bottom="0">
+                    <s:stroke>
+                        <s:SolidColorStroke color="0x007AC2" weight="2"/>
+                    </s:stroke>
+
+                    <s:fill>
+                        <s:SolidColor color="0xFFFFFF"/>
+                    </s:fill>
+                </s:Rect>
+
+                <s:HGroup left="10" right="10" top="10" bottom="10"
+                          verticalAlign="middle">
+                    <s:Label text="{resourceManager.getString('BuilderStrings', 'scaleBar')}"/>
+
+                    <s:DropDownList id="scaleBarStyleSelection" change="updateScaleBarStyle()">
+                        <s:ArrayList id="scaleBarStyleOptions">
+                            <s:DataItem label="{resourceManager.getString('BuilderStrings', 'scaleBar.default')}" value="default"/>
+                            <s:DataItem label="{resourceManager.getString('BuilderStrings', 'scaleBar.metric')}" value="metric"/>
+                            <s:DataItem label="{resourceManager.getString('BuilderStrings', 'scaleBar.us')}" value="us"/>
+                        </s:ArrayList>
+                    </s:DropDownList>
+                </s:HGroup>
+            </s:Group>
+        </s:Group>
 
         <!--HEADER CONTROLLER EDITOR-->
         <s:HGroup id="headerControllerWidgetContainer"
@@ -921,32 +950,6 @@
                 </s:VGroup>
             </s:Group>
         </s:HGroup>
-
-        <!--SCALE BAR-->
-        <s:Group left="10" bottom="65">
-            <s:Rect left="0" right="0" top="0" bottom="0">
-                <s:stroke>
-                    <s:SolidColorStroke color="0x007AC2" weight="2"/>
-                </s:stroke>
-
-                <s:fill>
-                    <s:SolidColor color="0xFFFFFF"/>
-                </s:fill>
-            </s:Rect>
-
-            <s:HGroup left="10" right="10" top="10" bottom="10"
-                      verticalAlign="middle">
-                <s:Label text="{resourceManager.getString('BuilderStrings', 'scaleBar')}"/>
-
-                <s:DropDownList id="scaleBarStyleSelection" change="updateScaleBarStyle()">
-                    <s:ArrayList id="scaleBarStyleOptions">
-                        <s:DataItem label="{resourceManager.getString('BuilderStrings', 'scaleBar.default')}" value="default"/>
-                        <s:DataItem label="{resourceManager.getString('BuilderStrings', 'scaleBar.metric')}" value="metric"/>
-                        <s:DataItem label="{resourceManager.getString('BuilderStrings', 'scaleBar.us')}" value="us"/>
-                    </s:ArrayList>
-                </s:DropDownList>
-            </s:HGroup>
-        </s:Group>
     </s:Group>
 
     <components:LayoutWidgetContainer id="directionsWidgetContainer"
