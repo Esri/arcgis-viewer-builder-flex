@@ -87,6 +87,7 @@
                 }
 
                 numericPopUpFieldInfos.source = numericFieldInfos;
+                numericPopUpFieldInfos.addEventListener(CollectionEvent.COLLECTION_CHANGE, numericPopUpFieldInfos_collectionChangeHandler, false, 0, true);
             }
 
             private var _popUpFieldInfos:IList;
@@ -102,13 +103,12 @@
                 if (value)
                 {
                     _popUpFieldInfos = clonePopUpFieldInfos(value);
-                    _popUpFieldInfos.addEventListener(CollectionEvent.COLLECTION_CHANGE, _popUpFieldInfos_collectionChangeHandler, false, 0, true);
                     updatePopUpFieldInfoVisibility();
                     updateNumericPopUpFieldInfos();
                 }
             }
 
-            private function _popUpFieldInfos_collectionChangeHandler(event:CollectionEvent):void
+            private function numericPopUpFieldInfos_collectionChangeHandler(event:CollectionEvent):void
             {
                 if (event.kind == CollectionEventKind.UPDATE)
                 {
@@ -164,24 +164,13 @@
                 }
             }
 
-            private var _mediaTitle:String = "";
-
             [Bindable]
-            public function get mediaTitle():String
-            {
-                return _mediaTitle;
-            }
-
-            public function set mediaTitle(value:String):void
-            {
-                _mediaTitle = value;
-                dispatchEvent(new Event("requiredPropertyChanged"));
-            }
+            public var mediaTitle:String = "";
 
             [Bindable(event="requiredPropertyChanged")]
             private function get isInputValid():Boolean
             {
-                return Boolean(mediaTitle) && hasRequiredInputForMediaType();
+                return hasRequiredInputForMediaType();
             }
 
             private function hasRequiredInputForMediaType():Boolean
@@ -272,8 +261,7 @@
             {
                 var updatedPopUpFieldNames:Array = [];
 
-                var popUpFieldInfosSource:Array = popUpFieldInfos.toArray();
-                for each (var popUpFieldInfo:PopUpFieldInfo in popUpFieldInfosSource)
+                for each (var popUpFieldInfo:PopUpFieldInfo in numericPopUpFieldInfos.source)
                 {
                     if (popUpFieldInfo.visible)
                     {
@@ -405,7 +393,7 @@
             </s:DropDownList>
         </s:FormItem>
 
-        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.media.title')}" required="true">
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.media.title')}">
             <s:layout>
                 <s:HorizontalLayout verticalAlign="middle"/>
             </s:layout>
