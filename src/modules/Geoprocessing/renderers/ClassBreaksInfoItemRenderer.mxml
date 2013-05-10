@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                xmlns:mx="library://ns.adobe.com/flex/mx"
+                xmlns:supportClasses="modules.Geoprocessing.supportClasses.*"
+                width="100%"
+                autoDrawBackground="false">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.renderers.supportClasses.ClassBreakInfo;
+
+            import modules.Geoprocessing.supportClasses.InfoEditEvent;
+
+            private const DEFAULT_MIN:Number = 0;
+            private const DEFAULT_MAX:Number = 10;
+
+            [Bindable]
+            private var classBreaksInfo:ClassBreakInfo;
+            [Bindable]
+            private var minValue:Number;
+            [Bindable]
+            private var maxValue:Number;
+
+            override public function set data(value:Object):void
+            {
+                super.data = value;
+                if (value)
+                {
+                    minValueInput.maximum = int.MAX_VALUE;
+                    minValueInput.minimum = int.MIN_VALUE;
+
+                    maxValueInput.maximum = int.MAX_VALUE;
+                    maxValueInput.minimum = int.MIN_VALUE;
+
+                    classBreaksInfo = value as ClassBreakInfo;
+                    symbolEditor.symbol = classBreaksInfo.symbol;
+
+                    initMinValue();
+                    initMaxValue();
+                }
+            }
+
+            private function initMinValue():void
+            {
+                var isMinValueUsable:Boolean = !(isNaN(classBreaksInfo.minValue) || classBreaksInfo.minValue == Number.NEGATIVE_INFINITY);
+                if (isMinValueUsable)
+                {
+                    minValue = classBreaksInfo.minValue;
+                }
+                else
+                {
+                    minValue = classBreaksInfo.minValue = DEFAULT_MIN;
+                }
+            }
+
+            private function initMaxValue():void
+            {
+                var isMaxValueUsable:Boolean = !(isNaN(classBreaksInfo.maxValue) || classBreaksInfo.maxValue == Number.POSITIVE_INFINITY);
+                if (isMaxValueUsable)
+                {
+                    maxValue = classBreaksInfo.maxValue;
+                }
+                else
+                {
+                    maxValue = classBreaksInfo.maxValue = DEFAULT_MAX;
+                }
+            }
+
+            private function updateMinValue():void
+            {
+                classBreaksInfo.minValue = minValue;
+            }
+
+            private function updateMaxValue():void
+            {
+                classBreaksInfo.maxValue = maxValue;
+            }
+
+            private function dispatchRemoveEvent():void
+            {
+                (owner as IEventDispatcher).dispatchEvent(new InfoEditEvent(InfoEditEvent.REMOVE_INFO, data));
+            }
+        ]]>
+    </fx:Script>
+
+    <s:layout>
+        <s:ConstraintLayout>
+            <s:constraintColumns>
+                <s:ConstraintColumn id="column1" width="15%"/>
+                <s:ConstraintColumn id="column2" width="45%"/>
+                <s:ConstraintColumn id="column3" width="20%"/>
+            </s:constraintColumns>
+
+            <s:constraintRows>
+                <s:ConstraintRow id="row1" height="10"/>
+                <s:ConstraintRow id="row2"/>
+                <s:ConstraintRow id="row3" height="10"/>
+                <s:ConstraintRow id="row4"/>
+            </s:constraintRows>
+        </s:ConstraintLayout>
+    </s:layout>
+
+    <s:Line width="100%">
+        <s:stroke>
+            <s:SolidColorStroke alpha="0.25"/>
+        </s:stroke>
+    </s:Line>
+
+    <s:HGroup left="column1:0" right="column2:0"
+              baseline="row2:0"
+              verticalAlign="middle">
+        <s:Label fontWeight="bold" text="{resourceManager.getString('BuilderStrings', 'geoprocessing.minValue')}"/>
+
+        <s:NumericStepper id="minValueInput"
+                          width="100"
+                          change="updateMinValue()"
+                          value="@{minValue}"/>
+
+        <s:Label fontWeight="bold" text="{resourceManager.getString('BuilderStrings', 'geoprocessing.maxValue')}"/>
+
+        <s:NumericStepper id="maxValueInput"
+                          width="100"
+                          change="updateMaxValue()"
+                          value="@{maxValue}"/>
+    </s:HGroup>
+
+    <s:Button left="column3:0"
+              baseline="row2:0"
+              click="dispatchRemoveEvent()"
+              label="{resourceManager.getString('BuilderStrings', 'geoprocessing.removeSymbol')}"
+              skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+
+    <s:Label left="column1:0" right="column1:0"
+             baseline="row4:0"
+             fontWeight="bold"
+             paddingTop="6"
+             text="{resourceManager.getString('BuilderStrings', 'georss.symbol')}"/>
+
+    <supportClasses:SymbolEditor id="symbolEditor"
+                                 left="column2:0" right="column3:0"
+                                 baseline="row4:0"
+                                 symbolOwner="{classBreaksInfo}"/>
+</s:ItemRenderer>

@@ -1,0 +1,102 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<Graphic version="2.0" viewHeight="32" viewWidth="32" ai:appVersion="15.1.0.39" ATE:version="1.0.0" flm:version="1.0.0" d:using="" xmlns="http://ns.adobe.com/fxg/2008" xmlns:ATE="http://ns.adobe.com/ate/2009" xmlns:ai="http://ns.adobe.com/ai/2009" xmlns:d="http://ns.adobe.com/fxg/2008/dt" xmlns:flm="http://ns.adobe.com/flame/2008">
+  <Library/>
+  <Group ai:seqID="1" d:layerType="page" d:pageHeight="32" d:pageWidth="32" d:type="layer" d:userLabel="Artboard 1">
+    <Group ai:seqID="2" d:type="layer" d:userLabel="Layer 4">
+      <Group x="2.85303" y="0.769043" ai:seqID="3">
+        <Ellipse x="5.69092" y="27.0806" width="14.9111" height="3.80078" ai:seqID="4">
+          <fill>
+            <LinearGradient x="0" y="1.90039" scaleX="14.9111">
+              <GradientEntry ratio="0" color="#6E6E6E"/>
+              <GradientEntry ratio="1" color="#464646"/>
+            </LinearGradient>
+          </fill>
+        </Ellipse>
+        <Path y="3.19824" winding="nonZero" ai:seqID="5" data="M26.2935 0 0 0 5.69092 25.6274 5.69092 25.6274 5.69092 25.6284C5.69092 26.6772 9.0293 27.5298 13.1465 27.5298 17.2642 27.5298 20.6021 26.6772 20.6021 25.6284L20.6021 25.6274 20.6021 25.6274 26.2935 0Z">
+          <fill>
+            <LinearGradient x="1.81396" y="-1.75195" scaleX="32.9258" rotation="46">
+              <GradientEntry ratio="0" color="#969696"/>
+              <GradientEntry ratio="0.715152" color="#6E6E6E"/>
+              <GradientEntry ratio="0.987879" color="#464646"/>
+            </LinearGradient>
+          </fill>
+        </Path>
+        <Path x="0.0805664" y="3.62793" alpha="0.5" winding="nonZero" ai:seqID="6" data="M13.0659 2.98828C6.28955 2.98828 0.713379 1.68018 0 0L5.61035 25.2642 5.61035 25.2642C5.61035 26.314 8.94873 27.1646 13.0659 27.1646 17.1826 27.1646 20.5225 26.314 20.5225 25.2642L20.5225 25.2642 26.1318 0C25.4189 1.68018 19.8428 2.98828 13.0659
+ 2.98828Z">
+          <fill>
+            <LinearGradient x="3.48438" y="24.439" scaleX="32.4883" rotation="300">
+              <GradientEntry ratio="0" color="#969696" alpha="0.02"/>
+              <GradientEntry ratio="1" color="#464646"/>
+            </LinearGradient>
+          </fill>
+        </Path>
+        <Ellipse width="26.2935" height="6.70508" ai:seqID="7">
+          <fill>
+            <SolidColor color="#58595B"/>
+          </fill>
+        </Ellipse>
+        <Ellipse x="0.697266" y="0.42334" width="24.8989" height="5.5498" ai:seqID="8">
+          <fill>
+            <LinearGradient x="6.07129" y="-3.60352" scaleX="18.042" rotation="45">
+              <GradientEntry ratio="0.254545" color="#B4B4B4"/>
+              <GradientEntry ratio="0.993939" color="#6E6E6E"/>
+            </LinearGradient>
+          </fill>
+        </Ellipse>
+        <Ellipse x="0.697266" y="0.42334" width="24.8989" height="5.5498" ai:seqID="9">
+          <fill>
+            <LinearGradient x="12.7095" y="5.73389" scaleX="5.94043" rotation="265">
+              <GradientEntry ratio="0" color="#B4B4B4" alpha="0"/>
+              <GradientEntry ratio="0.313147" color="#AFAFAF" alpha="0.313147"/>
+              <GradientEntry ratio="0.559596" color="#9D9D9D" alpha="0.559596"/>
+              <GradientEntry ratio="0.787346" color="#7B7B7B" alpha="0.787346"/>
+              <GradientEntry ratio="1" color="#464646"/>
+            </LinearGradient>
+          </fill>
+        </Ellipse>
+      </Group>
+      <Group x="10.5806" y="12.2402" ai:seqID="10">
+        <Rect rotation="315.018" x="0.00180984" y="1.56753" width="2.2173" height="13.1101" ai:seqID="11">
+          <fill>
+            <SolidColor color="#AD3939"/>
+          </fill>
+        </Rect>
+        <Rect rotation="225.009" x="1.56752" y="10.838" width="2.21696" height="13.1101" ai:seqID="12">
+          <fill>
+            <SolidColor color="#AD3939"/>
+          </fill>
+        </Rect>
+      </Group>
+      <Group x="10.5786" y="11.7437" ai:seqID="13">
+        <Rect rotation="315.018" x="0.0019319" y="1.5674" width="2.2173" height="13.1098" ai:seqID="14">
+          <fill>
+            <SolidColor color="#DA4D1E"/>
+          </fill>
+        </Rect>
+        <Rect rotation="225.018" x="1.5674" y="10.8374" width="2.2173" height="13.1098" ai:seqID="15">
+          <fill>
+            <SolidColor color="#DA4D1E"/>
+          </fill>
+        </Rect>
+      </Group>
+    </Group>
+  </Group>
+  <Private/>
+</Graphic>

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:NavigatorContent xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark"
+                    xmlns:mx="library://ns.adobe.com/flex/mx"
+                    xmlns:components="com.esri.builder.components.*"
+                    width="100%" height="100%"
+                    creationComplete="this_creationCompleteHandler(event)">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.eventbus.AppEvent;
+
+            import mx.events.FlexEvent;
+
+            private var _isConfigXMLSaved:Boolean;
+
+            private function this_creationCompleteHandler(event:FlexEvent):void
+            {
+                AppEvent.addListener(AppEvent.CONFIG_XML_SAVED, configXMLSaved);
+            }
+
+            private function file_selectHandler(event:Event):void
+            {
+                AppEvent.dispatch(AppEvent.LOGO_EXECUTE, imageBrowser.selectedImage);
+            }
+
+            private function configXMLSaved(event:AppEvent):void
+            {
+                if (event.data == 'logo')
+                {
+                    _isConfigXMLSaved = true;
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <fx:Declarations>
+        <s:GlowFilter id="glowFilter"
+                      alpha="1"
+                      blurX="4"
+                      blurY="4"
+                      color="#BAD995"
+                      strength="16"/>
+    </fx:Declarations>
+
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="accept"/>
+    </s:states>
+
+    <s:HGroup height="100%"
+              left="30" top="5" bottom="5"
+              gap="40"
+              verticalAlign="middle">
+        <components:ImageBrowser id="imageBrowser"
+                                 change="file_selectHandler(event)"
+                                 skinClass="com.esri.builder.skins.LogoImageBrowserSkin"/>
+    </s:HGroup>
+
+    <s:Button right="10" top="10"
+              click="AppEvent.dispatch(AppEvent.SAVE_CONFIG_XML, 'logo')"
+              label="{resourceManager.getString('BuilderStrings', 'save')}"
+              skinClass="com.esri.builder.skins.BlueSaveButtonSkin"/>
+
+    <s:RichEditableText right="10" bottom="10"
+                        editable="false"
+                        selectable="true">
+        <s:textFlow>
+            <s:TextFlow>
+                <s:a href="{resourceManager.getString('BuilderStrings', 'designView.stylesHelpURL')}" target="_blank">{resourceManager.getString('BuilderStrings', 'layoutView.learnMore')}</s:a>
+            </s:TextFlow>
+        </s:textFlow>
+    </s:RichEditableText>
+</s:NavigatorContent>

@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:mx="library://ns.adobe.com/flex/mx"
+          xmlns:esri="http://www.esri.com/2008/ags"
+          xmlns:components="com.esri.builder.components.*"
+          xmlns:supportClasses="modules.supportClasses.*"
+          xmlns:views="com.esri.builder.views.*"
+          xmlns:graphics="assets.graphics.*"
+          width="100%" height="100%"
+          creationComplete="this_creationCompleteHandler(event)"
+          gap="0"
+          implements="modules.IWidgetView">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.events.DetailsEvent;
+            import com.esri.ags.layers.supportClasses.Field;
+            import com.esri.builder.components.serviceBrowser.nodes.LayerNode;
+            import com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.model.RecentlyUsedURLsModel;
+            import com.esri.builder.supportClasses.FieldUtil;
+            import com.esri.builder.views.BuilderAlert;
+
+            import modules.IWidgetModel;
+            import modules.supportClasses.NoneOptionArrayList;
+
+            import mx.collections.ArrayCollection;
+            import mx.collections.ArrayList;
+            import mx.controls.Alert;
+            import mx.events.FlexEvent;
+            import mx.rpc.events.FaultEvent;
+
+            import spark.events.GridEvent;
+
+            private var lastLoadedURL:String;
+
+            [Bindable]
+            private var queryModel:QueryModel;
+
+            [Bindable]
+            private var fieldsDataGridDataProvider:ArrayCollection = new ArrayCollection();
+
+            public function get widgetModel():IWidgetModel
+            {
+                return queryModel;
+            }
+
+            public function set widgetModel(widgetModel:IWidgetModel):void
+            {
+                if (widgetModel is QueryModel)
+                {
+                    queryModel = widgetModel as QueryModel;
+                    lastLoadedURL = queryModel.layer;
+                }
+                else
+                {
+                    throw new Error('argument is not an instance of QueryModel');
+                }
+            }
+
+            private function this_creationCompleteHandler(event:FlexEvent):void
+            {
+                if (queryModel.layer)
+                {
+                    loadFields();
+                }
+
+                var fields:Array = queryModel.fields.toArray();
+                displayFieldsDataGrid.updateTitleField(
+                    FieldUtil.findFieldByName(fields, queryModel.titleField));
+                displayFieldsDataGrid.updateOrderByField(
+                    FieldUtil.findFieldByName(fields, queryModel.orderByField),
+                    queryModel.orderByFieldDirection);
+            }
+
+            public function submit():Boolean
+            {
+                queryModel.titleField = displayFieldsDataGrid.titleFieldName;
+                queryModel.orderByField = displayFieldsDataGrid.orderByFieldName;
+                queryModel.orderByFieldDirection = displayFieldsDataGrid.orderByFieldDirection;
+
+                if (queryModel.layer === null || queryModel.layer.match(/^\s*$/))
+                {
+                    BuilderAlert.show(resourceManager.getString('BuilderStrings', 'query.missingLayerURL'),
+                                      resourceManager.getString('BuilderStrings', 'widgetsView.widgetConfigurationError'),
+                                      Alert.OK);
+                    return false;
+                }
+
+                return true;
+            }
+
+            public function cancel():void
+            {
+                Model.instance.status = '';
+            }
+
+            private function processServiceLayerURL():void
+            {
+                if (hasLayerEndPointURL())
+                {
+                    loadFields();
+                }
+                else
+                {
+                    currentState = "browse";
+                    serviceBrowser.browseService();
+                }
+            }
+
+            private function loadFields():void
+            {
+                const re:RegExp = /^\s*(.+)\/(\d+)\s*$/;
+                const result:Array = re.exec(queryModel.layer) as Array;
+                if (result)
+                {
+                    detailsTask.url = result[1];
+                    detailsTask.getDetails(Number(result[2]));
+                    Model.instance.status = resourceManager.getString('BuilderStrings', 'loadingFields');
+                }
+                else
+                {
+                    Model.instance.status = resourceManager.getString('BuilderStrings', 'invalidLayerURL');
+                }
+            }
+
+            private function hasLayerEndPointURL():Boolean
+            {
+                const layerEndPoint:RegExp = / \/ [a-z]+ Server \/ [0-9]+ $ /ix;
+                return layerEndPoint.test(queryModel.layer);
+            }
+
+            private function detailsTask_faultHandler(event:FaultEvent):void
+            {
+                BuilderAlert.show(event.fault.toString(), resourceManager.getString('BuilderStrings', 'error'));
+            }
+
+            private function detailsTask_getDetailsCompleteHandler(event:DetailsEvent):void
+            {
+                Model.instance.status = '';
+                fieldsDataGridDataProvider.removeAll();
+                if (!event.layerDetails.fields)
+                {
+                    return;
+                }
+
+                const fields:Array = FieldUtil.getValidFields(event.layerDetails.fields);
+                queryModel.names = new NoneOptionArrayList();
+
+                for each (var field:Field in fields)
+                {
+                    queryModel.names.addItem(field.name);
+                }
+                fieldsDataGridDataProvider.source = fields;
+
+                const currentLoadedURL:String = detailsTask.url + "/" + event.layerDetails.id;
+                if (currentLoadedURL != lastLoadedURL)
+                {
+                    lastLoadedURL = currentLoadedURL;
+                    queryModel.fields.removeAll();
+                }
+
+                preselectFields();
+            }
+
+            private function preselectFields():void
+            {
+                linkField.selectedItem = queryModel.linkField;
+            }
+
+            private function includeButton_clickHandler(event:MouseEvent):void
+            {
+                addSelectedFields();
+            }
+
+            private function addSelectedFields():void
+            {
+                var selectedFields:Vector.<Object> = fieldsDataGrid.selectedItems;
+
+                for each (var field:Field in selectedFields)
+                {
+                    const fieldCopy:Field = new Field();
+                    fieldCopy.name = field.name;
+                    fieldCopy.alias = field.alias;
+                    queryModel.fields.addItem(fieldCopy);
+                }
+            }
+
+            private function fieldsDataGrid_gridDoubleClickHandler(event:GridEvent):void
+            {
+                addSelectedFields();
+            }
+
+            protected function serviceBrowser_selectionChangeHandler(event:ServiceBrowserEvent):void
+            {
+                if (event.hasValidSelection)
+                {
+                    var selectedLayer:LayerNode = serviceBrowser.serviceSelection.getItemAt(0) as LayerNode;
+                    queryModel.layer = selectedLayer.url;
+                    updateCurrentState();
+                    loadFields();
+                }
+            }
+
+            protected function backButton_clickHandler(event:MouseEvent):void
+            {
+                updateCurrentState();
+            }
+
+            private function updateCurrentState():void
+            {
+                currentState = viewTabBar.selectedItem.value;
+            }
+
+            private function updateLinkField():void
+            {
+                queryModel.linkField = linkField.selectedItem;
+            }
+        ]]>
+    </fx:Script>
+
+    <fx:Declarations>
+        <esri:DetailsTask id="detailsTask"
+                          fault="detailsTask_faultHandler(event)"
+                          getDetailsComplete="detailsTask_getDetailsCompleteHandler(event)"/>
+    </fx:Declarations>
+
+    <s:states>
+        <s:State name="input"/>
+        <s:State name="output"/>
+        <s:State name="browse"/>
+    </s:states>
+
+    <s:HGroup width="100%"
+              excludeFrom="browse"
+              verticalAlign="middle">
+        <s:Label text="{resourceManager.getString('BuilderStrings', 'query.layerURL')}"/>
+
+        <components:SearchInput width="100%"
+                                direction="ltr"
+                                search="processServiceLayerURL()"
+                                searchButtonLabel="{resourceManager.getString('BuilderStrings', 'serviceBrowser.browse')}"
+                                searchButtonToolTip="{resourceManager.getString('BuilderStrings', 'serviceBrowser.browseTooltip')}"
+                                searchHistory="{RecentlyUsedURLsModel.getInstance().urls}"
+                                searchTextInputToolTip="{resourceManager.getString('BuilderStrings', 'serviceBrowser.urlTooltip')}"
+                                text="@{queryModel.layer}"/>
+    </s:HGroup>
+
+    <s:Spacer height="6" excludeFrom="browse"/>
+
+    <s:TabBar id="viewTabBar"
+              excludeFrom="browse"
+              valueCommit="updateCurrentState()">
+        <s:layout>
+            <s:HorizontalLayout columnWidth="100" gap="5"/>
+        </s:layout>
+
+        <s:dataProvider>
+            <s:ArrayList>
+                <s:DataItem label="{resourceManager.getString('BuilderStrings', 'query.input')}" value="input"/>
+                <s:DataItem label="{resourceManager.getString('BuilderStrings', 'query.output')}" value="output"/>
+            </s:ArrayList>
+        </s:dataProvider>
+    </s:TabBar>
+
+    <s:Group width="100%" height="100%"
+             excludeFrom="browse">
+        <s:Rect left="0" right="0" top="-1" bottom="0">
+            <s:stroke>
+                <s:SolidColorStroke/>
+            </s:stroke>
+        </s:Rect>
+
+        <s:Form left="10" top="10" bottom="10"
+                includeIn="input">
+            <s:FormItem label="{resourceManager.getString('BuilderStrings', 'query.query')}">
+                <s:helpContent>
+                    <views:HelpButton helpText="{resourceManager.getString('BuilderStrings', 'query.queryHelp')}" title="{resourceManager.getString('BuilderStrings', 'query.query')}"/>
+                </s:helpContent>
+
+                <s:TextInput id="query"
+                             width="300"
+                             text="@{queryModel.query}"/>
+            </s:FormItem>
+
+            <s:FormItem label="{resourceManager.getString('BuilderStrings', 'query.linkField')}">
+                <s:helpContent>
+                    <views:HelpButton helpText="{resourceManager.getString('BuilderStrings', 'query.linkFieldHelp')}" title="{resourceManager.getString('BuilderStrings', 'query.linkField')}"/>
+                </s:helpContent>
+
+                <s:Label includeInLayout="{fieldsDataGridDataProvider.length == 0}"
+                         text="{resourceManager.getString('BuilderStrings', 'query.noFieldsAvailable')}"
+                         visible="{fieldsDataGridDataProvider.length == 0}"/>
+
+                <s:DropDownList id="linkField"
+                                width="300"
+                                change="updateLinkField()"
+                                dataProvider="{queryModel.names}"
+                                includeInLayout="{fieldsDataGridDataProvider.length &gt; 0}"
+                                requireSelection="true"
+                                visible="{fieldsDataGridDataProvider.length &gt; 0}"/>
+            </s:FormItem>
+
+            <s:FormItem label="{resourceManager.getString('BuilderStrings', 'query.refreshRate')}">
+                <s:layout>
+                    <s:HorizontalLayout verticalAlign="middle"/>
+                </s:layout>
+
+                <s:helpContent>
+                    <views:HelpButton helpText="{resourceManager.getString('BuilderStrings', 'query.refreshRateHelp')}" title="{resourceManager.getString('BuilderStrings', 'query.refreshRate')}"/>
+                </s:helpContent>
+
+                <s:TextInput id="refreshRate"
+                             width="100"
+                             restrict="0-9"
+                             text="@{queryModel.refreshRate}"/>
+
+                <s:Label text="{resourceManager.getString('BuilderStrings', 'query.seconds')}"/>
+            </s:FormItem>
+
+            <s:FormItem label="{resourceManager.getString('BuilderStrings', 'query.zoomScale')}">
+                <s:layout>
+                    <s:HorizontalLayout verticalAlign="middle"/>
+                </s:layout>
+
+                <s:helpContent>
+                    <views:HelpButton helpText="{resourceManager.getString('BuilderStrings', 'query.zoomScaleHelp')}" title="{resourceManager.getString('BuilderStrings', 'query.zoomScale')}"/>
+                </s:helpContent>
+
+                <s:Label text="1:"/>
+
+                <s:TextInput id="zoomScale"
+                             width="100"
+                             restrict="0-9"
+                             text="@{queryModel.zoomScale}"/>
+            </s:FormItem>
+
+            <s:FormItem label="{resourceManager.getString('BuilderStrings', 'configLayerView.useProxy')}">
+                <s:layout>
+                    <s:HorizontalLayout verticalAlign="middle"/>
+                </s:layout>
+
+                <s:CheckBox id="useProxy" selected="@{queryModel.useProxy}"/>
+
+                <graphics:warning width="20" height="20"
+                                  visible="{useProxy.selected 
+                                      &amp;&amp; !Model.instance.proxyURL}"/>
+
+                <s:Label text="{resourceManager.getString('BuilderStrings', 'httpProxyMissing')}" visible="{useProxy.selected
+                         &amp;&amp; !Model.instance.proxyURL}"/>
+            </s:FormItem>
+        </s:Form>
+
+        <s:VGroup left="10" right="10" top="10" bottom="10"
+                  includeIn="output"
+                  itemCreationPolicy="immediate">
+            <s:HGroup width="100%" height="100%"
+                      includeIn="output"
+                      itemCreationPolicy="immediate"
+                      verticalAlign="middle">
+                <components:TitleContainer width="30%" height="100%"
+                                           title="{resourceManager.getString('BuilderStrings', 'query.allFields')}">
+                    <components:layout>
+                        <s:VerticalLayout horizontalAlign="center"
+                                          paddingLeft="5"
+                                          paddingRight="5"
+                                          verticalAlign="middle"/>
+                    </components:layout>
+
+                    <s:Label includeInLayout="{fieldsDataGridDataProvider.length == 0}"
+                             text="{resourceManager.getString('BuilderStrings', 'query.noFieldsAvailable')}"
+                             visible="{fieldsDataGridDataProvider.length == 0}"/>
+
+                    <s:DataGrid id="fieldsDataGrid"
+                                width="100%" height="100%"
+                                dataProvider="{fieldsDataGridDataProvider}"
+                                doubleClickEnabled="true"
+                                gridDoubleClick="fieldsDataGrid_gridDoubleClickHandler(event)"
+                                includeInLayout="{fieldsDataGridDataProvider.length &gt; 0}"
+                                selectionMode="multipleRows"
+                                sortableColumns="true"
+                                visible="{fieldsDataGridDataProvider.length &gt; 0}">
+                        <s:columns>
+                            <s:ArrayList>
+                                <s:GridColumn dataField="name"
+                                              headerText="{resourceManager.getString('BuilderStrings', 'query.name')}"
+                                              sortable="true"/>
+                            </s:ArrayList>
+                        </s:columns>
+                    </s:DataGrid>
+                </components:TitleContainer>
+
+                <s:Button id="includeButton"
+                          click="includeButton_clickHandler(event)"
+                          enabled="{fieldsDataGrid.selectionLength > 0}"
+                          label="{resourceManager.getString('BuilderStrings', 'include')}"
+                          skinClass="com.esri.builder.skins.GreenNextButtonSkin"
+                          toolTip="{resourceManager.getString('BuilderStrings', 'query.includeTooltip')}"/>
+                <components:TitleContainer width="100%" height="100%"
+                                           title="{resourceManager.getString('BuilderStrings', 'query.displayFields')}">
+                    <components:layout>
+                        <s:VerticalLayout paddingLeft="5" paddingRight="5"/>
+                    </components:layout>
+
+                    <supportClasses:DisplayFieldsDataGrid id="displayFieldsDataGrid"
+                                                          width="100%" height="100%"
+                                                          dataProvider="{queryModel.fields}"
+                                                          includeIn="output"
+                                                          itemCreationPolicy="immediate"
+                                                          sortableColumns="true"/>
+                </components:TitleContainer>
+            </s:HGroup>
+
+            <s:CheckBox label="{resourceManager.getString('BuilderStrings', 'shareResults')}" selected="@{queryModel.shareResults}"/>
+        </s:VGroup>
+    </s:Group>
+
+    <s:VGroup width="100%" height="100%"
+              left="10" right="10" top="10" bottom="10"
+              horizontalAlign="right"
+              includeIn="browse">
+        <components:ServiceBrowser id="serviceBrowser"
+                                   width="100%" height="100%"
+                                   allowMultipleSelection="false"
+                                   searchType="querylayers"
+                                   selectionChange="serviceBrowser_selectionChangeHandler(event)"
+                                   serviceURL="{queryModel.layer}"/>
+
+        <s:HGroup width="100%" verticalAlign="middle">
+            <s:Button click="backButton_clickHandler(event)"
+                      label="{resourceManager.getString('BuilderStrings', 'query.goBack')}"
+                      skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+        </s:HGroup>
+    </s:VGroup>
+</s:VGroup>
+

@@ -1,0 +1,593 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:graphics="assets.graphics.*"
+         xmlns:components="com.esri.builder.components.*"
+         width="100%" height="100%">
+    <fx:Metadata>
+        [Event(name="selectionChange", type="com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent")]
+        [Event(name="itemSelected", type="com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent")]
+    </fx:Metadata>
+
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.components.IdentityManager;
+            import com.esri.ags.components.supportClasses.Credential;
+            import com.esri.builder.components.SearchInputEvent;
+            import com.esri.builder.components.serviceBrowser.filters.INodeFilter;
+            import com.esri.builder.components.serviceBrowser.nodes.ServiceDirectoryNode;
+            import com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent;
+            import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryBuilder;
+            import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryBuilderEvent;
+            import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryInfo;
+            import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryTreeDataDescriptor;
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.RecentlyUsedURLsModel;
+            import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryBuildRequest;
+            import com.esri.builder.supportClasses.LogUtil;
+
+            import flashx.textLayout.conversion.TextConverter;
+
+            import mx.collections.ArrayCollection;
+            import mx.collections.ArrayList;
+            import mx.events.FlexEvent;
+            import mx.logging.ILogger;
+            import mx.logging.Log;
+            import mx.rpc.AsyncResponder;
+            import mx.rpc.Fault;
+            import mx.rpc.events.FaultEvent;
+            import mx.utils.StringUtil;
+
+            private static const CROSS_DOMAIN_FILE_HELP_LINK:String = 'http://links.esri.com/help/flex3crossdomain';
+
+            private static const LOG:ILogger = LogUtil.createLogger(ServiceBrowser);
+
+            [Bindable]
+            private var servicesDirectory:ArrayCollection = new ArrayCollection();
+            [Bindable]
+            public var hasValidSelection:Boolean;
+            [Bindable]
+            private var showMissingCrossDomainMessage:Boolean;
+            [Bindable]
+            private var isServiceSecure:Boolean;
+            [Bindable]
+            private var securityWarning:String;
+            [Bindable]
+            private var isUserSignedIn:Boolean;
+            [Bindable]
+            private var currentCredentials:Credential;
+            [Bindable]
+            private var hasContent:Boolean;
+
+            private var lastUsedURL:String;
+            private var serviceDirectoryBuilder:ServiceDirectoryBuilder;
+            private var nodeFilter:INodeFilter;
+
+            private var _serviceSelection:ArrayList;
+
+            [Bindable]
+            public function get serviceSelection():ArrayList
+            {
+                return _serviceSelection ||= new ArrayList();
+            }
+
+            public function set serviceSelection(value:ArrayList):void
+            {
+                _serviceSelection = value;
+            }
+
+            private var _allowMultipleSelection:Boolean;
+
+            [Bindable]
+            [Inspectable(enumeration="true,false", defaultValue="false")]
+            public function get allowMultipleSelection():Boolean
+            {
+                return _allowMultipleSelection;
+            }
+
+            public function set allowMultipleSelection(value:Boolean):void
+            {
+                _allowMultipleSelection = value;
+            }
+
+            private var _serviceURL:String;
+
+            [Bindable]
+            public function get serviceURL():String
+            {
+                return _serviceURL;
+            }
+
+            public function set serviceURL(value:String):void
+            {
+                _serviceURL = value;
+            }
+
+            private var _searchType:String;
+
+            [Inspectable(enumeration="maplayers,querylayers,geoprocessingtasks,printtasks,locators,routeservices,mapservers", defaultValue="maplayers")]
+            public function set searchType(value:String):void
+            {
+                _searchType = value;
+            }
+
+            private function urlInput_addHandler(event:FlexEvent):void
+            {
+                urlInput.setFocus();
+            }
+
+            public function browseService():void
+            {
+
+                if (serviceDirectoryBuilder)
+                {
+                    serviceDirectoryBuilder.removeEventListener(ServiceDirectoryBuilderEvent.COMPLETE, serviceDirectoryBuilder_browseCompleteHandler);
+                    serviceDirectoryBuilder.removeEventListener(FaultEvent.FAULT, serviceDirectoryBuilder_faultHandler);
+                }
+
+                lastUsedURL = appendMissingServicesDirectoryEndPoints(normalizeURL(serviceURL));
+                if (_searchType == "printtasks")
+                {
+                    lastUsedURL = appendMissingDefaultPrintTaskEndPoint(lastUsedURL);
+                }
+
+                if (lastUsedURL)
+                {
+                    if (Log.isInfo())
+                    {
+                        LOG.info("Browsing service - url: {0}, search type: {1}", lastUsedURL, serviceDirectoryBuilderSearchType);
+                    }
+
+                    hasValidSelection = false;
+                    currentState = "loading";
+                    serviceDirectoryBuilder = new ServiceDirectoryBuilder();
+                    serviceDirectoryBuilder.addEventListener(ServiceDirectoryBuilderEvent.COMPLETE, serviceDirectoryBuilder_browseCompleteHandler, false, 0, true);
+                    serviceDirectoryBuilder.addEventListener(FaultEvent.FAULT, serviceDirectoryBuilder_faultHandler, false, 0, true);
+                    serviceDirectoryBuilder.buildServiceDirectory(
+                        new ServiceDirectoryBuildRequest(lastUsedURL, serviceDirectoryBuilderSearchType));
+                }
+            }
+
+            public function get serviceDirectoryBuilderSearchType():String
+            {
+                var serviceDirBuilderSearchType:String;
+
+                switch (_searchType)
+                {
+                    case "maplayers":
+                    {
+                        serviceDirBuilderSearchType = ServiceDirectoryBuildRequest.MAP_LAYER_SEARCH;
+                        break;
+                    }
+                    case "geoprocessingtasks":
+                    case "printtasks":
+                    {
+                        serviceDirBuilderSearchType = ServiceDirectoryBuildRequest.GEOPROCESSING_TASK_SEARCH;
+                        break;
+                    }
+                    case "routeservices":
+                    {
+                        serviceDirBuilderSearchType = ServiceDirectoryBuildRequest.ROUTE_LAYER_SEARCH;
+                        break;
+                    }
+                    case "locators":
+                    {
+                        serviceDirBuilderSearchType = ServiceDirectoryBuildRequest.GEOCODER_SEARCH;
+                        break;
+                    }
+                    case "mapservers":
+                    {
+                        serviceDirBuilderSearchType = ServiceDirectoryBuildRequest.MAP_SERVER_SEARCH;
+                        break;
+                    }
+                    case "querylayers":
+                    default:
+                    {
+                        serviceDirBuilderSearchType = ServiceDirectoryBuildRequest.QUERYABLE_LAYER_SEARCH;
+                        break;
+                    }
+                }
+
+                return serviceDirBuilderSearchType;
+            }
+
+            private function normalizeURL(url:String):String
+            {
+                var preparedURL:String = StringUtil.trim(url);
+                preparedURL = removeLeadingForwardSlashes(collapseRepeatedForwardSlashes(preparedURL));
+
+                var httpOrHTTPSMatch:Array = preparedURL.match(/^https?:\//i);
+                if (httpOrHTTPSMatch)
+                {
+                    var httpOrHTTPS:String = httpOrHTTPSMatch[0];
+                    preparedURL = httpOrHTTPS.toLowerCase() + '/' + preparedURL.substr(httpOrHTTPS.length);
+                }
+                else
+                {
+                    preparedURL = 'http://' + preparedURL;
+                }
+
+                if (preparedURL.lastIndexOf('/') != preparedURL.length - 1)
+                {
+                    preparedURL += '/';
+                }
+
+                return preparedURL;
+            }
+
+            private function collapseRepeatedForwardSlashes(url:String):String
+            {
+                return url.replace(/\/\/+/g, '/');
+            }
+
+            private function removeLeadingForwardSlashes(url:String):String
+            {
+                return url.replace(/^\/+/, '');
+            }
+
+            private function appendMissingServicesDirectoryEndPoints(url:String):String
+            {
+                url = removeTrailingForwardSlash(url);
+
+                var hasServicesEndPoint:RegExp = /(.+\/services\/?$|.+\/services\/.+)/;
+                if (hasServicesEndPoint.test(url))
+                {
+                    return url;
+                }
+
+                var endsWithRestEndPoint:RegExp = /.+\/rest\/?$/;
+                if (endsWithRestEndPoint.test(url))
+                {
+                    return url + '/services/';
+                }
+
+                var endsWithInstanceNameEndPoint:RegExp = /(.+\w+\/\w+\/?)+$/;
+                if (endsWithInstanceNameEndPoint.test(url))
+                {
+                    return url + '/rest/services/';
+                }
+
+                return url + '/arcgis/rest/services/';
+            }
+
+            private function removeTrailingForwardSlash(name:String):String
+            {
+                const index:int = name.lastIndexOf('/');
+                return (index === name.length - 1) ? name.substr(0, index) : name;
+            }
+
+            private function appendMissingDefaultPrintTaskEndPoint(url:String):String
+            {
+                url = removeTrailingForwardSlash(url);
+                var endsWithRestSlashServices:RegExp = /\/rest\/services$/i;
+                if (endsWithRestSlashServices.test(url))
+                {
+                    url += "/Utilities/PrintingTools/GPServer"
+                }
+                return url;
+            }
+
+            private function serviceDirectoryBuilder_browseCompleteHandler(event:ServiceDirectoryBuilderEvent):void
+            {
+                if (Log.isInfo())
+                {
+                    LOG.info("Service browse complete");
+                }
+
+                serviceDirectoryBuilder.removeEventListener(ServiceDirectoryBuilderEvent.COMPLETE, serviceDirectoryBuilder_browseCompleteHandler);
+                serviceDirectoryBuilder.removeEventListener(FaultEvent.FAULT, serviceDirectoryBuilder_faultHandler);
+                serviceDirectoryBuilder = null;
+
+                servicesDirectory.removeAll();
+                currentState = "loaded";
+
+                const serviceDirectoryInfo:ServiceDirectoryInfo = event.serviceDirectoryInfo;
+                hasContent = serviceDirectoryInfo.hasContent;
+                if (hasContent)
+                {
+                    servicesDirectory.addItem(serviceDirectoryInfo.rootNode);
+                    serviceDirectoryTree.openItems = serviceDirectoryInfo.pathNodes;
+                    serviceDirectoryTree.validateNow();
+                    nodeFilter = serviceDirectoryInfo.nodeFilter;
+
+                    highlightNode(serviceDirectoryInfo.endNode);
+
+                    isServiceSecure = serviceDirectoryInfo.isSecure;
+                    securityWarning = serviceDirectoryInfo.securityWarning;
+
+                    currentCredentials = IdentityManager.instance.findCredential(extractServiceRoot(lastUsedURL));
+                    isUserSignedIn = currentCredentials != null;
+
+                    serviceURL = serviceDirectoryInfo.url;
+                    AppEvent.dispatch(AppEvent.REGISTER_URL, serviceURL);
+                    showMissingCrossDomainMessage = !serviceDirectoryInfo.hasCrossDomain;
+                    if (showMissingCrossDomainMessage)
+                    {
+                        crossDomainHelpText.textFlow =
+                            TextConverter.importToFlow(getCrossDomainHelpTextHTML(),
+                                                       TextConverter.TEXT_FIELD_HTML_FORMAT);
+                    }
+
+                    updateSelection();
+                }
+                else
+                {
+                    showMissingCrossDomainMessage = false;
+                }
+            }
+
+            private function getCrossDomainHelpTextHTML():String
+            {
+                return StringUtil.substitute("{0} <a href='{1}' target='_blank'>{2}</a>",
+                                             resourceManager.getString('BuilderStrings', 'serviceBrowser.crossDomainNotFound'),
+                                             CROSS_DOMAIN_FILE_HELP_LINK,
+                                             resourceManager.getString('BuilderStrings', 'serviceBrowser.crossDomainHelp'));
+            }
+
+            private function highlightNode(node:ServiceDirectoryNode):void
+            {
+                serviceDirectoryTree.selectedItem = node;
+                const selectedResourceIndex:int = serviceDirectoryTree.getItemIndex(node);
+                serviceDirectoryTree.scrollToIndex(selectedResourceIndex);
+            }
+
+            private function extractServiceRoot(url:String):String
+            {
+                var endsWithRestServices:RegExp = /.+\/rest\/services\/?/;
+                var matches:Array = endsWithRestServices.exec(url);
+                var serviceRoot:String = removeTrailingForwardSlash(matches[0]);
+                return serviceRoot;
+            }
+
+            private function updateSelection():void
+            {
+                validateSelection(filterSelection(serviceDirectoryTree.selectedItems));
+                dispatchEvent(new ServiceBrowserEvent(ServiceBrowserEvent.SELECTION_CHANGE, hasValidSelection));
+            }
+
+            private function filterSelection(selectedItems:Array):Array
+            {
+                const filteredItems:Array = [];
+
+                for each (var item:Object in selectedItems)
+                {
+                    if (nodeFilter.isSelectable(item as ServiceDirectoryNode))
+                    {
+                        filteredItems.push(item);
+                    }
+                }
+
+                return filteredItems;
+            }
+
+            private function validateSelection(selectedItems:Array):void
+            {
+                hasValidSelection = selectedItems.length > 0;
+                serviceSelection.source = selectedItems;
+            }
+
+            private function signIn():void
+            {
+                IdentityManager.instance
+                    .getCredential(extractServiceRoot(lastUsedURL),
+                                   false,
+                                   new AsyncResponder(getCredentialsSuccessHandler,
+                                                      getCredentialsFaultHandler));
+
+                function getCredentialsSuccessHandler(credential:Credential, token:Object = null):void {
+                    if (Log.isDebug()) {
+                        LOG.debug("Signing into {0}", credential.server);
+                    }
+                    refreshServiceBrowse();
+                }
+
+                function getCredentialsFaultHandler(fault:Fault, token:Object = null):void {
+                    //DO NOTHING
+                }
+            }
+
+            private function refreshServiceBrowse():void
+            {
+                if (Log.isInfo())
+                {
+                    LOG.info("Refreshing service");
+                }
+
+                if (serviceURL != lastUsedURL)
+                {
+                    serviceURL = lastUsedURL;
+                }
+                browseService();
+            }
+
+            private function signOut():void
+            {
+                IdentityManager.instance
+                    .getCredential(extractServiceRoot(lastUsedURL),
+                                   false,
+                                   new AsyncResponder(getCredentialsSuccessHandler,
+                                                      getCredentialsFaultHandler));
+
+                function getCredentialsSuccessHandler(credential:Credential, token:Object = null):void {
+                    if (Log.isDebug()) {
+                        LOG.debug("Signing out of {0}", credential.server);
+                    }
+
+                    credential.destroy();
+                    refreshServiceBrowse();
+                }
+
+                function getCredentialsFaultHandler(fault:Fault, token:Object = null):void {
+                    //DO NOTHING
+                }
+            }
+
+            private function dispatchItemSelected():void
+            {
+                updateSelection(); //TODO: NEEDED?
+                dispatchEvent(new ServiceBrowserEvent(ServiceBrowserEvent.ITEM_SELECTED, hasValidSelection));
+            }
+
+            protected function urlInput_searchHandler(event:SearchInputEvent):void
+            {
+                serviceURL = event.searchTerm;
+                if (serviceURL != "")
+                {
+                    browseService();
+                }
+            }
+
+            protected function serviceDirectory_keyDownHandler(event:KeyboardEvent):void
+            {
+                if (event.keyCode == Keyboard.ENTER)
+                {
+                    dispatchItemSelected();
+                }
+            }
+
+            //TODO: show specific error message when root URL faults
+            protected function serviceDirectoryBuilder_faultHandler(event:FaultEvent):void
+            {
+                if (Log.isWarn())
+                {
+                    LOG.warn("Service browse failed");
+                }
+
+                serviceDirectoryBuilder.removeEventListener(ServiceDirectoryBuilderEvent.COMPLETE, serviceDirectoryBuilder_browseCompleteHandler);
+                serviceDirectoryBuilder.removeEventListener(FaultEvent.FAULT, serviceDirectoryBuilder_faultHandler);
+                serviceDirectoryBuilder = null;
+                servicesDirectory.removeAll();
+
+                isServiceSecure = false;
+                currentCredentials = null;
+                isUserSignedIn = false;
+                hasContent = false;
+                showMissingCrossDomainMessage = false;
+
+                currentState = "loaded";
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="startup"/>
+        <s:State name="loaded"/>
+        <s:State name="loading"/>
+    </s:states>
+
+    <s:SWFLoader width="40" height="40"
+                 autoLoad="true"
+                 horizontalCenter="0"
+                 includeIn="loading"
+                 source="@Embed(source='/assets/images/ico_loading.swf')"
+                 verticalCenter="0"/>
+
+    <s:VGroup width="100%" height="100%">
+        <components:SearchInput id="urlInput"
+                                width="100%"
+                                direction="ltr"
+                                search="urlInput_searchHandler(event)"
+                                searchButtonLabel="{resourceManager.getString('BuilderStrings', 'serviceBrowser.browse')}"
+                                searchButtonToolTip="{resourceManager.getString('BuilderStrings', 'serviceBrowser.browseTooltip')}"
+                                searchHistory="{RecentlyUsedURLsModel.getInstance().urls}"
+                                searchTextInputToolTip="{resourceManager.getString('BuilderStrings', 'serviceBrowser.urlTooltip')}"
+                                text="@{serviceURL}"/>
+
+        <s:VGroup includeIn="loaded">
+            <s:HGroup includeInLayout="{isServiceSecure}"
+                      verticalAlign="middle"
+                      visible="{isServiceSecure}">
+                <s:Label includeInLayout="{isUserSignedIn}"
+                         text="{resourceManager.getString('BuilderStrings', 'serviceBrowser.signedInAs',[currentCredentials.userId])}"
+                         visible="{isUserSignedIn}"/>
+
+                <s:Button click="signOut()"
+                          includeInLayout="{isUserSignedIn}"
+                          label="{resourceManager.getString('BuilderStrings', 'serviceBrowser.signOut')}"
+                          skinClass="com.esri.builder.skins.LinkButtonSkin"
+                          visible="{isUserSignedIn}"/>
+
+                <s:Label includeInLayout="{!isUserSignedIn}"
+                         text="{resourceManager.getString('BuilderStrings', 'serviceBrowser.secureService')}"
+                         visible="{!isUserSignedIn}"/>
+
+                <s:Button click="signIn()"
+                          includeInLayout="{!isUserSignedIn}"
+                          label="{resourceManager.getString('BuilderStrings', 'serviceBrowser.signIn')}"
+                          skinClass="com.esri.builder.skins.LinkButtonSkin"
+                          visible="{!isUserSignedIn}"/>
+            </s:HGroup>
+
+            <s:HGroup includeInLayout="{hasContent &amp;&amp; isServiceSecure &amp;&amp; securityWarning}"
+                      verticalAlign="middle"
+                      visible="{hasContent &amp;&amp; isServiceSecure &amp;&amp; securityWarning}">
+                <graphics:warning width="20" height="20"/>
+
+                <s:Label text="{securityWarning}"/>
+            </s:HGroup>
+
+            <s:HGroup includeInLayout="{hasContent &amp;&amp; showMissingCrossDomainMessage}"
+                      verticalAlign="middle"
+                      visible="{hasContent &amp;&amp; showMissingCrossDomainMessage}">
+                <graphics:warning width="20" height="20"/>
+
+                <s:RichEditableText id="crossDomainHelpText"
+                                    editable="false"
+                                    selectable="false"/>
+            </s:HGroup>
+        </s:VGroup>
+
+        <s:Group width="100%" height="100%">
+            <s:Rect left="0" right="0" top="0" bottom="0">
+                <s:stroke>
+                    <s:SolidColorStroke color="0x000000" weight="1"/>
+                </s:stroke>
+            </s:Rect>
+
+            <s:Group width="100%" height="100%"
+                     includeIn="loaded">
+                <s:Label fontWeight="bold"
+                         horizontalCenter="0"
+                         includeInLayout="{!hasContent}"
+                         text="{resourceManager.getString('BuilderStrings', 'serviceBrowser.noResultsFound')}"
+                         verticalCenter="0"
+                         visible="{!hasContent}"/>
+
+                <mx:Tree id="serviceDirectoryTree"
+                         left="1" right="1" top="1" bottom="1"
+                         allowMultipleSelection="{allowMultipleSelection}"
+                         borderVisible="false"
+                         change="updateSelection()"
+                         dataDescriptor="{new ServiceDirectoryTreeDataDescriptor()}"
+                         dataProvider="{servicesDirectory}"
+                         defaultLeafIcon="{null}"
+                         doubleClick="dispatchItemSelected()"
+                         doubleClickEnabled="true"
+                         includeInLayout="{hasContent}"
+                         itemRenderer="com.esri.builder.components.serviceBrowser.renderers.ServiceDirectoryTreeItemRenderer"
+                         keyDown="serviceDirectory_keyDownHandler(event)"
+                         labelField="displayLabel"
+                         visible="{hasContent}">
+                </mx:Tree>
+            </s:Group>
+        </s:Group>
+    </s:VGroup>
+</s:Group>

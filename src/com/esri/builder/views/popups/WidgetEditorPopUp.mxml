@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:SkinnablePopUpContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                           xmlns:s="library://ns.adobe.com/flex/spark"
+                           xmlns:mx="library://ns.adobe.com/flex/mx"
+                           xmlns:components="com.esri.builder.components.*"
+                           width="600"
+                           minHeight="400">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.model.Widget;
+            import com.esri.builder.model.WidgetType;
+
+            import modules.IWidgetView;
+
+            import mx.events.FlexEvent;
+            import mx.managers.PopUpManager;
+            import mx.utils.StringUtil;
+
+            public var widgetView:IWidgetView;
+
+            [Bindable]
+            public var widgetType:WidgetType;
+            [Bindable]
+            public var widget:Widget;
+
+            protected function imageBrowser_creationCompleteHandler(event:FlexEvent):void
+            {
+                imageBrowser.selectedImage = widget.iconFile;
+            }
+
+            protected function editorContainer_creationCompleteHandler(event:FlexEvent):void
+            {
+                editorContainer.addElement(widgetView);
+            }
+
+            override public function updatePopUpPosition():void
+            {
+                PopUpManager.centerPopUp(this);
+            }
+
+            protected function imageBrowser_changeHandler(event:Event):void
+            {
+                widget.iconFile = imageBrowser.selectedImage;
+            }
+
+            protected function okButton_clickHandler(event:MouseEvent):void
+            {
+                if (widgetView.submit())
+                {
+                    close(true);
+                }
+            }
+
+            protected function cancelButton_clickHandler(event:MouseEvent):void
+            {
+                widgetView.cancel();
+                close();
+            }
+        ]]>
+    </fx:Script>
+
+    <!--background-->
+    <s:Rect left="0" right="0" top="0" bottom="0">
+        <s:fill>
+            <s:SolidColor color="#FFFFFF"/>
+        </s:fill>
+
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:Rect height="25"
+            left="2" right="2" top="2">
+        <s:fill>
+            <s:LinearGradient rotation="90">
+                <s:GradientEntry alpha="1"
+                                 color="#FFFFFF"
+                                 ratio="0"/>
+
+                <s:GradientEntry alpha="1.0"
+                                 color="#CCCCCC"
+                                 ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Rect>
+
+    <s:Line left="0" right="0" top="26">
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Line>
+
+    <!--content-->
+    <s:Label left="10" top="9"
+             color="#000000"
+             fontSize="14"
+             fontWeight="bold"
+             text="{StringUtil.substitute(resourceManager.getString('BuilderStrings', 'widgetsView.configureWidget'), widgetType.label)}"
+             textAlign="center"
+             verticalAlign="middle"/>
+
+    <s:VGroup width="100%" height="100%"
+              top="20"
+              gap="15"
+              paddingBottom="15"
+              paddingLeft="15"
+              paddingRight="15"
+              paddingTop="15">
+        <s:HGroup width="100%">
+            <s:Group id="headerContainer" width="33%">
+                <s:layout>
+                    <s:ConstraintLayout>
+                        <s:constraintColumns>
+                            <s:ConstraintColumn id="firstColumn" width="45%"/>
+                            <s:ConstraintColumn id="secondColumn" width="30%"/>
+                            <s:ConstraintColumn id="thirdColumn" width="25%"/>
+                        </s:constraintColumns>
+
+                        <s:constraintRows>
+                            <s:ConstraintRow id="topRow" baseline="15"/>
+                            <s:ConstraintRow id="middleRow" baseline="30"/>
+                            <s:ConstraintRow id="bottomRow" baseline="30"/>
+                        </s:constraintRows>
+                    </s:ConstraintLayout>
+                </s:layout>
+
+                <s:Label left="firstColumn:0"
+                         baseline="topRow:0"
+                         text="{resourceManager.getString('BuilderStrings', 'widgetsView.widgetLabel')}"/>
+
+                <s:TextInput id="widgetLabel"
+                             width="100%"
+                             left="secondColumn:0"
+                             baseline="topRow:0"
+                             restrict='^&gt;&lt;'
+                             text="@{widget.label}"/>
+
+                <s:Label left="firstColumn:0"
+                         baseline="middleRow:0"
+                         text="{resourceManager.getString('BuilderStrings', 'widgetsView.widgetIcon')}"/>
+
+                <components:ImageBrowser id="imageBrowser"
+                                         width="40" height="40"
+                                         left="secondColumn:0"
+                                         baseline="middleRow:-5"
+                                         change="imageBrowser_changeHandler(event)"
+                                         creationComplete="imageBrowser_creationCompleteHandler(event)"
+                                         skinClass="com.esri.builder.skins.IconImageBrowserSkin"
+                                         toolTip="{resourceManager.getString('BuilderStrings', 'widgetsView.imageTooltip')}"/>
+
+                <s:Label left="firstColumn:0"
+                         baseline="bottomRow:0"
+                         text="{resourceManager.getString('BuilderStrings', 'widgetsView.preload')}"/>
+
+                <components:SliderToggleButton left="secondColumn:0"
+                                               baseline="bottomRow:0"
+                                               deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                               selected="@{widget.preload}"
+                                               selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"
+                                               toolTip="{resourceManager.getString('BuilderStrings', 'widgetsView.preloadTooltip')}"/>
+            </s:Group>
+
+            <s:Group width="33%" height="100%"/>
+
+            <s:Group width="33%" height="100%">
+                <s:RichEditableText right="10" bottom="10"
+                                    editable="false"
+                                    selectable="true"
+                                    visible="{Boolean(widgetType.helpURL)}">
+                    <s:textFlow>
+                        <s:TextFlow>
+                            <s:a href="{widgetType.helpURL}" target="_blank">{StringUtil.substitute(resourceManager.getString('BuilderStrings', 'widgetsView.learnMore'), widgetType.label)}</s:a>
+                        </s:TextFlow>
+                    </s:textFlow>
+                </s:RichEditableText>
+            </s:Group>
+        </s:HGroup>
+
+        <components:TitleContainer width="100%" height="100%"
+                                   title="{resourceManager.getString('BuilderStrings', 'widgetsView.widgetSettings')}">
+            <s:Scroller left="10" right="10" top="10" bottom="10">
+                <s:Group id="editorContainer"
+                         left="0" right="0" top="0" bottom="0"
+                         creationComplete="editorContainer_creationCompleteHandler(event)"/>
+            </s:Scroller>
+        </components:TitleContainer>
+
+        <s:HGroup width="100%"
+                  horizontalAlign="center"
+                  verticalAlign="middle">
+            <s:Button id="okButton"
+                      click="okButton_clickHandler(event)"
+                      label="{resourceManager.getString('BuilderStrings', 'ok')}"
+                      skinClass="com.esri.builder.skins.BlueButtonSkin"/>
+
+            <s:Button id="cancelButton"
+                      click="cancelButton_clickHandler(event)"
+                      label="{resourceManager.getString('BuilderStrings', 'cancel')}"
+                      skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+        </s:HGroup>
+    </s:VGroup>
+</s:SkinnablePopUpContainer>

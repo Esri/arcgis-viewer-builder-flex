@@ -1,0 +1,646 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:esri="http://www.esri.com/2008/ags"
+         xmlns:bookmark="modules.Bookmark.*"
+         width="100%" height="100%"
+         add="this_addHandler(event)"
+         creationComplete="init()"
+         implements="modules.IWidgetView">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.Graphic;
+            import com.esri.ags.events.WebMapEvent;
+            import com.esri.ags.geometry.Extent;
+            import com.esri.ags.layers.ArcGISTiledMapServiceLayer;
+            import com.esri.ags.layers.Layer;
+            import com.esri.ags.layers.OpenStreetMapLayer;
+            import com.esri.ags.portal.Portal;
+            import com.esri.ags.virtualearth.VETiledLayer;
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.ConfigLayer;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.model.PortalModel;
+            import com.esri.builder.supportClasses.ErrorMessageUtil;
+
+            import modules.IWidgetModel;
+
+            import mx.collections.ArrayCollection;
+            import mx.events.FlexEvent;
+            import mx.rpc.events.FaultEvent;
+            import mx.utils.StringUtil;
+
+            import spark.components.TextArea;
+            import spark.components.gridClasses.DefaultGridItemEditor;
+            import spark.events.GridEvent;
+            import spark.events.GridItemEditorEvent;
+            import spark.events.GridSelectionEvent;
+
+            [Bindable]
+            private var m_model:BookmarkModel;
+
+            private var bookmarkNameEditor:TextArea;
+
+            private var editBookmark:Bookmark;
+            private var editBookmarkGraphic:Graphic;
+
+            private var lastBookmarkExtentGraphic:Graphic;
+            private var lastBookmark:Bookmark;
+
+            private var bookmarkCount:int = 1;
+            [Bindable]
+            private var isAddingBookmark:Boolean;
+            private var isEditingBookmark:Boolean;
+
+            [Bindable]
+            private var hasBasemap:Boolean;
+
+            private var bookmarkNameBeforeEditing:String;
+
+            private function init():void
+            {
+                resizeActionsColumnWidthBasedOnHeaderText();
+            }
+
+            private function resizeActionsColumnWidthBasedOnHeaderText():void
+            {
+                addBookmarkButton.width = getPaddedWidthForText(
+                    resourceManager.getString('BuilderStrings', 'bookmark.addBookmark'), 30);
+            }
+
+            private function getPaddedWidthForText(text:String, padding:Number = 20):Number
+            {
+                var textLineMetrics:TextLineMetrics = measureText(text);
+                return textLineMetrics.width + padding;
+            }
+
+            public function set widgetModel(value:IWidgetModel):void
+            {
+                if (value is BookmarkModel)
+                {
+                    m_model = BookmarkModel(value);
+                }
+                else
+                {
+                    throw new Error('argument is not an instance of BookmarkModel');
+                }
+            }
+
+            public function get widgetModel():IWidgetModel
+            {
+                return m_model;
+            }
+
+            public function submit():Boolean
+            {
+                if (isEditingBookmark)
+                {
+                    finishEditBookmark();
+                }
+                else if (isAddingBookmark)
+                {
+                    finishAddBookmark(lastBookmark);
+                }
+                return true;
+            }
+
+            private function isBookmarkNameEditorValid():Boolean
+            {
+                return isBookmarkNameValid(bookmarkNameEditor.text);
+            }
+
+            private function isBookmarkNameValid(name:String):Boolean
+            {
+                return StringUtil.trim(name).length > 0;
+            }
+
+            public function cancel():void
+            {
+                if (isEditingBookmark)
+                {
+                    editBookmark.isEditing = false;
+                }
+                else if (isAddingBookmark)
+                {
+                    removeBookmarkFromList();
+                }
+            }
+
+            protected function this_addHandler(event:FlexEvent):void
+            {
+                for (var i:int = 0; i < m_model.bookmarkList.length; i++)
+                {
+                    const bookmark:Bookmark = m_model.bookmarkList.getItemAt(i) as Bookmark;
+                    if (!isBookmarkExtentAlreadyAdded(bookmark))
+                    {
+                        var bookmarkExtentGraphic:Graphic = new Graphic;
+                        bookmarkExtentGraphic.id = bookmark.name;
+                        bookmarkExtentGraphic.toolTip = bookmark.name;
+
+                        var bookmarkExtent:Extent = new Extent;
+                        bookmarkExtent.xmin = bookmark.xmin;
+                        bookmarkExtent.xmax = bookmark.xmax;
+                        bookmarkExtent.ymin = bookmark.ymin;
+                        bookmarkExtent.ymax = bookmark.ymax;
+
+                        bookmarkExtentGraphic.geometry = bookmarkExtent;
+                        bookmarkExtentGraphic.symbol = bookmarkExtentSymbol;
+                        bookmarksGraphicsLayer.add(bookmarkExtentGraphic);
+                    }
+                }
+                // add layers on the map
+                if (Model.instance.webmap)
+                {
+                    webMapUtil.createMapById(Model.instance.config.configMap.itemId);
+                }
+                else
+                {
+                    const bottomBasemapConfigLayer:ConfigLayer = Model.instance.configBasemapsList.getLayerAt(0);
+                    if (bottomBasemapConfigLayer)
+                    {
+                        map.addLayer(bottomBasemapConfigLayer.createLayer());
+
+                        //check if next layer is part of hybrid layer
+                        const topBasemapConfigLayer:ConfigLayer = Model.instance.configBasemapsList.getLayerAt(1);
+                        if (topBasemapConfigLayer
+                            && bottomBasemapConfigLayer.label == topBasemapConfigLayer.label)
+                        {
+                            map.addLayer(topBasemapConfigLayer.createLayer());
+                        }
+
+                        addVisibleOperationalLayers();
+                    }
+
+                    if (map.layerIds.length)
+                    {
+                        map.addLayer(bookmarksGraphicsLayer);
+                        map.extent = Model.instance.config.configMap.initExtent;
+                        hasBasemap = true;
+                    }
+                    else if (Model.instance.config.configMap.addArcGISBasemaps)
+                    {
+                        if (PortalModel.getInstance().portal.loaded)
+                        {
+                            addDefaultPortalBasemap(PortalModel.getInstance().portal);
+                        }
+                        else
+                        {
+                            hasBasemap = false;
+                        }
+                    }
+                    else
+                    {
+                        hasBasemap = false;
+                    }
+                }
+            }
+
+            private function addVisibleOperationalLayers():void
+            {
+                const opConfigLayers:Array = Model.instance.getOpLayers();
+                for each (var opConfigLayer:ConfigLayer in opConfigLayers)
+                {
+                    if (opConfigLayer.visible)
+                    {
+                        map.addLayer(opConfigLayer.createLayer());
+                    }
+                }
+            }
+
+            private function addDefaultPortalBasemap(portal:Portal):void
+            {
+                map.wrapAround180 = true;
+
+                var portalDefaultBasemapObject:Object = portal.info.defaultBasemap;
+                var defaultBasemapLayerObjects:Array = portalDefaultBasemapObject.baseMapLayers;
+
+                if (defaultBasemapLayerObjects)
+                {
+                    for each (var defaultBasemapLayerObject:Object in defaultBasemapLayerObjects)
+                    {
+                        if (defaultBasemapLayerObject.url)
+                        {
+                            map.addLayer(new ArcGISTiledMapServiceLayer(defaultBasemapLayerObject.url));
+                        }
+                        else if (isAllowedType(defaultBasemapLayerObject.type))
+                        {
+                            map.addLayer(createBasemapLayerFromType(defaultBasemapLayerObject.type));
+                        }
+                    }
+
+                    addVisibleOperationalLayers();
+
+                    map.addLayer(bookmarksGraphicsLayer);
+                    if (Model.instance.config.configMap.initExtent)
+                    {
+                        map.extent = Model.instance.config.configMap.initExtent;
+                    }
+
+                    hasBasemap = true;
+                }
+                else
+                {
+                    hasBasemap = false;
+                }
+            }
+
+            private function isAllowedType(type:String):Boolean
+            {
+                return type == "OpenStreetMap" ||
+                    (isBingBasemap(type) && hasBingKey());
+            }
+
+            private function isBingBasemap(type:String):Boolean
+            {
+                return type.indexOf('BingMaps') > -1;
+            }
+
+            private function hasBingKey():Boolean
+            {
+                var bingKey:String = Model.instance.bingKey;
+                return (bingKey != null && bingKey.length > 0);
+            }
+
+            private function createBasemapLayerFromType(type:String):Layer
+            {
+                var layer:Layer;
+                if (type == "OpenStreetMap")
+                {
+                    layer = new OpenStreetMapLayer();
+                }
+                else
+                {
+                    //assuming bing
+                    var veLayer:VETiledLayer = new VETiledLayer();
+                    veLayer.key = Model.instance.bingKey;
+                    layer = veLayer;
+                }
+
+                return layer;
+            }
+
+            private function webMapUtil_createMapByIdCompleteHandler(event:WebMapEvent):void
+            {
+                for each (var layer:Layer in event.map.layers)
+                {
+                    map.addLayer(layer);
+                }
+                map.addLayer(bookmarksGraphicsLayer);
+                map.extent = Model.instance.config.configMap.initExtent;
+                hasBasemap = true;
+            }
+
+            protected function addBookmark_clickHandler(event:MouseEvent):void
+            {
+                if (isEditingBookmark)
+                {
+                    finishEditBookmark();
+                }
+                else if (isAddingBookmark)
+                {
+                    finishAddBookmark(lastBookmark);
+                }
+
+                if (!isAddingBookmark) // dont allow adding a bookmark if previos one is not added
+                {
+                    isAddingBookmark = true;
+                    // get the current map extent and add it as a bookmark
+                    var bookmark:Bookmark = new Bookmark();
+                    bookmark.isNew = true;
+
+                    if (map.extent)
+                    {
+                        bookmark.xmin = map.extent.xmin;
+                        bookmark.xmax = map.extent.xmax;
+                        bookmark.ymin = map.extent.ymin;
+                        bookmark.ymax = map.extent.ymax;
+                    }
+
+                    lastBookmark = bookmark;
+                    m_model.bookmarkList.addItem(bookmark);
+
+                    lastBookmarkExtentGraphic = new Graphic;
+                    lastBookmarkExtentGraphic.geometry = map.extent;
+                    lastBookmarkExtentGraphic.symbol = bookmarkExtentSymbol;
+                    bookmarksGraphicsLayer.add(lastBookmarkExtentGraphic);
+
+                    bookmarkList.selectedIndex = bookmarkList.dataProviderLength - 1;
+                    bookmarkList.startItemEditorSession(bookmarkList.dataProviderLength - 1, 0);
+                }
+            }
+
+            public function startEditBookmark(bookmark:Bookmark):void
+            {
+                editBookmark = bookmark;
+                editBookmark.isEditing = isEditingBookmark = true;
+                bookmarkList.startItemEditorSession(bookmarkList.selectedIndex, 0);
+
+                var graphics:ArrayCollection = bookmarksGraphicsLayer.graphicProvider as ArrayCollection;
+                if (graphics.length)
+                {
+                    for each (var graphic:Graphic in graphics)
+                    {
+                        if (editBookmark.name === graphic.id)
+                        {
+                            editBookmarkGraphic = graphic;
+
+                            if (map.extent)
+                            {
+                                map.extent = editBookmarkGraphic.geometry as Extent;
+                                if (!map.extent.contains(editBookmarkGraphic.geometry))
+                                {
+                                    map.level--;
+                                }
+                                editTool.activate(EditTool.MOVE | EditTool.SCALE, [ editBookmarkGraphic ]);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
+            public function finishEditBookmark():void
+            {
+                isEditingBookmark = false;
+                bookmarkList.endItemEditorSession();
+                editTool.deactivate();
+                editBookmark.isEditing = false;
+                commitEditedExtent();
+                editBookmark = null;
+            }
+
+            private function commitEditedExtent():void
+            {
+                editBookmark.xmin = editBookmarkGraphic.geometry.extent.xmin;
+                editBookmark.xmax = editBookmarkGraphic.geometry.extent.xmax;
+                editBookmark.ymin = editBookmarkGraphic.geometry.extent.ymin;
+                editBookmark.ymax = editBookmarkGraphic.geometry.extent.ymax;
+            }
+
+            public function finishAddBookmark(bookmark:Bookmark):void
+            {
+                isAddingBookmark = false;
+                bookmark.isNew = false;
+                lastBookmarkExtentGraphic.id = bookmark.name;
+                lastBookmarkExtentGraphic.toolTip = bookmark.name;
+            }
+
+            public function deleteBookmark(deleteBookmark:Bookmark):void
+            {
+                var graphics:ArrayCollection = bookmarksGraphicsLayer.graphicProvider as ArrayCollection
+                for (var i:int = 0; i < graphics.length; i++)
+                {
+                    if (deleteBookmark.name === Graphic(graphics.getItemAt(i)).id)
+                    {
+                        editTool.deactivate();
+
+                        graphics.removeItemAt(i);
+                        m_model.bookmarkList.removeItem(deleteBookmark);
+                        break;
+                    }
+                }
+            }
+
+            protected function bookmarkList_selectionChangeHandler(event:GridSelectionEvent):void
+            {
+                if (editBookmark)
+                {
+                    editBookmark.isEditing = false;
+                    isEditingBookmark = false;
+                    editTool.deactivate();
+                    revertEditedExtent();
+                    editBookmark = null;
+                }
+            }
+
+            private function revertEditedExtent():void
+            {
+                editBookmarkGraphic.geometry.extent.xmin = editBookmark.xmin;
+                editBookmarkGraphic.geometry.extent.xmax = editBookmark.xmax;
+                editBookmarkGraphic.geometry.extent.ymin = editBookmark.ymin;
+                editBookmarkGraphic.geometry.extent.ymax = editBookmark.ymax;
+                editBookmarkGraphic.refresh();
+            }
+
+            protected function bookmarkList_gridItemEditorSessionStartHandler(event:GridItemEditorEvent):void
+            {
+                var editorInstance:DefaultGridItemEditor = bookmarkList.itemEditorInstance as DefaultGridItemEditor;
+                bookmarkNameEditor = editorInstance.textArea;
+                bookmarkNameEditor.maxWidth = bookmarkList.labelColumn.width;
+                bookmarkNameBeforeEditing = bookmarkNameEditor.text;
+            }
+
+            private function removeBookmarkFromList(isEditing:Boolean = false):void
+            {
+                var graphics:ArrayCollection = bookmarksGraphicsLayer.graphicProvider as ArrayCollection;
+                if (isEditing)
+                {
+                    editTool.deactivate();
+                    m_model.bookmarkList.removeItem(editBookmark);
+                    graphics.removeItemAt(graphics.getItemIndex(editBookmarkGraphic));
+
+                    editBookmark = null;
+                    editBookmarkGraphic = null;
+
+                    isEditingBookmark = false;
+                }
+                else
+                {
+                    editTool.deactivate();
+                    m_model.bookmarkList.removeItem(lastBookmark);
+                    graphics.removeItemAt(graphics.getItemIndex(lastBookmarkExtentGraphic));
+
+                    lastBookmark = null;
+                    lastBookmarkExtentGraphic = null;
+
+                    isAddingBookmark = false;
+                }
+            }
+
+            private function isBookmarkExtentAlreadyAdded(bookmark:Bookmark):Boolean
+            {
+                var result:Boolean;
+                var graphics:ArrayCollection = bookmarksGraphicsLayer.graphicProvider as ArrayCollection;
+                if (graphics.length)
+                {
+                    for each (var graphic:Graphic in graphics)
+                    {
+                        if (bookmark.name === graphic.id)
+                        {
+                            result = true;
+                            break;
+                        }
+                    }
+                }
+                return result;
+            }
+
+            protected function bookmarkList_gridItemEditorSessionSaveHandler(event:GridItemEditorEvent):void
+            {
+                if (editBookmark)
+                {
+                    if (isBookmarkNameEditorValid())
+                    {
+                        editBookmark.name = bookmarkNameEditor.text;
+                    }
+                    else if (isBookmarkNameValid(bookmarkNameBeforeEditing))
+                    {
+                        editBookmark.name = bookmarkNameBeforeEditing;
+                        return;
+                    }
+                    else
+                    {
+                        editBookmark.name = getDefaultBookmarkName() + bookmarkCount;
+                        bookmarkCount++;
+                    }
+                    editBookmarkGraphic.id = editBookmark.name;
+                    editBookmarkGraphic.toolTip = editBookmark.name;
+                }
+                else if (lastBookmark)
+                {
+                    if (isBookmarkNameEditorValid())
+                    {
+                        lastBookmark.name = bookmarkNameEditor.text;
+                    }
+                    else if (isBookmarkNameValid(bookmarkNameBeforeEditing))
+                    {
+                        lastBookmark.name = bookmarkNameBeforeEditing;
+                        return;
+                    }
+                    else
+                    {
+                        lastBookmark.name = getDefaultBookmarkName() + bookmarkCount;
+                        bookmarkCount++;
+                    }
+                    lastBookmarkExtentGraphic.id = lastBookmark.name;
+                    lastBookmarkExtentGraphic.toolTip = lastBookmark.name;
+                }
+            }
+
+            private function getDefaultBookmarkName():String
+            {
+                return resourceManager.getString('BuilderStrings', 'bookmark.defaultBookmarkName');
+            }
+
+            public function bookmarkList_gridItemEditorSessionStartingHandler(event:GridItemEditorEvent):void
+            {
+                var isEditingSelectedBookmark:Boolean = isEditingBookmark && (bookmarkList.selectedItem == editBookmark);
+                var isAddingSelectedBookmark:Boolean = isAddingBookmark && (bookmarkList.selectedItem == lastBookmark);
+                if (!isAddingSelectedBookmark && !isEditingSelectedBookmark)
+                {
+                    event.preventDefault();
+                }
+            }
+
+            protected function webMapUtil_faultHandler(event:FaultEvent):void
+            {
+                AppEvent.dispatch(AppEvent.SHOW_ERROR,
+                                  ErrorMessageUtil.getKnownErrorCauseMessage(event.fault));
+            }
+
+            protected function bookmarkList_gridDoubleClickHandler(event:GridEvent):void
+            {
+                if (event.rowIndex > -1
+                    && !(event.itemRenderer is BookmarkEditGridItemRenderer))
+                {
+                    startEditBookmark(m_model.bookmarkList.getItemAt(event.rowIndex) as Bookmark);
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <fx:Declarations>
+        <s:Fade id="fade"
+                alphaFrom="1"
+                alphaTo="0"
+                duration="3000"/>
+
+        <esri:SimpleFillSymbol id="bookmarkExtentSymbol"
+                               alpha="0.3"
+                               color="0xFF0000">
+            <esri:SimpleLineSymbol color="0xFF0000"/>
+        </esri:SimpleFillSymbol>
+
+        <esri:GraphicsLayer id="bookmarksGraphicsLayer"/>
+
+        <esri:WebMapUtil id="webMapUtil"
+                         createMapByIdComplete="webMapUtil_createMapByIdCompleteHandler(event)"
+                         fault="webMapUtil_faultHandler(event)"
+                         portalURL="{PortalModel.getInstance().portalURL}"/>
+
+        <esri:EditTool id="editTool" map="{map}"/>
+    </fx:Declarations>
+
+    <s:Group width="20%" height="100%"
+             left="5" top="0">
+        <s:Button id="addBookmarkButton"
+                  height="20"
+                  right="0"
+                  buttonMode="true"
+                  click="addBookmark_clickHandler(event)"
+                  enabled="{!isAddingBookmark &amp;&amp; hasBasemap}"
+                  fontWeight="bold"
+                  label="{resourceManager.getString('BuilderStrings', 'bookmark.addBookmark')}"
+                  skinClass="com.esri.builder.skins.SquareGreenButtonSkin"/>
+
+        <bookmark:BookmarkGrid id="bookmarkList"
+                               height="95%"
+                               top="20"
+                               dataProvider="{m_model.bookmarkList}"
+                               doubleClickEnabled="true"
+                               gridDoubleClick="bookmarkList_gridDoubleClickHandler(event)"
+                               gridItemEditorSessionSave="bookmarkList_gridItemEditorSessionSaveHandler(event)"
+                               gridItemEditorSessionStart="bookmarkList_gridItemEditorSessionStartHandler(event)"
+                               gridItemEditorSessionStarting="bookmarkList_gridItemEditorSessionStartingHandler(event)"
+                               maxWidth="280"
+                               requireSelection="true"
+                               selectionChange="bookmarkList_selectionChangeHandler(event)"/>
+    </s:Group>
+
+    <s:VGroup id="mapGroup"
+              width="100%" height="95%"
+              left="290" top="0"
+              gap="2"
+              includeInLayout="{hasBasemap}"
+              visible="{hasBasemap}">
+        <s:BorderContainer width="100%" height="30"
+                           cornerRadius="0">
+            <s:layout>
+                <s:HorizontalLayout verticalAlign="middle"/>
+            </s:layout>
+
+            <s:Label alpha="0.5"
+                     fontSize="14"
+                     paddingLeft="15"
+                     text="{resourceManager.getString('BuilderStrings', 'mapsView.setExtentText')}"/>
+        </s:BorderContainer>
+
+        <esri:Map id="map"
+                  width="100%" height="100%"/>
+    </s:VGroup>
+
+    <s:Label fontSize="18"
+             horizontalCenter="125"
+             includeInLayout="{!hasBasemap}"
+             text="{resourceManager.getString('BuilderStrings', 'mapsView.noBasemapSelected')}"
+             verticalCenter="0"
+             visible="{!hasBasemap}"/>
+</s:Group>

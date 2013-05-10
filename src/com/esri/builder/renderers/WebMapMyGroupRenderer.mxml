@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                xmlns:mx="library://ns.adobe.com/flex/mx"
+                width="230" height="150"
+                autoDrawBackground="false"
+                click="itemrenderer1_clickHandler(event)">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.eventbus.AppEvent;
+
+            import mx.utils.StringUtil;
+
+            import spark.components.List;
+
+            protected function itemrenderer1_clickHandler(event:MouseEvent):void
+            {
+                if (List(owner).selectedItem && List(owner).selectedItem == data)
+                {
+                    AppEvent.dispatch(AppEvent.PORTAL_OPEN_GROUP);
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <fx:Declarations>
+        <s:DateTimeFormatter id="dateFormatter"
+                             dateTimePattern="MMM. D, YYYY"
+                             timeStyle="none"/>
+    </fx:Declarations>
+
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="hovered"/>
+        <s:State name="selected"/>
+    </s:states>
+
+    <s:Rect left="0" right="0" top="0" bottom="0"
+            includeIn="hovered,selected">
+        <s:stroke>
+            <s:SolidColorStroke alpha.hovered="0.7"
+                                color="0x000000"
+                                weight.hovered="1"
+                                weight.selected="2"/>
+        </s:stroke>
+    </s:Rect>
+    <s:VGroup paddingBottom="5"
+              paddingLeft="5"
+              paddingRight="5"
+              paddingTop="5">
+        <s:Label width="225"
+                 color="0x217598"
+                 fontWeight="bold"
+                 lineBreak="toFit"
+                 text="{data.title}"/>
+        <s:Label width="225" text="{StringUtil.substitute(resourceManager.getString('BuilderStrings', 'agsPortal.groupCreatedBy'), data.owner, dateFormatter.format(data.created))}"/>
+        <s:HGroup width="100%" verticalAlign="top">
+            <s:Image width="80" height="80"
+                     enableLoadingState="true"
+                     skinClass="com.esri.builder.skins.PortalUserThumbnailSkin"
+                     source="{!data.thumbnailURL ? 'assets/images/portal_no_thumbnail.png' : data.thumbnailURL}"/>
+            <s:Label width="120"
+                     maxDisplayedLines="4"
+                     showTruncationTip="true"
+                     text="{data.snippet}"/>
+        </s:HGroup>
+    </s:VGroup>
+</s:ItemRenderer>
+

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:SkinnableContainer xmlns:s="library://ns.adobe.com/flex/spark"
+                      xmlns:fx="http://ns.adobe.com/mxml/2009"
+                      xmlns:graphics="assets.graphics.*"
+                      width="500" height="300">
+    <fx:Script>
+        <![CDATA[
+            import mx.events.CloseEvent;
+        ]]>
+    </fx:Script>
+
+    <s:Rect left="0" right="0" top="0" bottom="0">
+        <s:fill>
+            <s:SolidColor color="#FFFFFF"/>
+        </s:fill>
+
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:Rect height="25"
+            left="2" right="2" top="2">
+        <s:fill>
+            <s:LinearGradient rotation="90">
+                <s:GradientEntry alpha="1"
+                                 color="#FFFFFF"
+                                 ratio="0"/>
+                <s:GradientEntry alpha="1.0"
+                                 color="#CCCCCC"
+                                 ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Rect>
+
+    <s:Line left="0" right="0" top="26">
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Line>
+
+    <!--header-->
+    <s:Label left="10" top="9"
+             color="#000000"
+             fontSize="14"
+             fontWeight="bold"
+             text="{resourceManager.getString('BuilderStrings', 'aboutPopUp.aboutApplicationBuilder')}"
+             textAlign="center"
+             verticalAlign="middle"/>
+
+    <s:Button right="10" top="6"
+              click="dispatchEvent(new CloseEvent(CloseEvent.CLOSE))"
+              label="{resourceManager.getString('BuilderStrings', 'close')}"
+              skinClass="com.esri.builder.skins.CloseButtonSkin"/>
+
+    <!--content-->
+    <graphics:esri_logo width="180.368" height="63.065"
+                        right="10" top="35"
+                        layoutDirection="ltr"/>
+
+    <s:VGroup width="100%"
+              left="15" right="15" top="47">
+        <s:Label color="#000000"
+                 fontSize="25"
+                 text="{resourceManager.getString('BuilderStrings', 'applicationBuilder')}"/>
+
+        <s:Label width="100%"
+                 color="#000000"
+                 fontSize="25"
+                 maxWidth="280"
+                 text="{resourceManager.getString('BuilderStrings', 'aboutPopUp.subtitle')}"/>
+
+        <s:HGroup paddingTop="15">
+            <s:Label color="#000000"
+                     fontWeight="bold"
+                     text="{resourceManager.getString('BuilderStrings', 'aboutPopUp.versionLabel')}"
+                     textAlign="right"/>
+
+            <s:Label color="#000000"
+                     fontWeight="bold"
+                     text="{resourceManager.getString('BuilderStrings', 'applicationBuilderVersion')}"
+                     textAlign="right"/>
+        </s:HGroup>
+
+        <s:Label width="100%"
+                 color="#000000"
+                 maxDisplayedLines="-1"
+                 maxWidth="400"
+                 text="{resourceManager.getString('BuilderStrings', 'aboutPopUp.description')}"/>
+    </s:VGroup>
+</s:SkinnableContainer>

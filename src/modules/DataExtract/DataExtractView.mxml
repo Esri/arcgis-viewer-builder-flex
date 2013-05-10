@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:graphics="assets.graphics.*"
+         xmlns:components="com.esri.builder.components.*"
+         width="100%" height="100%"
+         creationComplete="preselectExtractionMethod()"
+         implements="modules.IWidgetView">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.components.SearchInputEvent;
+            import com.esri.builder.components.serviceBrowser.nodes.GPTaskNode;
+            import com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.model.RecentlyUsedURLsModel;
+            import com.esri.builder.views.BuilderAlert;
+
+            import modules.IWidgetModel;
+
+            import mx.controls.Alert;
+            import mx.events.FlexEvent;
+
+            private function preselectExtractionMethod():void
+            {
+                switch (dataExtractModel.selectionMethod)
+                {
+                    case "extent":
+                    {
+                        extentMethodOption.selected = true;
+                        break;
+                    }
+                    case "draw":
+                    default:
+                    {
+                        drawMethodOption.selected = true;
+                        break;
+                    }
+                }
+            }
+
+            [Bindable]
+            private var dataExtractModel:DataExtractModel;
+
+            public function get widgetModel():IWidgetModel
+            {
+                return dataExtractModel;
+            }
+
+            public function set widgetModel(value:IWidgetModel):void
+            {
+                if (value is DataExtractModel)
+                {
+                    dataExtractModel = DataExtractModel(value);
+                }
+                else
+                {
+                    throw new Error('argument is not an instance of DataExtractModel');
+                }
+            }
+
+            private function selectionMethodGroup_changeHandler(event:Event):void
+            {
+                dataExtractModel.selectionMethod = selectionMethodGroup.selectedValue as String;
+            }
+
+            public function submit():Boolean
+            {
+                if (!dataExtractModel.dataExtractionService)
+                {
+                    BuilderAlert.show(resourceManager.getString('BuilderStrings', 'dataExtract.missingDataExtractionServiceURL'),
+                                      resourceManager.getString('BuilderStrings', 'widgetsView.widgetConfigurationError'),
+                                      Alert.OK);
+                    return false;
+                }
+
+                return true;
+            }
+
+            public function cancel():void
+            {
+                // NOOP
+            }
+
+            protected function serviceBrowser_selectionChangeHandler(event:ServiceBrowserEvent):void
+            {
+                if (event.hasValidSelection)
+                {
+                    const selectedGPTask:GPTaskNode = serviceBrowser.serviceSelection.getItemAt(0) as GPTaskNode;
+                    dataExtractModel.dataExtractionService = selectedGPTask.url;
+                    currentState = "normal";
+                }
+            }
+
+            protected function backButton_clickHandler(event:MouseEvent):void
+            {
+                currentState = "normal";
+            }
+
+            protected function dataExtractServiceInput_enterHandler(event:FlexEvent):void
+            {
+                browseForTasksIfNeeded();
+            }
+
+            private function browseForTasksIfNeeded():void
+            {
+                if (!hasGPTaskEndPoint())
+                {
+                    browseForTasks();
+                }
+            }
+
+            private function browseForTasks():void
+            {
+                currentState = "browsingTasks";
+                serviceBrowser.browseService();
+            }
+
+            private function hasGPTaskEndPoint():Boolean
+            {
+                const endsWithGPServerAndTaskName:RegExp = / \/ GPServer \/ .+ $ /ix;
+                return endsWithGPServerAndTaskName.test(dataExtractModel.dataExtractionService);
+            }
+
+            protected function dataExtractionServiceURLInput_enterHandler(event:SearchInputEvent):void
+            {
+                browseForTasksIfNeeded();
+            }
+        ]]>
+    </fx:Script>
+
+    <fx:Declarations>
+        <s:RadioButtonGroup id="selectionMethodGroup" change="selectionMethodGroup_changeHandler(event)"/>
+    </fx:Declarations>
+
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="browsingTasks"/>
+    </s:states>
+
+    <s:Form width="100%" height="100%"
+            includeIn="normal">
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'dataExtract.dataExtractionService')}" toolTip="{resourceManager.getString('BuilderStrings', 'dataExtract.dataExtractionServiceTooltip')}">
+            <s:layout>
+                <s:HorizontalLayout verticalAlign="middle"/>
+            </s:layout>
+
+            <components:SearchInput width="100%"
+                                    direction="ltr"
+                                    search="dataExtractionServiceURLInput_enterHandler(event)"
+                                    searchButtonLabel="{resourceManager.getString('BuilderStrings', 'serviceBrowser.browse')}"
+                                    searchButtonToolTip="{resourceManager.getString('BuilderStrings', 'serviceBrowser.browseTooltip')}"
+                                    searchHistory="{RecentlyUsedURLsModel.getInstance().urls}"
+                                    searchTextInputToolTip="{resourceManager.getString('BuilderStrings', 'serviceBrowser.urlTooltip')}"
+                                    text="@{dataExtractModel.dataExtractionService}"/>
+        </s:FormItem>
+
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'dataExtract.selectionMethod')}" toolTip="{resourceManager.getString('BuilderStrings', 'dataExtract.selectionMethodTooltip')}">
+            <s:RadioButton id="drawMethodOption"
+                           group="{selectionMethodGroup}"
+                           label="{resourceManager.getString('BuilderStrings', 'dataExtract.selectionMethodDraw')}"
+                           value="draw"/>
+
+            <s:RadioButton id="extentMethodOption"
+                           group="{selectionMethodGroup}"
+                           label="{resourceManager.getString('BuilderStrings', 'dataExtract.selectionMethodExtent')}"
+                           value="extent"/>
+        </s:FormItem>
+
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'configLayerView.useProxy')}">
+            <s:layout>
+                <s:HorizontalLayout verticalAlign="middle"/>
+            </s:layout>
+
+            <s:CheckBox id="useProxy" selected="@{dataExtractModel.useProxy}"/>
+
+            <graphics:warning width="20" height="20"
+                              visible="{useProxy.selected 
+                              &amp;&amp; !Model.instance.proxyURL}"/>
+
+            <s:Label text="{resourceManager.getString('BuilderStrings', 'httpProxyMissing')}" visible="{useProxy.selected
+                 &amp;&amp; !Model.instance.proxyURL}"/>
+        </s:FormItem>
+    </s:Form>
+
+    <s:VGroup width="100%" height="100%"
+              horizontalAlign="right"
+              includeIn="browsingTasks">
+        <components:ServiceBrowser id="serviceBrowser"
+                                   width="100%" height="100%"
+                                   searchType="geoprocessingtasks"
+                                   selectionChange="serviceBrowser_selectionChangeHandler(event)"
+                                   serviceURL="{dataExtractModel.dataExtractionService}"/>
+
+        <s:HGroup width="100%" verticalAlign="middle">
+            <s:Button click="backButton_clickHandler(event)"
+                      label="{resourceManager.getString('BuilderStrings', 'query.goBack')}"
+                      skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+        </s:HGroup>
+    </s:VGroup>
+</s:Group>

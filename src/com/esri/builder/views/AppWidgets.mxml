@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:components="com.esri.builder.components.*"
+         creationComplete="init()"
+         minHeight="184">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.model.Widget;
+            import com.esri.builder.model.WidgetGroup;
+            import com.esri.builder.renderers.WidgetGroupRenderer;
+            import com.esri.builder.renderers.WidgetRenderer;
+
+            import mx.utils.StringUtil;
+
+            import spark.skins.spark.DefaultItemRenderer;
+
+            private function init():void
+            {
+                AppEvent.addListener(AppEvent.DELETE_WIDGET, deleteWidgetListItemHandler, false, 0, true);
+            }
+
+            private function deleteWidgetListItemHandler(event:AppEvent):void
+            {
+                const itemIndex:int = widgetList.dataProvider.getItemIndex(event.data);
+                widgetList.dataProvider.removeItemAt(itemIndex);
+                Model.instance.config.isDirty = true;
+            }
+
+            private function widgetListItemRendererFunction(item:Object):IFactory
+            {
+                if (item is Widget)
+                {
+                    return new ClassFactory(WidgetRenderer);
+                }
+                else if (item is WidgetGroup)
+                {
+                    return new ClassFactory(WidgetGroupRenderer);
+                }
+                else
+                {
+                    return new ClassFactory(DefaultItemRenderer);
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <components:TitleContainer left="0" right="0" top="0" bottom="20"
+                               title="{StringUtil.substitute(
+                                        resourceManager.getString('BuilderStrings', 'widgetsView.myAppWidgets'),
+                                        widgetList.dataProvider.length)}">
+        <s:List id="widgetList"
+                left="2" right="2" top="0" bottom="0"
+                allowMultipleSelection="false"
+                borderVisible="false"
+                dataProvider="{Model.instance.widgetList}"
+                dragEnabled="true"
+                dragMoveEnabled="true"
+                dropEnabled="true"
+                itemRendererFunction="widgetListItemRendererFunction">
+            <s:layout>
+                <s:HorizontalLayout/>
+            </s:layout>
+        </s:List>
+    </components:TitleContainer>
+
+    <s:Label bottom="0" text="{resourceManager.getString('BuilderStrings', 'widgetsView.dragWidgetsHelp')}"/>
+</s:Group>

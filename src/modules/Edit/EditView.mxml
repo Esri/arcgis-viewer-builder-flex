@@ -1,0 +1,563 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:supportClasses="modules.supportClasses.*"
+          xmlns:components="com.esri.builder.components.*"
+          xmlns:views="com.esri.builder.views.*"
+          width="100%" height="100%"
+          gap="0"
+          implements="modules.IWidgetView">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.events.LayerEvent;
+            import com.esri.ags.layers.FeatureLayer;
+            import com.esri.ags.tasks.JSONTask;
+            import com.esri.builder.components.ModifyItemEvent;
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.ConfigLayer;
+            import com.esri.builder.model.Model;
+
+            import modules.IWidgetModel;
+            import modules.supportClasses.ExcludeLayerListEvent;
+            import modules.supportClasses.ExcludeLayerListItem;
+            import modules.supportClasses.LayerSettingsPopUp;
+
+            import mx.collections.ArrayList;
+            import mx.core.FlexGlobals;
+            import mx.events.CollectionEvent;
+            import mx.events.FlexEvent;
+            import mx.rpc.AsyncResponder;
+            import mx.rpc.Fault;
+            import mx.rpc.events.FaultEvent;
+            import mx.utils.StringUtil;
+
+            import spark.events.PopUpEvent;
+
+            [Bindable]
+            private var isLoadingEditableLayers:Boolean;
+            [Bindable]
+            private var editableOperationalLayers:ArrayList = new ArrayList();
+            private var possibleEditableLayerListItemsCount:int;
+
+            private var layerSettingsPopUp:LayerSettingsPopUp;
+            private var layerListItemToConfigLayerMap:Dictionary = new Dictionary(true);
+
+            private var orderedEditableLayerListItemCandidates:Array = [];
+
+            [Bindable]
+            private var editModel:EditModel;
+
+            public function get widgetModel():IWidgetModel
+            {
+                return editModel;
+            }
+
+            public function set widgetModel(value:IWidgetModel):void
+            {
+                if (value is EditModel)
+                {
+                    editModel = value as EditModel;
+                    populateEditableLayerListItems();
+                }
+                else
+                {
+                    throw new Error('argument is not an instance of EditModel');
+                }
+            }
+
+            private function populateEditableLayerListItems():void
+            {
+                var configOperationalLayers:Array = Model.instance.getOpLayers();
+                isLoadingEditableLayers = true;
+
+                for each (var configLayer:ConfigLayer in configOperationalLayers)
+                {
+                    checkIfConfigLayerIsEditableCandidate(configLayer);
+                }
+
+                hideLoadingLayersAnimationIfNoPossibleEditableLayersLeft();
+            }
+
+            private function checkIfConfigLayerIsEditableCandidate(configLayer:ConfigLayer):void
+            {
+                var layerListItem:ExcludeLayerListItem;
+                if (configLayer.type == ConfigLayer.FEATURE)
+                {
+                    possibleEditableLayerListItemsCount++;
+                    layerListItem = ExcludeLayerList.configLayerToLayerListItem(configLayer);
+                    orderedEditableLayerListItemCandidates.push(layerListItem);
+                    layerListItemToConfigLayerMap[layerListItem] = configLayer;
+                    addLayerListItemIfFeatureLayerIsEditable(layerListItem, configLayer.createLayer() as FeatureLayer);
+                }
+                else if (configLayer.type == ConfigLayer.DYNAMIC)
+                {
+                    possibleEditableLayerListItemsCount++;
+                    layerListItem = ExcludeLayerList.configLayerToLayerListItem(configLayer);
+                    orderedEditableLayerListItemCandidates.push(layerListItem);
+                    checkCorrespondingFeatureServer(configLayer, layerListItem);
+                }
+            }
+
+            private function addLayerListItemIfFeatureLayerIsEditable(layerListItem:ExcludeLayerListItem, featureLayer:FeatureLayer):void
+            {
+                featureLayer.addEventListener(LayerEvent.LOAD, featureLayer_loadHandler);
+                featureLayer.addEventListener(FaultEvent.FAULT, featureLayer_faultHandler);
+
+                function featureLayer_loadHandler(event:LayerEvent):void {
+                    featureLayer.removeEventListener(LayerEvent.LOAD, featureLayer_loadHandler);
+                    featureLayer.removeEventListener(FaultEvent.FAULT, featureLayer_faultHandler);
+
+                    if (!featureLayer.isEditable) {
+                        removeFromOrderedLayerListItems(layerListItem);
+                        delete layerListItemToConfigLayerMap[layerListItem];
+                    }
+
+                    possibleEditableLayerListItemsCount--;
+                    hideLoadingLayersAnimationIfNoPossibleEditableLayersLeft();
+                }
+
+                function featureLayer_faultHandler(event:LayerEvent):void {
+                    featureLayer.removeEventListener(LayerEvent.LOAD, featureLayer_loadHandler);
+                    featureLayer.removeEventListener(FaultEvent.FAULT, featureLayer_faultHandler);
+                    removeFromOrderedLayerListItems(layerListItem);
+                    possibleEditableLayerListItemsCount--;
+                    hideLoadingLayersAnimationIfNoPossibleEditableLayersLeft();
+                }
+            }
+
+            private function removeFromOrderedLayerListItems(layerListItem:ExcludeLayerListItem):void
+            {
+                const deletionIndex:int = orderedEditableLayerListItemCandidates.indexOf(layerListItem);
+                orderedEditableLayerListItemCandidates.splice(deletionIndex, 1);
+            }
+
+            private function hideLoadingLayersAnimationIfNoPossibleEditableLayersLeft():void
+            {
+                if (possibleEditableLayerListItemsCount == 0)
+                {
+                    editableOperationalLayers.source = orderedEditableLayerListItemCandidates;
+                    isLoadingEditableLayers = false;
+                }
+            }
+
+            private function checkCorrespondingFeatureServer(configLayer:ConfigLayer, layerListItem:ExcludeLayerListItem):void
+            {
+                var featureServiceURL:String = configLayer.url.replace(/MapServer/i, "FeatureServer");
+                var serviceInspector:JSONTask = new JSONTask();
+                var urlVars:URLVariables = new URLVariables();
+                urlVars.f = "json";
+                serviceInspector.url = featureServiceURL;
+                serviceInspector.execute(urlVars, new AsyncResponder(serviceInspector_resultHandler, serviceInspector_faultHandler, { configLayer: configLayer, layerListItem: layerListItem }));
+            }
+
+            private function serviceInspector_resultHandler(serviceDescription:Object, items:Object):void
+            {
+                var featureServiceURL:String = items.configLayer.url.replace(/MapServer/i, "FeatureServer");
+                var layers:Array = serviceDescription.layers;
+
+                var featureLayerURL:String;
+                var featureLayer:FeatureLayer;
+                var featureLayerLabel:String;
+                var layerListItem:ExcludeLayerListItem;
+                var configLayer:ConfigLayer;
+                var orderedSubConfigLayersAndLayerListItems:Array = [];
+                for each (var layerItem:Object in layers)
+                {
+                    featureLayerURL = featureServiceURL + "/" + layerItem.id;
+                    featureLayer = new FeatureLayer(featureLayerURL);
+                    featureLayerLabel = items.configLayer.label + "/" + layerItem.id;
+
+                    configLayer = ConfigLayer.operationalConfigLayerFromLayer(featureLayer, featureLayerLabel);
+                    layerListItem = ExcludeLayerList.configLayerToLayerListItem(configLayer);
+                    layerListItemToConfigLayerMap[layerListItem] = configLayer;
+                    layerListItem.alias = StringUtil.substitute("{0} ({1})",
+                                                                layerItem.name, featureLayerLabel);
+                    orderedSubConfigLayersAndLayerListItems.push({ configLayer: configLayer,
+                                                                     layerListItem: layerListItem });
+                }
+                insertChildrenAfterLayerListItem(items.layerListItem, orderedSubConfigLayersAndLayerListItems);
+
+                for each (var subConfigLayerAndLayerListItem:Object in orderedSubConfigLayersAndLayerListItems)
+                {
+                    possibleEditableLayerListItemsCount++;
+                    addLayerListItemIfFeatureLayerIsEditable(subConfigLayerAndLayerListItem.layerListItem, subConfigLayerAndLayerListItem.configLayer.createLayer() as FeatureLayer);
+                }
+
+                removeFromOrderedLayerListItems(items.layerListItem);
+                possibleEditableLayerListItemsCount--;
+                hideLoadingLayersAnimationIfNoPossibleEditableLayersLeft();
+            }
+
+            private function insertChildrenAfterLayerListItem(layerListItem:ExcludeLayerListItem, subConfigLayersItems:Array):void
+            {
+                var insertionIndex:int = orderedEditableLayerListItemCandidates.indexOf(layerListItem);
+                for each (var subConfigLayerListItem:Object in subConfigLayersItems)
+                {
+                    orderedEditableLayerListItemCandidates.splice(++insertionIndex, 0, subConfigLayerListItem.layerListItem);
+                }
+            }
+
+            private function serviceInspector_faultHandler(fault:Fault, items:Object):void
+            {
+                removeFromOrderedLayerListItems(items.layerListItem);
+                possibleEditableLayerListItemsCount--;
+                hideLoadingLayersAnimationIfNoPossibleEditableLayersLeft();
+            }
+
+            private function layerList_layerIncludedHandler(event:ExcludeLayerListEvent):void
+            {
+                editModel.excludedLayers.removeItem(event.layerName);
+            }
+
+            private function layerList_layerExcludedHandler(event:ExcludeLayerListEvent):void
+            {
+                editModel.excludedLayers.addItem(event.layerName);
+            }
+
+            public function submit():Boolean
+            {
+                editableOperationalLayers.removeEventListener(CollectionEvent.COLLECTION_CHANGE, configOperationalLayers_collectionChangeHandler);
+                return true;
+            }
+
+            public function cancel():void
+            {
+                editableOperationalLayers.removeEventListener(CollectionEvent.COLLECTION_CHANGE, configOperationalLayers_collectionChangeHandler);
+            }
+
+            private function updateState():void
+            {
+                currentState = tabBar.selectedItem.state;
+            }
+
+            protected function layerList_creationCompleteHandler(event:FlexEvent):void
+            {
+                layerList.addEventListener(ModifyItemEvent.EDIT_ITEM, layerList_editItemHandler);
+                editableOperationalLayers.addEventListener(CollectionEvent.COLLECTION_CHANGE, configOperationalLayers_collectionChangeHandler);
+                updateLayerListItems();
+            }
+
+            private function layerList_editItemHandler(event:ModifyItemEvent):void
+            {
+                var featureConfigLayer:ConfigLayer = layerListItemToConfigLayerMap[event.item];
+                if (featureConfigLayer)
+                {
+                    layerSettingsPopUp = new LayerSettingsPopUp();
+                    layerSettingsPopUp.layerName = featureConfigLayer.label;
+                    layerSettingsPopUp.overrideLayerSettings(editModel.findLayerSettings(featureConfigLayer.label));
+                    var featureLayer:FeatureLayer = featureConfigLayer.createLayer() as FeatureLayer;
+                    featureLayer.addEventListener(LayerEvent.LOAD, featureLayer_loadHandler);
+                    featureLayer.addEventListener(LayerEvent.LOAD_ERROR, featureLayer_loadErrorHandler);
+                }
+            }
+
+            private function featureLayer_loadHandler(event:LayerEvent):void
+            {
+                var featureLayer:FeatureLayer = event.layer as FeatureLayer;
+                featureLayer.removeEventListener(LayerEvent.LOAD, featureLayer_loadHandler);
+                featureLayer.removeEventListener(LayerEvent.LOAD_ERROR, featureLayer_loadErrorHandler);
+
+                layerSettingsPopUp.layerDetails = featureLayer.layerDetails;
+                layerSettingsPopUp.addEventListener(PopUpEvent.CLOSE, layerSettingsPopUp_closeHandler);
+                layerSettingsPopUp.open(FlexGlobals.topLevelApplication as DisplayObjectContainer, true);
+            }
+
+            protected function layerSettingsPopUp_closeHandler(event:PopUpEvent):void
+            {
+                layerSettingsPopUp.removeEventListener(PopUpEvent.CLOSE, layerSettingsPopUp_closeHandler);
+                if (event.commit)
+                {
+                    if (layerSettingsPopUp.originalLayerSettings)
+                    {
+                        var deletionIndex:int = editModel.layerSettings.indexOf(layerSettingsPopUp.originalLayerSettings);
+                        if (deletionIndex > -1)
+                        {
+                            editModel.layerSettings.splice(deletionIndex, 1);
+                        }
+                    }
+
+                    editModel.layerSettings.push(event.data.layerSettings);
+                }
+            }
+
+            private function featureLayer_loadErrorHandler(event:LayerEvent):void
+            {
+                event.currentTarget.removeEventListener(LayerEvent.LOAD, featureLayer_loadHandler);
+                event.currentTarget.removeEventListener(LayerEvent.LOAD_ERROR, featureLayer_loadErrorHandler);
+                AppEvent.dispatch(AppEvent.SHOW_ERROR, resourceManager.getString('BuilderStrings', 'headerController.couldNotLoadMapServiceInfo'));
+            }
+
+            private function updateLayerListItems():void
+            {
+                layerList.layerListItems = editableOperationalLayers.toArray();
+            }
+
+            protected function configOperationalLayers_collectionChangeHandler(event:CollectionEvent):void
+            {
+                updateLayerListItems();
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="layers"/>
+    </s:states>
+
+    <s:Group width="100%">
+        <s:TabBar id="tabBar"
+                  left="0"
+                  change="updateState()"
+                  requireSelection="true"
+                  verticalCenter="0">
+            <s:dataProvider>
+                <s:ArrayList>
+                    <s:DataItem label="{resourceManager.getString('BuilderStrings', 'edit.options')}" state="normal"/>
+                    <s:DataItem label="{resourceManager.getString('BuilderStrings', 'edit.layers')}" state="layers"/>
+                </s:ArrayList>
+            </s:dataProvider>
+        </s:TabBar>
+    </s:Group>
+
+    <s:Group width="100%" height="100%">
+        <s:Rect left="0" right="0" top="-1" bottom="0">
+            <s:stroke>
+                <s:SolidColorStroke/>
+            </s:stroke>
+        </s:Rect>
+
+        <s:VGroup left="10" right="10" top="5" bottom="5"
+                  gap="2"
+                  includeIn="normal">
+            <components:TitleContainer width="100%" height="50%"
+                                       minHeight="88"
+                                       title="{resourceManager.getString('BuilderStrings', 'edit.editTools')}">
+                <components:layout>
+                    <s:ConstraintLayout>
+                        <s:constraintRows>
+                            <s:ConstraintRow id="topRow"
+                                             height="35%"
+                                             minHeight="24"/>
+                            <s:ConstraintRow id="bottomRow"
+                                             height="35%"
+                                             minHeight="24"/>
+                        </s:constraintRows>
+
+                        <s:constraintColumns>
+                            <s:ConstraintColumn id="column1" width="18.5%"/>
+                            <s:ConstraintColumn id="column2" width="15%"/>
+                            <s:ConstraintColumn id="column3" width="16.5%"/>
+                            <s:ConstraintColumn id="column4" width="20%"/>
+                            <s:ConstraintColumn id="column5" width="15%"/>
+                            <s:ConstraintColumn id="column6" width="15%"/>
+                        </s:constraintColumns>
+                    </s:ConstraintLayout>
+                </components:layout>
+
+                <s:Label left="column1:10" right="column1:11"
+                         baseline="topRow:0"
+                         text="{resourceManager.getString('BuilderStrings', 'edit.addFeatures')}"/>
+
+                <components:SliderToggleButton left="column2:10"
+                                               baseline="topRow:0"
+                                               deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                               selected="@{editModel.addFeatures}"
+                                               selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
+
+                <views:HelpButton left="column3:10"
+                                  baseline="topRow:0"
+                                  helpText="{resourceManager.getString('BuilderStrings', 'edit.addFeaturesHelp')}"
+                                  title="{resourceManager.getString('BuilderStrings', 'edit.addFeatures')}"/>
+
+                <s:Label left="column1:10" right="column1:11"
+                         baseline="bottomRow:0"
+                         text="{resourceManager.getString('BuilderStrings', 'edit.deleteFeatures')}"/>
+
+                <components:SliderToggleButton left="column2:10"
+                                               baseline="bottomRow:0"
+                                               deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                               selected="@{editModel.deleteFeatures}"
+                                               selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
+                <views:HelpButton left="column3:10"
+                                  baseline="bottomRow:0"
+                                  helpText="{resourceManager.getString('BuilderStrings', 'edit.deleteFeaturesHelp')}"
+                                  title="{resourceManager.getString('BuilderStrings', 'edit.deleteFeatures')}"/>
+
+                <s:Label left="column4:10" right="column4:11"
+                         baseline="topRow:0"
+                         text="{resourceManager.getString('BuilderStrings', 'edit.updateGeometry')}"/>
+
+                <components:SliderToggleButton left="column5:10"
+                                               baseline="topRow:0"
+                                               deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                               selected="@{editModel.updateGeometry}"
+                                               selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
+                <views:HelpButton left="column6:10"
+                                  baseline="topRow:0"
+                                  helpText="{resourceManager.getString('BuilderStrings', 'edit.updateGeometryHelp')}"
+                                  title="{resourceManager.getString('BuilderStrings', 'edit.updateGeometry')}"/>
+
+                <s:Label left="column4:10" right="column4:11"
+                         baseline="bottomRow:0"
+                         text="{resourceManager.getString('BuilderStrings', 'edit.updateAttributes')}"/>
+
+                <components:SliderToggleButton left="column5:10"
+                                               baseline="bottomRow:0"
+                                               deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                               selected="@{editModel.updateAttributes}"
+                                               selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
+
+                <views:HelpButton left="column6:10"
+                                  baseline="bottomRow:0"
+                                  helpText="{resourceManager.getString('BuilderStrings', 'edit.updateAttributesHelp')}"
+                                  title="{resourceManager.getString('BuilderStrings', 'edit.updateAttributesHelp')}"/>
+            </components:TitleContainer>
+
+            <components:TitleContainer width="100%" height="50%"
+                                       minHeight="112"
+                                       title="{resourceManager.getString('BuilderStrings', 'edit.editToolbar')}">
+                <components:layout>
+                    <s:ConstraintLayout>
+                        <s:constraintRows>
+                            <s:ConstraintRow id="toolbarRow1"
+                                             height="33%"
+                                             minHeight="24"/>
+                            <s:ConstraintRow id="toolbarRow2"
+                                             height="33%"
+                                             minHeight="24"/>
+                            <s:ConstraintRow id="toolbarRow3"
+                                             height="33%"
+                                             minHeight="24"/>
+                        </s:constraintRows>
+
+                        <s:constraintColumns>
+                            <s:ConstraintColumn id="toolbarColumn1" width="18.5%"/>
+                            <s:ConstraintColumn id="toolbarColumn2" width="15%"/>
+                            <s:ConstraintColumn id="toolbarColumn3" width="16.5%"/>
+                            <s:ConstraintColumn id="toolbarColumn4" width="20%"/>
+                            <s:ConstraintColumn id="toolbarColumn5" width="15%"/>
+                            <s:ConstraintColumn id="toolbarColumn6" width="15%"/>
+                        </s:constraintColumns>
+                    </s:ConstraintLayout>
+                </components:layout>
+
+                <s:Label left="toolbarColumn1:10" right="toolbarColumn1:11"
+                         baseline="toolbarRow1:0"
+                         text="{resourceManager.getString('BuilderStrings', 'edit.toolbar')}"/>
+
+                <components:SliderToggleButton left="toolbarColumn2:10"
+                                               baseline="toolbarRow1:0"
+                                               deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                               selected="@{editModel.toolbarVisible}"
+                                               selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
+
+                <views:HelpButton left="toolbarColumn3:10"
+                                  baseline="toolbarRow1:0"
+                                  helpText="{resourceManager.getString('BuilderStrings', 'edit.toolbarHelp')}"
+                                  title="{resourceManager.getString('BuilderStrings', 'edit.toolbar')}"/>
+
+                <s:Label left="toolbarColumn4:10" right="toolbarColumn4:11"
+                         baseline="toolbarRow1:0"
+                         enabled="{editModel.toolbarVisible}"
+                         text="{resourceManager.getString('BuilderStrings', 'edit.toolbarCut')}"/>
+
+                <components:SliderToggleButton left="toolbarColumn5:10"
+                                               baseline="toolbarRow1:0"
+                                               deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                               enabled="{editModel.toolbarVisible}"
+                                               selected="@{editModel.toolbarCut}"
+                                               selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
+
+                <views:HelpButton left="toolbarColumn6:10"
+                                  baseline="toolbarRow1:0"
+                                  helpText="{resourceManager.getString('BuilderStrings', 'edit.toolbarCutHelp')}"
+                                  title="{resourceManager.getString('BuilderStrings', 'edit.toolbarCut')}"/>
+
+                <s:Label left="toolbarColumn4:10" right="toolbarColumn4:11"
+                         baseline="toolbarRow2:0"
+                         enabled="{editModel.toolbarVisible}"
+                         text="{resourceManager.getString('BuilderStrings', 'edit.toolbarMerge')}"/>
+
+                <components:SliderToggleButton left="toolbarColumn5:10"
+                                               baseline="toolbarRow2:0"
+                                               deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                               enabled="{editModel.toolbarVisible}"
+                                               selected="@{editModel.toolbarMerge}"
+                                               selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
+
+                <views:HelpButton left="toolbarColumn6:10"
+                                  baseline="toolbarRow2:0"
+                                  helpText="{resourceManager.getString('BuilderStrings', 'edit.toolbarMergeHelp')}"
+                                  title="{resourceManager.getString('BuilderStrings', 'edit.toolbarMerge')}"/>
+
+                <s:Label left="toolbarColumn4:10" right="toolbarColumn4:11"
+                         baseline="toolbarRow3:0"
+                         enabled="{editModel.toolbarVisible}"
+                         text="{resourceManager.getString('BuilderStrings', 'edit.toolbarReshape')}"/>
+
+                <components:SliderToggleButton left="toolbarColumn5:10"
+                                               baseline="toolbarRow3:0"
+                                               deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                               enabled="{editModel.toolbarVisible}"
+                                               selected="@{editModel.toolbarReshape}"
+                                               selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
+
+                <views:HelpButton left="toolbarColumn6:10"
+                                  baseline="toolbarRow3:0"
+                                  helpText="{resourceManager.getString('BuilderStrings', 'edit.toolbarReshapeHelp')}"
+                                  title="{resourceManager.getString('BuilderStrings', 'edit.toolbarReshape')}"/>
+            </components:TitleContainer>
+        </s:VGroup>
+
+        <components:TitleContainer left="10" right="10" top="10" bottom="10"
+                                   includeIn="layers"
+                                   title="{resourceManager.getString('BuilderStrings', 'edit.excludeLayers')}">
+            <s:SWFLoader width="30" height="30"
+                         autoLoad="true"
+                         horizontalCenter="0"
+                         includeInLayout="{isLoadingEditableLayers}"
+                         source="@Embed(source='/assets/images/ico_loading.swf')"
+                         verticalCenter="0"
+                         visible="{isLoadingEditableLayers}"/>
+
+            <s:Group left="10" right="10" top="0" bottom="0"
+                     includeInLayout="{!isLoadingEditableLayers}"
+                     visible="{!isLoadingEditableLayers}">
+                <s:Label text="{resourceManager.getString('BuilderStrings', 'edit.selectLayersToInclude')}"/>
+
+                <s:Label top="15"
+                         includeInLayout="{layerList.dataProvider.length == 0}"
+                         text="{resourceManager.getString('BuilderStrings', 'edit.noLayersAvailable')}"
+                         visible="{layerList.dataProvider.length == 0}"/>
+
+                <supportClasses:ExcludeLayerList id="layerList"
+                                                 left="0" right="0" top="15" bottom="0"
+                                                 borderVisible="false"
+                                                 creationComplete="layerList_creationCompleteHandler(event)"
+                                                 excludedLayerNames="{editModel.excludedLayers}"
+                                                 includeInLayout="{layerList.dataProvider.length > 0}"
+                                                 itemRenderer="modules.supportClasses.EditableExcludeLayerListItemRenderer"
+                                                 layerExcluded="layerList_layerExcludedHandler(event)"
+                                                 layerIncluded="layerList_layerIncludedHandler(event)"
+                                                 visible="{layerList.dataProvider.length > 0}"/>
+            </s:Group>
+        </components:TitleContainer>
+    </s:Group>
+</s:VGroup>

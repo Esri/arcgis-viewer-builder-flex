@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<Graphic version="2.0" viewHeight="143.167" viewWidth="151.5" ai:appVersion="15.1.0.39" ATE:version="1.0.0" flm:version="1.0.0" d:id="1" d:using="" xmlns="http://ns.adobe.com/fxg/2008" xmlns:ATE="http://ns.adobe.com/ate/2009" xmlns:ai="http://ns.adobe.com/ai/2009" xmlns:d="http://ns.adobe.com/fxg/2008/dt" xmlns:flm="http://ns.adobe.com/flame/2008">
+  <Library/>
+  <Group ai:artboardActive="1" ai:artboardIndex="0" ai:seqID="1" d:layerType="page" d:pageHeight="143.167" d:pageWidth="151.5" d:type="layer" d:userLabel="Artboard 1">
+    <Group ai:objID="8aec880" ai:seqID="2" d:id="2" d:type="layer" d:userLabel="Layer 1">
+      <Path x="10.0396" y="8.80713" winding="nonZero" ai:objID="ec05f80" ai:seqID="3" d:id="3" data="M27.9326 18.4517C33.8271 44.5884 66.8848 89.9478 133 94.561L121.725 126.336C107.887 127.105 27.1641 100.454 15.1191 21.7817L0 25.1138 16.1445 0 44.0098 14.1133 27.9326 18.4517Z">
+        <fill>
+          <SolidColor color="#007AC2"/>
+        </fill>
+        <stroke>
+          <SolidColorStroke weight="4" caps="none" joints="miter" miterLimit="4" color="#FFFFFF"/>
+        </stroke>
+        <filters>
+          <DropShadowFilter quality="2" alpha="0.75" angle="0" distance="0"/>
+        </filters>
+      </Path>
+      <Path x="10.0396" y="8.80713" winding="nonZero" ai:objID="ec09e80" ai:seqID="4" d:id="4" data="M27.9326 18.4517C33.8271 44.5884 66.8848 89.9478 133.001 94.561L121.726 126.336C107.887 127.105 27.1641 100.454 15.1191 21.7817L0 25.1138 16.1445 0 44.0098 14.1133 27.9326 18.4517Z">
+        <fill>
+          <SolidColor color="#007AC2"/>
+        </fill>
+      </Path>
+    </Group>
+  </Group>
+  <Private>
+      <ai:PrivateElement d:ref="#1">
+        <ai:SaveOptions>
+          <ai:Dict data="I versionKey 2 B includeSymbol 0 B aiEditCap 1 B includeXMP 0 B writeImages 1 I expandBlendsOption 5 B downsampleLinkedImages 0 I preserveGradientPolicy 4 I preserveFilterPolicy 3 I preserveTextPolicy 4 I rasterizeResolution 72 B includeObjectOutsideArtboard 0 "/>
+        </ai:SaveOptions>
+        <ai:DocData base="arrow_blue.assets/images" globalOffsetH="-10" globalOffsetV="558.5" rulerCanvasDiffH="489.5" rulerCanvasDiffV="-350.5">
+          <ai:DocRasterSettings>
+            <ai:Dict data="R padd 36 B mask 0 B spot 1 B alis 0 I dpi. 72 I colr 4 "/>
+          </ai:DocRasterSettings>
+        </ai:DocData>
+        <ai:AutoGenImageList>
+          <ai:Dict/>
+        </ai:AutoGenImageList>
+      </ai:PrivateElement>
+      <ai:PrivateElement flm:hashcode="A222AFF69FF9402E565AC48A761F1728" d:ref="#2">
+        <ai:LayerOptions color="5 79.31 257 128.502"/>
+      </ai:PrivateElement>
+      <ai:PrivateElement alternate="1" flm:hashcode="F26C7038948F1E1B357CF750A07D07FC" d:ref="#3">
+        <ai:Path data="M 37.972 27.259C 43.867 53.396 76.924 98.755 143.04 103.368L 131.764 135.143C 117.926 135.913 37.204 109.261 25.159 30.589L 10.04 33.921L 26.184 8.807L 54.049 22.92L 37.972 27.259Z" knockout="0">
+          <ai:ArtStyle>
+            <ai:PaintFields>
+              <ai:Stroke color="5 1 1 1" focus="1" miterLimit="4" weight="4"/>
+              <ai:Fill color="5 0 0.761 0.478" focus="1"/>
+            </ai:PaintFields>
+            <ai:LiveEffects>
+              <ai:LiveEffect index="0" major="1" minor="0" name="Adobe Drop Shadow">
+                <ai:Dict data="R opac 0.75 I blnd 1 R blur 2 R horz 0 B pair 1 R vert 0 I csrc 0 R dark 100 ">
+                  <ai:Entry name="sclr" valueType="F">
+                    <ai:Fill color="5 0 0 0"/>
+                  </ai:Entry>
+                </ai:Dict>
+              </ai:LiveEffect>
+            </ai:LiveEffects>
+          </ai:ArtStyle>
+        </ai:Path>
+      </ai:PrivateElement>
+      <ai:PrivateElement alternate="1" flm:hashcode="5F08B0CAE09907947EABDE6D1441062E" d:ref="#4">
+        <ai:Path data="M 37.972 27.259C 43.867 53.396 76.924 98.755 143.041 103.368L 131.765 135.143C 117.926 135.913 37.204 109.261 25.159 30.589L 10.04 33.921L 26.184 8.807L 54.049 22.92L 37.972 27.259Z" knockout="0">
+          <ai:ArtStyle>
+            <ai:PaintFields>
+              <ai:Stroke focus="1" miterLimit="10" weight="1"/>
+              <ai:Fill color="5 0 0.761 0.478" focus="1"/>
+            </ai:PaintFields>
+            <ai:LiveEffects/>
+          </ai:ArtStyle>
+        </ai:Path>
+      </ai:PrivateElement>
+    </Private>
+  </Graphic>

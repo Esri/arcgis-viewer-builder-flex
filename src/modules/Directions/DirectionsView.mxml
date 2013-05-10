@@ -1,0 +1,562 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:components="com.esri.builder.components.*"
+          xmlns:graphics="assets.graphics.*"
+          width="100%" height="100%"
+          gap="4"
+          implements="modules.IWidgetView"
+          paddingBottom="10"
+          paddingTop="15"
+          preinitialize="init()">
+
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.tasks.JSONTask;
+            import com.esri.builder.components.ModifyItemEvent;
+            import com.esri.builder.components.serviceBrowser.nodes.GeocodeServerNode;
+            import com.esri.builder.components.serviceBrowser.nodes.RouteLayerNode;
+            import com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.model.RecentlyUsedURLsModel;
+            import com.esri.builder.views.BuilderAlert;
+
+            import modules.HeaderController.MapService;
+            import modules.HeaderController.MapServicePopUp;
+            import modules.IWidgetModel;
+
+            import mx.controls.Alert;
+            import mx.core.FlexGlobals;
+            import mx.rpc.AsyncResponder;
+            import mx.rpc.Fault;
+
+            import spark.events.PopUpEvent;
+            import spark.utils.LabelUtil;
+
+            private static const MIN_VALIDATION_REQUEST_DELAY_IN_MS:Number = 100;
+
+            private var locatorValidationRequestTimer:Timer = new Timer(MIN_VALIDATION_REQUEST_DELAY_IN_MS, 1);
+            private var routeURLValidationRequestTimer:Timer = new Timer(MIN_VALIDATION_REQUEST_DELAY_IN_MS, 1);
+
+            [Bindable]
+            private var mapServicesDataProvider:ArrayList;
+
+            [Bindable]
+            private var hasSupportedSingleLineLocator:Boolean = false;
+            [Bindable]
+            private var hasSupportedRouteURL:Boolean = false;
+
+            [Bindable]
+            private var directionsModel:DirectionsModel;
+
+            [Bindable]
+            public function get routeURL():String
+            {
+                return directionsModel.routeURL;
+            }
+
+            public function set routeURL(value:String):void
+            {
+                directionsModel.routeURL = value;
+                resetRouteURLValidationRequest();
+            }
+
+            private function resetRouteURLValidationRequest():void
+            {
+                if (routeURLValidationRequestTimer.running)
+                {
+                    routeURLValidationRequestTimer.reset();
+                }
+
+                routeURLValidationRequestTimer.start();
+            }
+
+            [Bindable]
+            public function get locatorURL():String
+            {
+                return directionsModel.locatorURL;
+            }
+
+            public function set locatorURL(value:String):void
+            {
+                directionsModel.locatorURL = value;
+                resetLocatorValidationRequest();
+            }
+
+            public function get widgetModel():IWidgetModel
+            {
+                return directionsModel;
+            }
+
+            public function set widgetModel(value:IWidgetModel):void
+            {
+                if (value is DirectionsModel)
+                {
+                    directionsModel = value as DirectionsModel;
+                    resetLocatorValidationRequest();
+                    resetRouteURLValidationRequest();
+                    mapServicesDataProvider = new ArrayList(directionsModel.mapServices)
+                }
+                else
+                {
+                    throw new Error('argument is not an instance of DirectionsModel');
+                }
+            }
+
+            private function init():void
+            {
+                locatorValidationRequestTimer.addEventListener(TimerEvent.TIMER_COMPLETE, locatorValidationRequestTimer_timerCompleteHandler, false, 0, true);
+                routeURLValidationRequestTimer.addEventListener(TimerEvent.TIMER_COMPLETE, routeURLValidationRequestTimer_timerCompleteHandler, false, 0, true);
+            }
+
+            private function resetLocatorValidationRequest():void
+            {
+                if (locatorValidationRequestTimer.running)
+                {
+                    locatorValidationRequestTimer.reset();
+                }
+
+                locatorValidationRequestTimer.start();
+            }
+
+            private function locatorValidationRequestTimer_timerCompleteHandler(event:TimerEvent):void
+            {
+                validateLocator();
+            }
+
+            private function validateLocator():void
+            {
+                var locatorMetadataRequest:JSONTask = new JSONTask(locatorURL);
+                var urlVars:URLVariables = new URLVariables();
+                urlVars.f = 'json';
+                locatorMetadataRequest.execute(urlVars, new AsyncResponder(locatorMetadataRequest_resultHandler, locatorMetadataRequest_faultHandler));
+            }
+
+            private function locatorMetadataRequest_resultHandler(locatorMetadata:Object, token:Object = null):void
+            {
+                hasSupportedSingleLineLocator = locatorMetadata.singleLineAddressField != null;
+            }
+
+            private function locatorMetadataRequest_faultHandler(fault:Fault, token:Object = null):void
+            {
+                hasSupportedSingleLineLocator = false;
+            }
+
+            protected function routeURLValidationRequestTimer_timerCompleteHandler(event:TimerEvent):void
+            {
+                validateRouteURL();
+            }
+
+            private function validateRouteURL():void
+            {
+                var routeURLMetadataRequest:JSONTask = new JSONTask(routeURL);
+                var urlVars:URLVariables = new URLVariables();
+                urlVars.f = 'json';
+                routeURLMetadataRequest.execute(
+                    urlVars, new AsyncResponder(routeURLMetadataRequest_resultHandler,
+                                                routeURLMetadataRequest_faultHandler));
+            }
+
+            private function routeURLMetadataRequest_resultHandler(locatorMetadata:Object, token:Object = null):void
+            {
+                hasSupportedRouteURL = locatorMetadata && locatorMetadata.layerType == "esriNAServerRouteLayer";
+            }
+
+            private function routeURLMetadataRequest_faultHandler(fault:Fault, token:Object = null):void
+            {
+                hasSupportedRouteURL = false;
+            }
+
+            private function serviceBrowserLocator_selectionChangeHandler(event:ServiceBrowserEvent):void
+            {
+                if (event.hasValidSelection)
+                {
+                    const selectedGeocodeServer:GeocodeServerNode = serviceBrowserLocator.serviceSelection.getItemAt(0) as GeocodeServerNode;
+                    locatorURL = selectedGeocodeServer.url;
+                    resetLocatorValidationRequest();
+                    currentState = "normal";
+                }
+            }
+
+            private function browseForLocatorsIfNeeded():void
+            {
+                if (!hasGeocodeServerEndPoint())
+                {
+                    browseForLocators();
+                }
+            }
+
+            private function browseForLocators():void
+            {
+                currentState = "browsingLocators";
+                serviceBrowserLocator.browseService();
+            }
+
+            private function hasGeocodeServerEndPoint():Boolean
+            {
+                const endsWithGeocodeServer:RegExp = / \/ GeocodeServer \/? $ /ix;
+                return endsWithGeocodeServer.test(locatorURL);
+            }
+
+            private function locatorBackButton_clickHandler(event:MouseEvent):void
+            {
+                currentState = "normal";
+            }
+
+            public function startAddMapService():void
+            {
+                var mapServicePopUp:MapServicePopUp = new MapServicePopUp();
+                mapServicePopUp.addEventListener(PopUpEvent.CLOSE, addMapServicePopUp_closeHandler);
+                mapServicePopUp.open(FlexGlobals.topLevelApplication as DisplayObjectContainer, true);
+            }
+
+            private function addMapServicePopUp_closeHandler(event:PopUpEvent):void
+            {
+                event.currentTarget.addEventListener(PopUpEvent.CLOSE, addMapServicePopUp_closeHandler);
+                if (event.commit)
+                {
+                    mapServicesDataProvider.addItem(event.data);
+                }
+            }
+
+            public function startEditMapService(mapService:MapService):void
+            {
+                var mapServicePopUp:MapServicePopUp = new MapServicePopUp();
+                mapServicePopUp.overrideMapService(mapService);
+                mapServicePopUp.addEventListener(PopUpEvent.CLOSE, editMapServicePopUp_closeHandler);
+                mapServicePopUp.open(FlexGlobals.topLevelApplication as DisplayObjectContainer, true);
+            }
+
+            private function editMapServicePopUp_closeHandler(event:PopUpEvent):void
+            {
+                event.currentTarget.addEventListener(PopUpEvent.CLOSE, addMapServicePopUp_closeHandler);
+                if (event.commit)
+                {
+                    var replacementIndex:int = mapServicesDataProvider.getItemIndex(event.data.originalMapService);
+                    mapServicesDataProvider.removeItemAt(replacementIndex);
+                    mapServicesDataProvider.addItemAt(event.data.mapService, replacementIndex);
+                }
+            }
+
+            private function mapServicesDataGrid_editItemHandler(event:ModifyItemEvent):void
+            {
+                startEditMapService(event.item as MapService);
+            }
+
+            private function mapServicesDataGrid_removeItemHandler(event:ModifyItemEvent):void
+            {
+                mapServicesDataProvider.removeItem(event.item);
+            }
+
+            private function searchFieldsToLabel(mapService:MapService, column:GridColumn):String
+            {
+                return (mapService.searchFields.length > 0) ?
+                    LabelUtil.itemToLabel(mapService.searchFields) : resourceManager.getString('BuilderStrings', 'query.allFields')
+            }
+
+            private function serviceBrowserRoute_selectionChangeHandler(event:ServiceBrowserEvent):void
+            {
+                if (event.hasValidSelection)
+                {
+                    const selectedRouteServer:RouteLayerNode = serviceBrowserRoute.serviceSelection.getItemAt(0) as RouteLayerNode;
+                    routeURL = selectedRouteServer.url;
+                    currentState = "normal";
+                }
+            }
+
+            private function browseForRouteServicesIfNeeded():void
+            {
+                if (!hasRouteServerEndPoint())
+                {
+                    browseForRouteServices();
+                }
+            }
+
+            private function browseForRouteServices():void
+            {
+                currentState = "browsingRouteServices";
+                serviceBrowserRoute.browseService();
+            }
+
+            private function hasRouteServerEndPoint():Boolean
+            {
+                const endsWithGeocodeServer:RegExp = / \/ NAServer \/? $ /ix;
+                return endsWithGeocodeServer.test(routeURL);
+            }
+
+            private function routeBackButton_clickHandler(event:MouseEvent):void
+            {
+                currentState = "normal";
+            }
+
+            public function submit():Boolean
+            {
+                if (!directionsModel.locatorEnabled
+                    && directionsModel.mapServicesEnabled
+                    && directionsModel.mapServices.length == 0)
+                {
+                    BuilderAlert.show(resourceManager.getString('BuilderStrings', 'directions.missingMapService'),
+                                      resourceManager.getString('BuilderStrings', 'widgetsView.widgetConfigurationError'),
+                                      Alert.OK);
+
+                    return false;
+                }
+
+                if (!routeURL)
+                {
+                    BuilderAlert.show(resourceManager.getString('BuilderStrings', 'directions.missingRouteURL'),
+                                      resourceManager.getString('BuilderStrings', 'widgetsView.widgetConfigurationError'),
+                                      Alert.OK);
+
+                    return false;
+                }
+                return true;
+            }
+
+            public function cancel():void
+            {
+                // NOOP
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="browsingLocators"/>
+        <s:State name="browsingRouteServices"/>
+    </s:states>
+
+    <s:HGroup excludeFrom="browsingLocators,browsingRouteServices"
+              paddingBottom="5"
+              paddingLeft="15"
+              paddingTop="5"
+              verticalAlign="middle">
+        <s:Label text="{resourceManager.getString('BuilderStrings', 'layoutView.panelInitialState')}"/>
+        <components:SliderToggleButton id="initialStateInput"
+                                       width="100%" height="100%"
+                                       deselectedLabel="{resourceManager.getString('BuilderStrings', 'layoutView.panelCollapsed')}"
+                                       selected="@{directionsModel.isOpenOnStartUp}"
+                                       selectedLabel="{resourceManager.getString('BuilderStrings', 'layoutView.panelOpen')}"/>
+    </s:HGroup>
+
+    <s:Group width="100%" height="100%"
+             includeIn="normal">
+        <s:Form width="100%" height="100%">
+            <s:layout>
+                <s:FormLayout gap="-10"
+                              paddingBottom="-10"
+                              paddingTop="-10"/>
+            </s:layout>
+
+            <!-- Route -->
+            <s:Group>
+                <s:Label left="5" top="10" bottom="15"
+                         fontSize="14"
+                         fontWeight="bold"
+                         text="{resourceManager.getString('BuilderStrings', 'directions.route')}"/>
+            </s:Group>
+
+            <s:FormItem width="100%" label="{resourceManager.getString('BuilderStrings', 'headerController.urlType')}">
+                <s:HGroup width="100%" gap="2">
+                    <components:SearchInput width="500"
+                                            direction="ltr"
+                                            search="browseForRouteServicesIfNeeded()"
+                                            searchButtonLabel="{resourceManager.getString('BuilderStrings', 'serviceBrowser.browse')}"
+                                            searchButtonToolTip="{resourceManager.getString('BuilderStrings', 'serviceBrowser.browseTooltip')}"
+                                            searchHistory="{RecentlyUsedURLsModel.getInstance().urls}"
+                                            searchTextInputToolTip="{resourceManager.getString('BuilderStrings', 'serviceBrowser.urlTooltip')}"
+                                            text="@{routeURL}"/>
+                    <graphics:green_check width="20" height="20"
+                                          layoutDirection="ltr"
+                                          visible="{hasSupportedRouteURL}"/>
+                    <s:VGroup paddingLeft="30" verticalAlign="middle">
+                        <s:CheckBox id="useProxy"
+                                    label="{resourceManager.getString('BuilderStrings', 'configLayerView.useProxy')}"
+                                    selected="@{directionsModel.routeUseProxy}"/>
+                        <s:HGroup verticalAlign="middle">
+                            <graphics:warning width="20" height="20"
+                                              visible="{useProxy.selected 
+                                                  &amp;&amp; !Model.instance.proxyURL}"/>
+
+                            <s:Label maxWidth="250"
+                                     text="{resourceManager.getString('BuilderStrings', 'httpProxyMissing')}"
+                                     visible="{useProxy.selected
+                                     &amp;&amp; !Model.instance.proxyURL}"/>
+                        </s:HGroup>
+                    </s:VGroup>
+                </s:HGroup>
+            </s:FormItem>
+        </s:Form>
+        <s:Line width="100%"
+                left="15" right="15" top="90">
+            <s:stroke>
+                <s:SolidColorStroke color="0x000000" weight="2"/>
+            </s:stroke>
+        </s:Line>
+        <s:Form width="100%" height="100%"
+                top="95">
+            <s:layout>
+                <s:FormLayout gap="-10"
+                              paddingBottom="-10"
+                              paddingTop="-10"/>
+            </s:layout>
+            <!-- Search -->
+            <s:Group>
+                <s:Label left="5" top="20" bottom="10"
+                         fontSize="14"
+                         fontWeight="bold"
+                         text="{resourceManager.getString('BuilderStrings', 'headerController.search')}"/>
+            </s:Group>
+
+            <s:Group>
+                <s:CheckBox left="15" top="10" bottom="15"
+                            enabled="{directionsModel.mapServicesEnabled}"
+                            fontSize="14"
+                            fontWeight="bold"
+                            label="{resourceManager.getString('BuilderStrings', 'headerController.locator')}"
+                            selected="@{directionsModel.locatorEnabled}"
+                            skinClass="com.esri.builder.skins.FixedLabelCheckBoxSkin"/>
+            </s:Group>
+
+            <s:FormItem width="100%"
+                        enabled="{directionsModel.locatorEnabled}"
+                        label="{resourceManager.getString('BuilderStrings', 'headerController.urlType')}">
+                <s:HGroup width="100%" gap="2">
+                    <components:SearchInput width="500"
+                                            direction="ltr"
+                                            search="browseForLocatorsIfNeeded()"
+                                            searchButtonLabel="{resourceManager.getString('BuilderStrings', 'serviceBrowser.browse')}"
+                                            searchButtonToolTip="{resourceManager.getString('BuilderStrings', 'serviceBrowser.browseTooltip')}"
+                                            searchHistory="{RecentlyUsedURLsModel.getInstance().urls}"
+                                            searchTextInputToolTip="{resourceManager.getString('BuilderStrings', 'serviceBrowser.urlTooltip')}"
+                                            text="@{locatorURL}"/>
+                    <graphics:green_check width="20" height="20"
+                                          layoutDirection="ltr"
+                                          visible="{hasSupportedSingleLineLocator}"/>
+                    <s:VGroup paddingLeft="10" verticalAlign="middle">
+                        <s:CheckBox id="useProxyForLocator"
+                                    label="{resourceManager.getString('BuilderStrings', 'configLayerView.useProxy')}"
+                                    selected="@{directionsModel.locatorUseProxy}"/>
+
+                        <s:HGroup>
+                            <graphics:warning width="20" height="20"
+                                              visible="{useProxyForLocator.selected 
+                                                      &amp;&amp; !Model.instance.proxyURL}"/>
+
+                            <s:Label maxWidth="250"
+                                     text="{resourceManager.getString('BuilderStrings', 'httpProxyMissing')}"
+                                     visible="{useProxyForLocator.selected
+                                         &amp;&amp; !Model.instance.proxyURL}"/>
+                        </s:HGroup>
+                    </s:VGroup>
+                </s:HGroup>
+                <s:HGroup verticalAlign="middle">
+                    <graphics:warning width="20" height="20"
+                                      includeInLayout="{!hasSupportedSingleLineLocator}"
+                                      visible="{!hasSupportedSingleLineLocator}"/>
+                    <s:Label includeInLayout="{!hasSupportedSingleLineLocator}"
+                             maxWidth="300"
+                             text="{resourceManager.getString('BuilderStrings', 'headerController.needSingleLineFieldLocator')}"
+                             visible="{!hasSupportedSingleLineLocator}"/>
+                </s:HGroup>
+            </s:FormItem>
+
+            <s:Group>
+                <s:CheckBox left="15" top="0" bottom="5"
+                            enabled="{directionsModel.locatorEnabled}"
+                            fontSize="14"
+                            fontWeight="bold"
+                            label="{resourceManager.getString('BuilderStrings', 'headerController.mapServices')}"
+                            selected="@{directionsModel.mapServicesEnabled}"
+                            skinClass="com.esri.builder.skins.FixedLabelCheckBoxSkin"/>
+            </s:Group>
+
+            <s:VGroup width="100%" height="100%"
+                      enabled="{directionsModel.mapServicesEnabled}"
+                      gap="1"
+                      horizontalAlign="right"
+                      paddingLeft="15">
+                <s:Button click="startAddMapService()"
+                          label="{resourceManager.getString('BuilderStrings', 'headerController.addMapService')}"
+                          skinClass="com.esri.builder.skins.BlueAddButtonSkin"/>
+
+                <components:ItemModifierDataGrid id="mapServicesDataGrid"
+                                                 width="100%" height="100"
+                                                 dataProvider="{mapServicesDataProvider}"
+                                                 editItem="mapServicesDataGrid_editItemHandler(event)"
+                                                 removeItem="mapServicesDataGrid_removeItemHandler(event)"
+                                                 showDataTips="true">
+                    <components:columns>
+                        <s:ArrayList>
+                            <s:GridColumn dataField="url" headerText="{resourceManager.getString('BuilderStrings', 'headerController.label')}"/>
+
+                            <s:GridColumn width="80"
+                                          dataField="layerIds"
+                                          headerText="{resourceManager.getString('BuilderStrings', 'edit.layers')}"/>
+
+                            <s:GridColumn width="80"
+                                          dataField="searchFields"
+                                          dataTipFunction="searchFieldsToLabel"
+                                          headerText="{resourceManager.getString('BuilderStrings', 'edit.fields')}"
+                                          labelFunction="searchFieldsToLabel"/>
+
+                            <s:GridColumn width="60"
+                                          headerText="{resourceManager.getString('BuilderStrings', 'headerController.actions')}"
+                                          itemRenderer="com.esri.builder.renderers.EditableRemovableGridItemRenderer"
+                                          maxWidth="60"/>
+                        </s:ArrayList>
+                    </components:columns>
+                </components:ItemModifierDataGrid>
+            </s:VGroup>
+        </s:Form>
+    </s:Group>
+    <s:VGroup width="100%" height="100%"
+              horizontalAlign="right"
+              includeIn="browsingRouteServices">
+        <components:ServiceBrowser id="serviceBrowserRoute"
+                                   width="100%" height="100%"
+                                   minHeight="250"
+                                   minWidth="450"
+                                   searchType="routeservices"
+                                   selectionChange="serviceBrowserRoute_selectionChangeHandler(event)"
+                                   serviceURL="{routeURL}"/>
+        <s:HGroup width="100%" verticalAlign="middle">
+            <s:Button click="routeBackButton_clickHandler(event)"
+                      label="{resourceManager.getString('BuilderStrings', 'query.goBack')}"
+                      skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+        </s:HGroup>
+    </s:VGroup>
+    <s:VGroup width="100%" height="100%"
+              horizontalAlign="right"
+              includeIn="browsingLocators">
+        <components:ServiceBrowser id="serviceBrowserLocator"
+                                   width="100%" height="100%"
+                                   minHeight="250"
+                                   minWidth="450"
+                                   searchType="locators"
+                                   selectionChange="serviceBrowserLocator_selectionChangeHandler(event)"
+                                   serviceURL="{locatorURL}"/>
+        <s:HGroup width="100%" verticalAlign="middle">
+            <s:Button click="locatorBackButton_clickHandler(event)"
+                      label="{resourceManager.getString('BuilderStrings', 'query.goBack')}"
+                      skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+        </s:HGroup>
+    </s:VGroup>
+</s:VGroup>

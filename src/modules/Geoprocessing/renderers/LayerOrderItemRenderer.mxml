@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                xmlns:mx="library://ns.adobe.com/flex/mx"
+                xmlns:graphics="assets.graphics.*"
+                width="100%" height="50"
+                autoDrawBackground="false"
+                creationComplete="init()">
+    <fx:Script>
+        <![CDATA[
+            import modules.Geoprocessing.supportClasses.LayerOrderList;
+
+            [Bindable]
+            private var layerOrderList:LayerOrderList;
+
+            private function init():void
+            {
+                layerOrderList = owner as LayerOrderList;
+            }
+        ]]>
+    </fx:Script>
+    <fx:Declarations>
+        <s:GlowFilter id="glowFilter"
+                      blurX="5"
+                      blurY="5"
+                      color="0x000000"/>
+    </fx:Declarations>
+    <s:Rect left="2" right="2" top="2" bottom="2">
+        <s:fill>
+            <s:SolidColor color="0xFFFFFF"/>
+        </s:fill>
+    </s:Rect>
+    <s:VGroup paddingLeft="10"
+              paddingRight="10"
+              verticalCenter="0">
+        <s:Group id="moveUpButton"
+                 buttonMode="true"
+                 click="layerOrderList.moveLayerUp(data as String)"
+                 rollOut="{moveUpButton.filters = []}"
+                 rollOver="{moveUpButton.filters = [glowFilter]}"
+                 toolTip="{resourceManager.getString('BuilderStrings', 'geoprocessing.moveUp')}"
+                 visible="{itemIndex > 0}">
+            <graphics:small_up_arrow width="20" height="10"/>
+        </s:Group>
+        <s:Group id="moveDownButton"
+                 buttonMode="true"
+                 click="layerOrderList.moveLayerDown(data as String)"
+                 rollOut="{moveDownButton.filters = []}"
+                 rollOver="{moveDownButton.filters = [glowFilter]}"
+                 toolTip="{resourceManager.getString('BuilderStrings', 'geoprocessing.moveDown')}"
+                 visible="{itemIndex &lt; (layerOrderList.dataProvider.length - 1)}">
+            <graphics:small_down_arrow width="20" height="10"/>
+        </s:Group>
+    </s:VGroup>
+    <s:Label left="40"
+             text="{data}"
+             verticalCenter="0"/>
+</s:ItemRenderer>

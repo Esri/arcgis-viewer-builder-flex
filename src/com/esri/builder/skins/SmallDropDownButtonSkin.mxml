@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Skin xmlns:s="library://ns.adobe.com/flex/spark" xmlns:fx="http://ns.adobe.com/mxml/2009">
+    <fx:Metadata>[HostComponent("spark.components.Button")]</fx:Metadata>
+    <s:states>
+        <s:State name="up"/>
+        <s:State name="over"/>
+        <s:State name="down"/>
+        <s:State name="disabled"/>
+    </s:states>
+    <!--hit area-->
+    <s:Rect width="100%" height="100%">
+        <s:fill>
+            <s:SolidColor alpha="0.001" color="0xFFFFFF"/>
+        </s:fill>
+    </s:Rect>
+    <!--drop-down icon-->
+    <s:Group width="23" height="14"
+             horizontalCenter="0"
+             verticalCenter="0">
+        <s:Path x="7.541" y="3.636" width="8.559" height="6.452"
+                data="M -0.01 -0.01 L 13.51 -0.01 6.75 11.71 Z "
+                visible="false">
+            <s:stroke>
+                <s:SolidColorStroke caps="none"
+                                    color="#C38329"
+                                    joints="miter"
+                                    miterLimit="10"/>
+            </s:stroke>
+            <s:fill>
+                <s:LinearGradient x="4.96" y="0.297"
+                                  rotation="90"
+                                  scaleX="8.008">
+                    <s:entries>
+                        <s:GradientEntry color="#FFF7E4" ratio="0"/>
+                        <s:GradientEntry color="#FFAE07" ratio="1"/>
+                    </s:entries>
+                </s:LinearGradient>
+            </s:fill>
+        </s:Path>
+        <s:Path left="6.85" right="5.998" top="3.131" bottom="3.016"
+                data="M 0.5 0.5 L 14.02 0.5 L 7.26 12.22 L 0.5 0.5 Z"
+                visible.down="false"
+                visible.over="false"
+                visible.up="false">
+            <s:fill>
+                <s:LinearGradient x="4.952" y="0.297"
+                                  rotation="90"
+                                  scaleX="7.992">
+                    <s:GradientEntry color="#B3B3B3" ratio="0"/>
+                    <s:GradientEntry color="#666666" ratio="1"/>
+                </s:LinearGradient>
+            </s:fill>
+            <s:stroke>
+                <s:SolidColorStroke caps="none"
+                                    color="#666666"
+                                    joints="miter"
+                                    miterLimit="10"/>
+            </s:stroke>
+        </s:Path>
+        <s:Path x="7.028" y="3.355" width="8.712" height="6.459"
+                data="M 0.5 0.5 L 14.02 0.5 L 7.26 12.22 L 0.5 0.5 Z"
+                visible="false">
+            <s:fill>
+                <s:LinearGradient x="4.952" y="0.297"
+                                  rotation="90"
+                                  scaleX="7.992">
+                    <s:GradientEntry color="#BAD995" ratio="0"/>
+                    <s:GradientEntry color="#578D1E" ratio="1"/>
+                </s:LinearGradient>
+            </s:fill>
+            <s:stroke>
+                <s:SolidColorStroke caps="none"
+                                    color="#578D1E"
+                                    joints="miter"
+                                    miterLimit="10"/>
+            </s:stroke>
+        </s:Path>
+        <s:Path left="6.85" right="5.998" top="3.131" bottom="3.016"
+                data="M 0.5 0.5 L 14.02 0.5 L 7.26 12.22 L 0.5 0.5 Z"
+                visible.disabled="false"
+                visible.down="false"
+                visible.up="false">
+            <s:fill>
+                <s:LinearGradient x="4.952" y="0.297"
+                                  rotation="90"
+                                  scaleX="7.992">
+                    <s:GradientEntry color="#97C6D8" ratio="0"/>
+                    <s:GradientEntry color="#0C77A1" ratio="1"/>
+                </s:LinearGradient>
+            </s:fill>
+            <s:stroke>
+                <s:SolidColorStroke caps="none"
+                                    color="#0C77A1"
+                                    joints="miter"
+                                    miterLimit="10"/>
+            </s:stroke>
+        </s:Path>
+        <s:Path left="6.85" right="5.998" top="3.131" bottom="3.016"
+                data="M 0.5 0.5 L 14.02 0.5 L 7.26 12.22 L 0.5 0.5 Z"
+                visible.disabled="false"
+                visible.over="false">
+            <s:stroke>
+                <s:SolidColorStroke caps="none"
+                                    color="#000000"
+                                    joints="miter"
+                                    miterLimit="10"/>
+            </s:stroke>
+            <s:fill>
+                <s:SolidColor color="#000000"/>
+            </s:fill>
+        </s:Path>
+    </s:Group>
+</s:Skin>
+

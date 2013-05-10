@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:SkinnablePopUpContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                           xmlns:s="library://ns.adobe.com/flex/spark"
+                           xmlns:mx="library://ns.adobe.com/flex/mx"
+                           xmlns:graphics="assets.graphics.*"
+                           creationComplete="init()">
+    <fx:Script>
+        <![CDATA[
+            import flashx.textLayout.conversion.TextConverter;
+
+            import mx.managers.PopUpManager;
+
+            public var errorContent:String;
+
+            private function init():void
+            {
+                contentDisplay.textFlow =
+                    TextConverter.importToFlow(errorContent,
+                                               TextConverter.TEXT_FIELD_HTML_FORMAT);
+                updatePopUpPosition();
+            }
+
+            override public function updatePopUpPosition():void
+            {
+                PopUpManager.centerPopUp(this);
+            }
+        ]]>
+    </fx:Script>
+
+    <!--background-->
+    <s:Rect left="0" right="0" top="0" bottom="0">
+        <s:fill>
+            <s:SolidColor color="0xFFFFFF"/>
+        </s:fill>
+
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="0x666666"
+                                joints="miter"
+                                miterLimit="10"
+                                weight="2"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:Line width="100%" top="26.001">
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="0x666666"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Line>
+
+    <!--content-->
+    <s:Label left="5" top="9"
+             color="#000000"
+             fontSize="14"
+             fontWeight="bold"
+             maxDisplayedLines="1"
+             showTruncationTip="true"
+             text="{resourceManager.getString('BuilderStrings', 'unknownErrorTitle')}"
+             textAlign="center"
+             verticalAlign="middle"/>
+
+    <graphics:error width="50" height="50"
+                    left="10"
+                    verticalCenter="0"/>
+
+    <s:RichEditableText id="contentDisplay"
+                        left="70" right="10" top="40" bottom="40"
+                        editable="false"
+                        maxHeight="500"
+                        maxWidth="300"
+                        selectable="true"/>
+
+    <s:Button id="okButton"
+              bottom="5"
+              click="close()"
+              horizontalCenter="0"
+              label="{resourceManager.getString('BuilderStrings', 'ok')}"
+              skinClass="com.esri.builder.skins.BlueButtonSkin"/>
+</s:SkinnablePopUpContainer>
+

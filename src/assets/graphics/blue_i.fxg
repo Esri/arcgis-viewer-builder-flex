@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<Graphic version="2.0" viewHeight="32" viewWidth="32" ai:appVersion="15.1.0.39" ATE:version="1.0.0" flm:version="1.0.0" d:using="" xmlns="http://ns.adobe.com/fxg/2008" xmlns:ATE="http://ns.adobe.com/ate/2009" xmlns:ai="http://ns.adobe.com/ai/2009" xmlns:d="http://ns.adobe.com/fxg/2008/dt" xmlns:flm="http://ns.adobe.com/flame/2008">
+  <Library/>
+  <Group ai:seqID="1" d:layerType="page" d:pageHeight="32" d:pageWidth="32" d:type="layer" d:userLabel="Artboard 1">
+    <Group ai:seqID="2" d:type="layer" d:userLabel="Layer 15">
+      <Group x="12.1172" y="5.06934" ai:seqID="3" flm:knockout="false">
+        <Path x="0.00018692" winding="nonZero" ai:seqID="4" data="M6.12481 16.6943C6.12481 18.9297 6.25274 19.2168 7.30645 19.3125L7.9129 19.377C8.16778 19.5684 8.16778 20.3018 7.88067 20.4941 6.76348 20.4297 5.51837 20.3975 4.04962 20.3975 2.61309 20.3975 1.27325 20.4297 0.21954 20.4941 -0.0675697 20.3018 -0.0675697
+ 19.5684 0.187313 19.377L0.793758 19.3125C1.84747 19.2168 1.9754 18.9297 1.9754 16.6943L1.9754 11.875C1.9754 10.5981 1.9754 10.2148 1.36895 9.83203L0.921688 9.54443C0.698055 9.35303 0.698055 8.77881 0.921688 8.58691 2.42169 8.17188 4.68829 7.31006
+ 5.6463 6.73584 5.90118 6.73584 6.09259 6.83154 6.22052 7.02295 6.15704 7.98047 6.12481 9.38525 6.12481 10.8218L6.12481 16.6943ZM6.38067 2.2666C6.38067 3.79883 5.19903 4.59668 3.98614 4.59668 2.58184 4.59668 1.75177 3.63916 1.75177 2.33057 1.75177
+ 0.925781 2.86895 0 4.1463 0 5.48614 0 6.38067 0.989746 6.38067 2.2666Z">
+          <fill>
+            <LinearGradient x="-2.22724" y="5.17432" scaleX="18.0469" rotation="46">
+              <GradientEntry ratio="0" color="#00B9F2"/>
+              <GradientEntry ratio="0.233078" color="#009CDC"/>
+              <GradientEntry ratio="0.47343" color="#0088CD"/>
+              <GradientEntry ratio="0.722724" color="#007DC5"/>
+              <GradientEntry ratio="1" color="#007AC2"/>
+            </LinearGradient>
+          </fill>
+        </Path>
+      </Group>
+    </Group>
+  </Group>
+  <Private/>
+</Graphic>

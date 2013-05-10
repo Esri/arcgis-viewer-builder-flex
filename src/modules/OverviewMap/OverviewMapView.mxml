@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Form xmlns:fx="http://ns.adobe.com/mxml/2009"
+        xmlns:s="library://ns.adobe.com/flex/spark"
+        xmlns:components="com.esri.builder.components.*"
+        width="100%" height="100%"
+        implements="modules.IWidgetView">
+    <fx:Script>
+        <![CDATA[
+            import modules.IWidgetModel;
+
+            [Bindable]
+            public var overviewMapModel:OverviewMapModel;
+
+            private var _willOpenAtStartup:Boolean;
+
+            [Bindable]
+            public function get willOpenAtStartup():Boolean
+            {
+                return _willOpenAtStartup;
+            }
+
+            public function set willOpenAtStartup(value:Boolean):void
+            {
+                _willOpenAtStartup = value;
+                overviewMapModel.initialState = value ? OverviewMapModel.OPEN : OverviewMapModel.CLOSED;
+            }
+
+            public function set widgetModel(value:IWidgetModel):void
+            {
+                overviewMapModel = value as OverviewMapModel;
+
+                if (!overviewMapModel)
+                {
+                    throw new Error('argument is not an instance of MapSwitcherModel');
+                }
+
+                willOpenAtStartup = (overviewMapModel.initialState == OverviewMapModel.OPEN);
+            }
+
+            public function get widgetModel():IWidgetModel
+            {
+                return overviewMapModel;
+            }
+
+            //TODO: submit/cancel called? 
+            public function submit():Boolean
+            {
+                return true;
+            }
+
+            public function cancel():void
+            {
+                // NOOP
+            }
+        ]]>
+    </fx:Script>
+
+    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'overviewMap.initialState')}">
+        <components:SliderToggleButton id="initialStateInput"
+                                       deselectedLabel="{resourceManager.getString('BuilderStrings', 'overviewMap.closed')}"
+                                       selected="@{willOpenAtStartup}"
+                                       selectedLabel="{resourceManager.getString('BuilderStrings', 'overviewMap.open')}"/>
+    </s:FormItem>
+</s:Form>

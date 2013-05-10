@@ -1,0 +1,977 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:NavigatorContent xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark"
+                    xmlns:mx="library://ns.adobe.com/flex/mx"
+                    xmlns:components="com.esri.builder.components.*"
+                    width="100%" height="100%"
+                    add="this_addHandler(event)"
+                    creationComplete="this_creationCompleteHandler(event)"
+                    show="this_showHandler(event)">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.components.LayoutWidgetContainerEvent;
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.Constraints;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.model.Widget;
+            import com.esri.builder.model.WidgetContainer;
+            import com.esri.builder.model.WidgetType;
+            import com.esri.builder.model.WidgetTypeRegistryModel;
+            import com.esri.builder.views.popups.LayoutWidgetEditorPopUp;
+            import com.esri.builder.views.supportClasses.WidgetAndModelSet;
+
+            import modules.AttributeTable.AttributeTableModel;
+            import modules.Directions.DirectionsModel;
+            import modules.HeaderController.HeaderControllerView;
+            import modules.IWidgetModel;
+            import modules.IWidgetView;
+
+            import mx.collections.ArrayList;
+            import mx.collections.IList;
+            import mx.core.FlexGlobals;
+            import mx.core.IUIComponent;
+            import mx.events.FlexEvent;
+            import mx.utils.StringUtil;
+
+            import spark.events.PopUpEvent;
+
+            private static const HEADER_CONTROLLER_WIDGET_NAME:String = "HeaderController";
+            private static const STATIC_IMAGE_WIDGET_NAME:String = "StaticImage";
+            private static const COORDINATE_WIDGET_NAME:String = "Coordinate";
+            private static const SPLASH_WIDGET_NAME:String = "Splash";
+            private static const OVERVIEW_MAP_WIDGET_NAME:String = "OverviewMap";
+            private static const NAVIGATION_WIDGET_NAME:String = "Navigation";
+            private static const MAP_SWITCHER_WIDGET_NAME:String = "MapSwitcher";
+            private static const ATTRIBUTE_TABLE_WIDGET_NAME:String = "AttributeTable";
+            private static const DIRECTIONS_WIDGET_NAME:String = "Directions";
+
+            private var defaultWidgetMap:Dictionary = new Dictionary();
+            private var defaultWidgetTypeMap:Dictionary = new Dictionary();
+            private var layoutWidgetConstraintsMap:Dictionary = new Dictionary();
+            private var modifiedWidgets:ArrayList = new ArrayList();
+            private var editedWidget:Widget;
+            private var widgetEditorPopUp:LayoutWidgetEditorPopUp;
+
+            private var isAttributeTableOpenOnStartUp:Boolean = true;
+            private var isDirectionsOpenOnStartUp:Boolean = true;
+
+            protected function this_creationCompleteHandler(event:FlexEvent):void
+            {
+                AppEvent.addListener(AppEvent.SAVE_CONFIG_XML, onSaveConfigXML, false, 1);
+            }
+
+            protected function this_addHandler(event:FlexEvent):void
+            {
+                initLayoutWidgetConstraintsMap();
+            }
+
+            private function initLayoutWidgetConstraintsMap():void
+            {
+                var splashWidgetConstraints:Constraints = new Constraints();
+                var headerControllerWidgetConstraints:Constraints = new Constraints();
+                headerControllerWidgetConstraints.top = "0";
+                headerControllerWidgetConstraints.left = "0";
+                var staticImageWidgetConstraints:Constraints = new Constraints();
+                staticImageWidgetConstraints.bottom = "62";
+                staticImageWidgetConstraints.left = "5";
+                var coordinateWidgetConstraints:Constraints = new Constraints();
+                coordinateWidgetConstraints.bottom = "1";
+                coordinateWidgetConstraints.left = "3"
+                var mapSwitcherWidgetConstraints:Constraints = new Constraints();
+                mapSwitcherWidgetConstraints.top = "55";
+                mapSwitcherWidgetConstraints.right = "20";
+                var overviewWidgetConstraints:Constraints = new Constraints();
+                overviewWidgetConstraints.bottom = "0";
+                overviewWidgetConstraints.right = "0";
+                var navigationWidgetConstraints:Constraints = new Constraints();
+                navigationWidgetConstraints.top = "50";
+                navigationWidgetConstraints.left = "10";
+
+                layoutWidgetConstraintsMap[SPLASH_WIDGET_NAME] = splashWidgetConstraints;
+                layoutWidgetConstraintsMap[HEADER_CONTROLLER_WIDGET_NAME] = headerControllerWidgetConstraints;
+                layoutWidgetConstraintsMap[STATIC_IMAGE_WIDGET_NAME] = staticImageWidgetConstraints;
+                layoutWidgetConstraintsMap[COORDINATE_WIDGET_NAME] = coordinateWidgetConstraints;
+                layoutWidgetConstraintsMap[MAP_SWITCHER_WIDGET_NAME] = mapSwitcherWidgetConstraints;
+                layoutWidgetConstraintsMap[OVERVIEW_MAP_WIDGET_NAME] = overviewWidgetConstraints;
+                layoutWidgetConstraintsMap[NAVIGATION_WIDGET_NAME] = navigationWidgetConstraints;
+            }
+
+            protected function this_showHandler(event:FlexEvent):void
+            {
+                initMapsForDefaultLayoutWidgetAndWidgetTypes();
+                preselectScaleBarStyle();
+                preselectAttributionVisible();
+            }
+
+            private function initMapsForDefaultLayoutWidgetAndWidgetTypes():void
+            {
+                registerDefaultWidget(HEADER_CONTROLLER_WIDGET_NAME);
+                registerDefaultWidget(COORDINATE_WIDGET_NAME);
+                registerDefaultWidget(MAP_SWITCHER_WIDGET_NAME);
+                registerDefaultWidget(NAVIGATION_WIDGET_NAME);
+                registerDefaultWidget(OVERVIEW_MAP_WIDGET_NAME);
+                registerDefaultWidget(SPLASH_WIDGET_NAME);
+                registerDefaultWidget(STATIC_IMAGE_WIDGET_NAME);
+                registerDefaultWidget(ATTRIBUTE_TABLE_WIDGET_NAME, true);
+                registerDefaultWidget(DIRECTIONS_WIDGET_NAME, false, true);
+
+                //toggle header controller separately since it's not part of a LayoutWidgetContainer
+                enableLayoutWidgetEditor(defaultWidgetTypeMap[HEADER_CONTROLLER_WIDGET_NAME], headerControllerWidgetContainer);
+
+                updateEditorOptionsIfWidgetFound(COORDINATE_WIDGET_NAME, coordinateContainer);
+                updateEditorOptionsIfWidgetFound(MAP_SWITCHER_WIDGET_NAME, mapSwitcherContainer);
+                updateEditorOptionsIfWidgetFound(NAVIGATION_WIDGET_NAME, navigationContainer);
+                updateEditorOptionsIfWidgetFound(OVERVIEW_MAP_WIDGET_NAME, overviewMapContainer);
+                updateEditorOptionsIfWidgetFound(SPLASH_WIDGET_NAME, splashContainer);
+                updateEditorOptionsIfWidgetFound(STATIC_IMAGE_WIDGET_NAME, staticImageContainer);
+                updateEditorOptionsIfWidgetFound(ATTRIBUTE_TABLE_WIDGET_NAME, attributeTableWidgetContainer, true);
+                updateEditorOptionsIfWidgetFound(DIRECTIONS_WIDGET_NAME, directionsWidgetContainer, false, true);
+            }
+
+            private function registerDefaultWidget(widgetName:String, isAttributeTableWidget:Boolean = false, isDirectionsWidget:Boolean = false):void
+            {
+                var widgetType:WidgetType = WidgetTypeRegistryModel.getInstance().layoutWidgetTypeRegistry.findWidgetTypeByName(widgetName);
+                if (!widgetType)
+                {
+                    return;
+                }
+
+                var defaultWidget:Widget = findDefaultWidget(widgetType.name, isAttributeTableWidget, isDirectionsWidget);
+                if (!defaultWidget)
+                {
+                    defaultWidget = createDefaultWidget(widgetType);
+                }
+                defaultWidgetMap[widgetName] = defaultWidget;
+                defaultWidgetTypeMap[widgetName] = widgetType;
+                if (!isAttributeTableWidget && !isDirectionsWidget)
+                {
+                    applyPreDefinedConstraints(defaultWidget, widgetName);
+                }
+            }
+
+            private function updateEditorOptionsIfWidgetFound(widgetName:String, widgetContainer:LayoutWidgetContainer, isAttributeTableWidget:Boolean = false, isDirectionsWidget:Boolean = false):void
+            {
+                var widgetType:WidgetType = defaultWidgetTypeMap[widgetName];
+                enableLayoutWidgetEditor(widgetType, widgetContainer);
+                includeLayoutWidgetEditor(widgetType, widgetContainer, isAttributeTableWidget, isDirectionsWidget);
+            }
+
+            private function includeLayoutWidgetEditor(widgetType:WidgetType, widgetContainer:LayoutWidgetContainer, isAttributeTableWidget:Boolean, isDirectionsWidget:Boolean):void
+            {
+                if (!widgetType)
+                {
+                    widgetContainer.included = false;
+                    return;
+                }
+
+                widgetContainer.included =
+                    findDefaultWidget(widgetType.name, isAttributeTableWidget, isDirectionsWidget) != null;
+            }
+
+            private function enableLayoutWidgetEditor(widgetType:WidgetType, widgetContainer:IUIComponent):void
+            {
+                widgetContainer.enabled = (widgetType != null);
+            }
+
+            private function createDefaultWidget(widgetType:WidgetType):Widget
+            {
+                var defaultWidget:Widget = new Widget();
+                defaultWidget.name = widgetType.name;
+                defaultWidget.label = widgetType.label;
+                defaultWidget.icon = widgetType.iconLocation;
+                defaultWidget.iconFile = Model.instance.appDir.resolvePath(defaultWidget.icon);
+                defaultWidget.url = widgetType.url;
+                defaultWidget.config = buildDefaultConfigURL(widgetType.name);
+                return defaultWidget;
+            }
+
+            private function findDefaultWidget(widgetName:String, isAttributeTableWidget:Boolean, isDirectionsWidget:Boolean):Widget
+            {
+                var widgets:Array = isAttributeTableWidget ? Model.instance.bottomPanelWidgetList.source :
+                    isDirectionsWidget ? Model.instance.leftPanelWidgetList.source : Model.instance.layoutWidgetList.source;
+
+                for each (var widget:Widget in widgets)
+                {
+                    if (widget.config == buildDefaultConfigURL(widgetName))
+                    {
+                        return widget;
+                    }
+                }
+
+                return null;
+            }
+
+            private function buildDefaultConfigURL(widgetTypeName:String):String
+            {
+                return 'widgets/' + widgetTypeName + '/' + widgetTypeName + 'Widget.xml'
+            }
+
+            private function applyPreDefinedConstraints(widget:Widget, widgetName:String):void
+            {
+                var constraints:Constraints = layoutWidgetConstraintsMap[widgetName];
+                widget.top = constraints.top;
+                widget.left = constraints.left;
+                widget.right = constraints.right;
+                widget.bottom = constraints.bottom;
+            }
+
+            protected function saveButton_clickHandler(event:MouseEvent):void
+            {
+                saveAllLayoutWidgetConfigs();
+                AppEvent.dispatch(AppEvent.SAVE_CONFIG_XML, 'layout');
+            }
+
+            private function onSaveConfigXML(event:AppEvent):void
+            {
+                if (!event.data)
+                {
+                    saveAllLayoutWidgetConfigs();
+                }
+            }
+
+            private function saveAllLayoutWidgetConfigs():void
+            {
+                if (isAttributeTableWidgetIncluded())
+                {
+                    addBottomPanel();
+                }
+                else
+                {
+                    removeBottomPanel();
+                }
+
+                if (isDirectionsWidgetIncluded())
+                {
+                    addLeftPanel();
+                }
+                else
+                {
+                    removeLeftPanel();
+                }
+
+                if (modifiedWidgets.length)
+                {
+                    writeConfigXMLForUnsavedWidgets();
+                    modifiedWidgets.removeAll();
+                }
+            }
+
+            private function isAttributeTableWidgetIncluded():Boolean
+            {
+                var widgetIndex:int =
+                    Model.instance.bottomPanelWidgetList.getItemIndex(
+                    defaultWidgetMap[ATTRIBUTE_TABLE_WIDGET_NAME]);
+                return widgetIndex > -1;
+            }
+
+            private function addBottomPanel():void
+            {
+                addPanel(Model.instance.bottomPanelWidgetList, "bottom", isAttributeTableOpenOnStartUp);
+            }
+
+            private function removeBottomPanel():void
+            {
+                removePanel("bottom");
+            }
+
+            private function removePanel(panelType:String):void
+            {
+                for (var i:int = 0; i < Model.instance.config.widgetContainerArray.length; i++)
+                {
+                    var widgetContainer:WidgetContainer = Model.instance.config.widgetContainerArray[i];
+                    if (widgetContainer.panelType && widgetContainer.panelType == panelType)
+                    {
+                        Model.instance.config.widgetContainerArray.splice(i, 1);
+                        break;
+                    }
+                }
+            }
+
+            private function isDirectionsWidgetIncluded():Boolean
+            {
+                var widgetIndex:int =
+                    Model.instance.leftPanelWidgetList.getItemIndex(
+                    defaultWidgetMap[DIRECTIONS_WIDGET_NAME]);
+                return widgetIndex > -1;
+            }
+
+            private function addLeftPanel():void
+            {
+                addPanel(Model.instance.leftPanelWidgetList, "left", isDirectionsOpenOnStartUp);
+            }
+
+            private function addPanel(panelWidgetList:IList, panelType:String, isOpenOnStartup:Boolean):void
+            {
+                var panelFound:Boolean = false;
+                var panel:WidgetContainer;
+                for each (var widgetContainer:WidgetContainer in Model.instance.config.widgetContainerArray)
+                {
+                    if (widgetContainer.panelType == panelType)
+                    {
+                        panel = widgetContainer;
+                        panel.children = panelWidgetList.toArray();
+                        panelFound = true;
+                        break;
+                    }
+                }
+                if (!panelFound)
+                {
+                    panel = new WidgetContainer(panelWidgetList.toArray());
+                    panel.panelType = panelType;
+                    Model.instance.config.widgetContainerArray.push(panel);
+                }
+                panel.initialState = isOpenOnStartup ? "open" : "collapsed";
+            }
+
+            private function removeLeftPanel():void
+            {
+                removePanel("left");
+            }
+
+            private function editStaticImageWidget():void
+            {
+                startEditSession(STATIC_IMAGE_WIDGET_NAME);
+            }
+
+            private function editSplashWidget():void
+            {
+                startEditSession(SPLASH_WIDGET_NAME);
+            }
+
+            private function editMapSwitcherWidget():void
+            {
+                startEditSession(MAP_SWITCHER_WIDGET_NAME);
+            }
+
+            private function editCoordinateWidget():void
+            {
+                startEditSession(COORDINATE_WIDGET_NAME);
+            }
+
+            private function editOverviewMapWidget():void
+            {
+                startEditSession(OVERVIEW_MAP_WIDGET_NAME);
+            }
+
+            private function editAttributeTableWidget():void
+            {
+                startEditSession(ATTRIBUTE_TABLE_WIDGET_NAME);
+            }
+
+            private function editDirectionsWidget():void
+            {
+                startEditSession(DIRECTIONS_WIDGET_NAME);
+            }
+
+            private function startEditSession(widgetName:String):void
+            {
+                const modelToEdit:IWidgetModel = getWidgetModelToEdit(widgetName);
+                if (modelToEdit)
+                {
+                    showWidgetEditor(modelToEdit,
+                                     defaultWidgetTypeMap[widgetName]);
+                }
+            }
+
+            private function getWidgetModelToEdit(widgetName:String):IWidgetModel
+            {
+                var modelToEdit:IWidgetModel;
+
+                const widgetType:WidgetType = defaultWidgetTypeMap[widgetName];
+                editedWidget = defaultWidgetMap[widgetName];
+
+                const previouslyEditedWidgetModel:IWidgetModel = findModifiedAndUnsavedWidgetModel(editedWidget);
+                if (previouslyEditedWidgetModel)
+                {
+                    modelToEdit = previouslyEditedWidgetModel;
+                }
+                else
+                {
+                    const file:File = Model.instance.appDir.resolvePath(editedWidget.config);
+                    if (file.exists)
+                    {
+                        const bytes:ByteArray = new ByteArray();
+                        const fileStream:FileStream = new FileStream();
+                        fileStream.open(file, FileMode.READ);
+                        fileStream.readBytes(bytes, 0, fileStream.bytesAvailable);
+                        fileStream.close();
+
+                        var configXML:XML;
+                        try
+                        {
+                            configXML = XML(bytes);
+                        }
+                        catch (e:Error)
+                        {
+                            configXML = null;
+                        }
+                        if (configXML)
+                        {
+                            var editedWidgetModel:IWidgetModel = widgetType.createWidgetModel();
+                            if (editedWidgetModel)
+                            {
+                                editedWidgetModel.importXML(configXML);
+                                modelToEdit = editedWidgetModel;
+                            }
+                            else
+                            {
+                                showBadWidgetModelMessage(widgetType);
+                            }
+                        }
+                        else
+                        {
+                            showBadXMLMessage(file);
+                        }
+                    }
+                    else if (widgetType)
+                    {
+                        modelToEdit = widgetType.createWidgetModel();
+                    }
+                }
+
+                return modelToEdit;
+            }
+
+            private function findModifiedAndUnsavedWidgetModel(widget:Widget):IWidgetModel
+            {
+                var modifiedWidgetsSource:Array = modifiedWidgets.source;
+                for each (var widgetAndModel:WidgetAndModelSet in modifiedWidgetsSource)
+                {
+                    if (widgetAndModel.widget == widget)
+                    {
+                        return widgetAndModel.model;
+                    }
+                }
+
+                return null;
+            }
+
+            private function showWidgetEditor(editedWidgetModel:IWidgetModel, widgetType:WidgetType, panelType:String = null):void
+            {
+                var editedWidgetView:IWidgetView = widgetType.createWidgetView()
+                editedWidgetView.widgetModel = editedWidgetModel;
+                widgetEditorPopUp = new LayoutWidgetEditorPopUp();
+                widgetEditorPopUp.title = widgetType.label;
+                widgetEditorPopUp.widgetView = editedWidgetView;
+                widgetEditorPopUp.widgetType = widgetType;
+                widgetEditorPopUp.addEventListener(PopUpEvent.CLOSE, widgetEditorPopUp_closeHandler, false, 0, true);
+                widgetEditorPopUp.open(FlexGlobals.topLevelApplication as DisplayObjectContainer, true);
+            }
+
+            private function showBadWidgetModelMessage(widgetType:WidgetType):void
+            {
+                const text:String = resourceManager.getString('BuilderStrings', 'widgetsView.badWidgetModelText', [ widgetType.name ]);
+                const title:String = resourceManager.getString('BuilderStrings', 'widgetsView.badWidgetModelTitle');
+                Model.instance.status = text;
+                BuilderAlert.show(text, title);
+            }
+
+            private function showBadXMLMessage(file:File):void
+            {
+                const text:String = resourceManager.getString('BuilderStrings', 'widgetsView.badXMLText', [ file.nativePath ]);
+                const title:String = resourceManager.getString('BuilderStrings', 'widgetsView.badXMLTitle');
+                Model.instance.status = text;
+                BuilderAlert.show(text, title);
+            }
+
+            private function widgetEditorPopUp_closeHandler(event:PopUpEvent):void
+            {
+                if (event.commit)
+                {
+                    var widgetModelPair:WidgetAndModelSet = new WidgetAndModelSet(editedWidget, widgetEditorPopUp.widgetView.widgetModel)
+                    modifiedWidgets.addItem(widgetModelPair);
+                    Model.instance.config.isDirty = true;
+
+                    if (widgetEditorPopUp.widgetView.widgetModel is AttributeTableModel)
+                    {
+                        isAttributeTableOpenOnStartUp = AttributeTableModel(widgetEditorPopUp.widgetView.widgetModel).isOpenOnStartUp;
+                    }
+
+                    if (widgetEditorPopUp.widgetView.widgetModel is DirectionsModel)
+                    {
+                        isDirectionsOpenOnStartUp = DirectionsModel(widgetEditorPopUp.widgetView.widgetModel).isOpenOnStartUp;
+                    }
+                }
+
+                widgetEditorPopUp = null;
+            }
+
+            private function writeConfigXMLForUnsavedWidgets():void
+            {
+                for (var i:int = 0; i < modifiedWidgets.length; i++)
+                {
+                    const widget:Widget = modifiedWidgets.getItemAt(i).widget;
+                    const widgetModel:IWidgetModel = modifiedWidgets.getItemAt(i).model;
+                    writeConfigXML(widget, widgetModel);
+                }
+            }
+
+            private function writeConfigXML(widget:Widget, widgetModel:IWidgetModel):void
+            {
+                const configXML:XML = widgetModel.exportXML();
+                const configText:String = "<?xml version=\"1.0\" ?>\n" + configXML.toXMLString() + "\n";
+
+                const file:File = Model.instance.appDir.resolvePath(widget.config);
+                const fileStream:FileStream = new FileStream();
+                fileStream.open(file, FileMode.WRITE);
+                fileStream.writeUTFBytes(configText);
+                fileStream.close();
+
+                AppEvent.dispatch(AppEvent.WIDGET_CONFIG_XML_SAVED);
+            }
+
+            private function updateCoordinateWidgetInclusion(event:LayoutWidgetContainerEvent):void
+            {
+                updateWidgetInclusion(event.included, COORDINATE_WIDGET_NAME);
+            }
+
+            private function updateMapSwitcherWidgetInclusion(event:LayoutWidgetContainerEvent):void
+            {
+                updateWidgetInclusion(event.included, MAP_SWITCHER_WIDGET_NAME);
+            }
+
+            private function updateNavigationWidgetInclusion(event:LayoutWidgetContainerEvent):void
+            {
+                updateWidgetInclusion(event.included, NAVIGATION_WIDGET_NAME);
+            }
+
+            private function updateOverviewMapWidgetInclusion(event:LayoutWidgetContainerEvent):void
+            {
+                updateWidgetInclusion(event.included, OVERVIEW_MAP_WIDGET_NAME);
+            }
+
+            private function updateSplashWidgetInclusion(event:LayoutWidgetContainerEvent):void
+            {
+                updateWidgetInclusion(event.included, SPLASH_WIDGET_NAME);
+            }
+
+            private function updateStaticImageWidgetInclusion(event:LayoutWidgetContainerEvent):void
+            {
+                updateWidgetInclusion(event.included, STATIC_IMAGE_WIDGET_NAME);
+            }
+
+            private function updateAttributeTableWidgetInclusion(event:LayoutWidgetContainerEvent):void
+            {
+                var layoutWidgetIndex:int;
+                if (event.included)
+                {
+                    var widgetToAdd:Widget = defaultWidgetMap[ATTRIBUTE_TABLE_WIDGET_NAME];
+                    layoutWidgetIndex = Model.instance.bottomPanelWidgetList.getItemIndex(widgetToAdd);
+                    if (layoutWidgetIndex < 0)
+                    {
+                        Model.instance.bottomPanelWidgetList.addItem(widgetToAdd);
+                    }
+                }
+                else
+                {
+                    var widgetToRemove:Widget = defaultWidgetMap[ATTRIBUTE_TABLE_WIDGET_NAME];
+                    layoutWidgetIndex = Model.instance.bottomPanelWidgetList.getItemIndex(widgetToRemove);
+                    if (layoutWidgetIndex > -1)
+                    {
+                        Model.instance.bottomPanelWidgetList.removeItem(widgetToRemove);
+                    }
+                }
+                Model.instance.config.isDirty = true;
+            }
+
+            private function updateDirectionsWidgetInclusion(event:LayoutWidgetContainerEvent):void
+            {
+                var layoutWidgetIndex:int;
+                if (event.included)
+                {
+                    var widgetToAdd:Widget = defaultWidgetMap[DIRECTIONS_WIDGET_NAME];
+                    layoutWidgetIndex = Model.instance.leftPanelWidgetList.getItemIndex(widgetToAdd);
+                    if (layoutWidgetIndex < 0)
+                    {
+                        Model.instance.leftPanelWidgetList.addItem(widgetToAdd);
+                    }
+                }
+                else
+                {
+                    var widgetToRemove:Widget = defaultWidgetMap[DIRECTIONS_WIDGET_NAME];
+                    layoutWidgetIndex = Model.instance.leftPanelWidgetList.getItemIndex(widgetToRemove);
+                    if (layoutWidgetIndex > -1)
+                    {
+                        Model.instance.leftPanelWidgetList.removeItem(widgetToRemove);
+                    }
+                }
+                Model.instance.config.isDirty = true;
+            }
+
+            private function createDefaultWidgetConfigURL(name:String):String
+            {
+                return StringUtil.substitute('widgets/{0}/{0}Widget.xml', name);
+            }
+
+            private function updateWidgetInclusion(included:Boolean, widgetName:String):void
+            {
+                if (included)
+                {
+                    addLayoutWidget(widgetName);
+                }
+                else
+                {
+                    removeLayoutWidget(widgetName);
+                }
+                Model.instance.config.isDirty = true;
+            }
+
+            private function addLayoutWidget(widgetName:String):void
+            {
+                var widgetToAdd:Widget = defaultWidgetMap[widgetName];
+                var layoutWidgetIndex:int = Model.instance.layoutWidgetList.getItemIndex(widgetToAdd);
+                if (layoutWidgetIndex < 0)
+                {
+                    Model.instance.layoutWidgetList.addItem(widgetToAdd);
+                }
+            }
+
+            private function removeLayoutWidget(widgetName:String):void
+            {
+                var widgetToRemove:Widget = defaultWidgetMap[widgetName];
+                var layoutWidgetIndex:int = Model.instance.layoutWidgetList.getItemIndex(widgetToRemove);
+                if (layoutWidgetIndex > -1)
+                {
+                    Model.instance.layoutWidgetList.removeItem(widgetToRemove);
+                }
+            }
+
+            private function preselectScaleBarStyle():void
+            {
+                var currentScaleBarStyle:String = Model.instance.config.configMap.scaleBarStyle;
+                var scaleBarStyles:Array = scaleBarStyleOptions.toArray();
+                for each (var scaleBarStyle:DataItem in scaleBarStyles)
+                {
+                    if (scaleBarStyle.value == currentScaleBarStyle)
+                    {
+                        scaleBarStyleSelection.selectedItem = scaleBarStyle;
+                        break;
+                    }
+                }
+            }
+
+            private function updateScaleBarStyle():void
+            {
+                Model.instance.config.configMap.scaleBarStyle = scaleBarStyleSelection.selectedItem.value;
+                Model.instance.config.isDirty = true;
+            }
+
+            private function preselectAttributionVisible():void
+            {
+                attributionVisibleToggle.included = Model.instance.config.configMap.attributionVisible;
+            }
+
+            private function updateAttributionVisible():void
+            {
+                Model.instance.config.configMap.attributionVisible = attributionVisibleToggle.included;
+                Model.instance.config.isDirty = true;
+            }
+
+            protected function headerControllerLinksButton_clickHandler(event:MouseEvent):void
+            {
+                const modelToEdit:IWidgetModel = getWidgetModelToEdit(HEADER_CONTROLLER_WIDGET_NAME);
+                if (modelToEdit)
+                {
+                    showLinksEditor(modelToEdit,
+                                    defaultWidgetTypeMap[HEADER_CONTROLLER_WIDGET_NAME]);
+                }
+            }
+
+            private function showLinksEditor(editedWidgetModel:IWidgetModel, widgetType:WidgetType):void
+            {
+                var editedWidgetView:IWidgetView = widgetType.createWidgetView();
+                editedWidgetView.widgetModel = editedWidgetModel;
+                widgetEditorPopUp = new LayoutWidgetEditorPopUp();
+                (editedWidgetView as HeaderControllerView).showLinksEditor();
+                widgetEditorPopUp.title = resourceManager.getString('BuilderStrings', 'headerController.links');
+                widgetEditorPopUp.widgetView = editedWidgetView;
+                widgetEditorPopUp.widgetType = widgetType;
+                widgetEditorPopUp.addEventListener(PopUpEvent.CLOSE, widgetEditorPopUp_closeHandler, false, 0, true);
+                widgetEditorPopUp.open(FlexGlobals.topLevelApplication as DisplayObjectContainer, true);
+            }
+
+            protected function headerControllerSearchButton_clickHandler(event:MouseEvent):void
+            {
+                const modelToEdit:IWidgetModel = getWidgetModelToEdit(HEADER_CONTROLLER_WIDGET_NAME);
+                if (modelToEdit)
+                {
+                    showSearchEditor(modelToEdit,
+                                     defaultWidgetTypeMap[HEADER_CONTROLLER_WIDGET_NAME]);
+                }
+            }
+
+            private function showSearchEditor(editedWidgetModel:IWidgetModel, widgetType:WidgetType):void
+            {
+                var editedWidgetView:IWidgetView = widgetType.createWidgetView();
+                editedWidgetView.widgetModel = editedWidgetModel;
+                widgetEditorPopUp = new LayoutWidgetEditorPopUp();
+                (editedWidgetView as HeaderControllerView).showSearchEditor();
+                widgetEditorPopUp.title = resourceManager.getString('BuilderStrings', 'headerController.search');
+                widgetEditorPopUp.widgetView = editedWidgetView;
+                widgetEditorPopUp.widgetType = widgetType;
+                widgetEditorPopUp.addEventListener(PopUpEvent.CLOSE, widgetEditorPopUp_closeHandler, false, 0, true);
+                widgetEditorPopUp.open(FlexGlobals.topLevelApplication as DisplayObjectContainer, true);
+            }
+        ]]>
+    </fx:Script>
+
+    <s:Button right="10" top="10"
+              click="saveButton_clickHandler(event)"
+              label="{resourceManager.getString('BuilderStrings', 'save')}"
+              skinClass="com.esri.builder.skins.BlueSaveButtonSkin"/>
+
+    <s:Group id="mainContainer"
+             height="100%"
+             left="128" right="10" top="40" bottom="85"
+             minHeight="280">
+        <s:Group width="100%" height="100%">
+            <s:Rect left="0" right="0" top="0" bottom="0">
+                <s:stroke>
+                    <s:SolidColorStroke caps="none"
+                                        color="#333333"
+                                        joints="miter"
+                                        miterLimit="4"
+                                        weight="2"/>
+                </s:stroke>
+
+                <s:fill>
+                    <s:SolidColor color="#FFFFFF"/>
+                </s:fill>
+            </s:Rect>
+
+            <s:Group width="100%" height="84"
+                     left="2" right="2" top="2">
+                <s:Rect left="0" right="0" top="0" bottom="0">
+                    <s:fill>
+                        <s:SolidColor color="#999999"/>
+                    </s:fill>
+                </s:Rect>
+
+                <s:Label id="placeholderLabel"
+                         left="{headerControllerWidgetContainer.width + 20}" right="{headerControllerWidgetContainer.width + 20}"
+                         color="#FFFFFF"
+                         fontSize="14"
+                         fontWeight="bold"
+                         text="{resourceManager.getString('BuilderStrings', 'viewerWireframe.headerPlaceholder')}"
+                         textAlign="center"
+                         verticalCenter="0"/>
+            </s:Group>
+
+            <s:Line left="0" right="0" top="85">
+                <s:stroke>
+                    <s:SolidColorStroke caps="none"
+                                        color="#333333"
+                                        joints="miter"
+                                        miterLimit="4"
+                                        weight="2"/>
+                </s:stroke>
+            </s:Line>
+
+            <s:Image width="100%" height="100%"
+                     left="2" right="2" top="87" bottom="2"
+                     scaleMode="stretch"
+                     source="@Embed(source='/assets/images/layout_map.png')"/>
+        </s:Group>
+
+        <components:LayoutWidgetContainer id="navigationContainer"
+                                          height="40%"
+                                          left="10" top="95"
+                                          inclusionChange="updateNavigationWidgetInclusion(event)"
+                                          label="{resourceManager.getString('BuilderStrings', 'navigation.widgetLabel')}"
+                                          skinClass="com.esri.builder.skins.IncludeOnlyLayoutWidgetWireframeSkin"/>
+
+        <components:LayoutWidgetContainer id="mapSwitcherContainer"
+                                          right="10" top="95"
+                                          editClick="editMapSwitcherWidget()"
+                                          inclusionChange="updateMapSwitcherWidgetInclusion(event)"
+                                          label="{resourceManager.getString('BuilderStrings', 'mapSwitcher.widgetLabel')}"
+                                          skinClass="com.esri.builder.skins.LayoutWidgetWireframeSkin">
+            <components:layout>
+                <s:VerticalLayout horizontalAlign="center"/>
+            </components:layout>
+        </components:LayoutWidgetContainer>
+
+        <components:LayoutWidgetContainer id="splashContainer"
+                                          editClick="editSplashWidget()"
+                                          horizontalCenter="0"
+                                          inclusionChange="updateSplashWidgetInclusion(event)"
+                                          label="{resourceManager.getString('BuilderStrings', 'layoutView.splashScreen')}"
+                                          skinClass="com.esri.builder.skins.LayoutWidgetWireframeSkin"
+                                          verticalCenter="0">
+            <components:layout>
+                <s:VerticalLayout horizontalAlign="center"/>
+            </components:layout>
+        </components:LayoutWidgetContainer>
+
+        <s:HGroup right="10" bottom="10"
+                  gap="10"
+                  verticalAlign="bottom">
+            <components:LayoutWidgetContainer id="attributionVisibleToggle"
+                                              horizontalCenter="0"
+                                              inclusionChange="updateAttributionVisible()"
+                                              label="{resourceManager.getString('BuilderStrings', 'attributionVisible')}"
+                                              skinClass="com.esri.builder.skins.IncludeOnlyLayoutWidgetWireframeSkin"
+                                              verticalCenter="0">
+                <components:layout>
+                    <s:HorizontalLayout verticalAlign="middle"/>
+                </components:layout>
+            </components:LayoutWidgetContainer>
+
+            <components:LayoutWidgetContainer id="overviewMapContainer"
+                                              editClick="editOverviewMapWidget()"
+                                              inclusionChange="updateOverviewMapWidgetInclusion(event)"
+                                              label="{resourceManager.getString('BuilderStrings', 'overviewMap.widgetLabel')}"
+                                              skinClass="com.esri.builder.skins.LayoutWidgetWireframeSkin">
+                <components:layout>
+                    <s:VerticalLayout horizontalAlign="center"/>
+                </components:layout>
+            </components:LayoutWidgetContainer>
+        </s:HGroup>
+
+        <components:LayoutWidgetContainer id="staticImageContainer"
+                                          left="10" bottom="115"
+                                          editClick="editStaticImageWidget()"
+                                          inclusionChange="updateStaticImageWidgetInclusion(event)"
+                                          label="{resourceManager.getString('BuilderStrings', 'staticImage.widgetLabel')}"
+                                          skinClass="com.esri.builder.skins.LayoutWidgetWireframeSkin">
+            <components:layout>
+                <s:VerticalLayout horizontalAlign="center"/>
+            </components:layout>
+        </components:LayoutWidgetContainer>
+
+        <components:LayoutWidgetContainer id="coordinateContainer"
+                                          left="10" bottom="10"
+                                          editClick="editCoordinateWidget()"
+                                          inclusionChange="updateCoordinateWidgetInclusion(event)"
+                                          label="{resourceManager.getString('BuilderStrings', 'layoutView.coordinates')}"
+                                          skinClass="com.esri.builder.skins.LayoutWidgetWireframeSkin">
+            <components:layout>
+                <s:HorizontalLayout verticalAlign="middle"/>
+            </components:layout>
+        </components:LayoutWidgetContainer>
+
+        <!--HEADER CONTROLLER EDITOR-->
+        <s:HGroup id="headerControllerWidgetContainer"
+                  height="40"
+                  right="10" top="12">
+            <s:Group>
+                <s:Rect left="0" right="0" top="0" bottom="0">
+                    <s:stroke>
+                        <s:SolidColorStroke color="0x007AC2" weight="2"/>
+                    </s:stroke>
+
+                    <s:fill>
+                        <s:SolidColor color="0xFFFFFF"/>
+                    </s:fill>
+                </s:Rect>
+
+                <s:VGroup left="10" right="10" top="10" bottom="10"
+                          horizontalAlign="center"
+                          verticalAlign="middle">
+                    <s:Label horizontalCenter="0"
+                             text="{resourceManager.getString('BuilderStrings', 'headerController.search')}"
+                             verticalCenter="-10"/>
+
+                    <s:Button click="headerControllerSearchButton_clickHandler(event)"
+                              enabled="{headerControllerWidgetContainer.enabled}"
+                              label="{resourceManager.getString('BuilderStrings', 'layoutView.edit')}"
+                              skinClass="com.esri.builder.skins.GreenButtonSkin"/>
+                </s:VGroup>
+            </s:Group>
+
+            <s:Group>
+                <s:Rect left="0" right="0" top="0" bottom="0">
+                    <s:stroke>
+                        <s:SolidColorStroke color="0x007AC2" weight="2"/>
+                    </s:stroke>
+
+                    <s:fill>
+                        <s:SolidColor color="0xFFFFFF"/>
+                    </s:fill>
+                </s:Rect>
+
+                <s:VGroup left="10" right="10" top="10" bottom="10"
+                          horizontalAlign="center"
+                          verticalAlign="middle">
+                    <s:Label horizontalCenter="0"
+                             text="{resourceManager.getString('BuilderStrings', 'headerController.links')}"
+                             verticalCenter="-10"/>
+
+                    <s:Button click="headerControllerLinksButton_clickHandler(event)"
+                              enabled="{headerControllerWidgetContainer.enabled}"
+                              label="{resourceManager.getString('BuilderStrings', 'layoutView.edit')}"
+                              skinClass="com.esri.builder.skins.GreenButtonSkin"/>
+                </s:VGroup>
+            </s:Group>
+        </s:HGroup>
+
+        <!--SCALE BAR-->
+        <s:Group left="10" bottom="65">
+            <s:Rect left="0" right="0" top="0" bottom="0">
+                <s:stroke>
+                    <s:SolidColorStroke color="0x007AC2" weight="2"/>
+                </s:stroke>
+
+                <s:fill>
+                    <s:SolidColor color="0xFFFFFF"/>
+                </s:fill>
+            </s:Rect>
+
+            <s:HGroup left="10" right="10" top="10" bottom="10"
+                      verticalAlign="middle">
+                <s:Label text="{resourceManager.getString('BuilderStrings', 'scaleBar')}"/>
+
+                <s:DropDownList id="scaleBarStyleSelection" change="updateScaleBarStyle()">
+                    <s:ArrayList id="scaleBarStyleOptions">
+                        <s:DataItem label="{resourceManager.getString('BuilderStrings', 'scaleBar.default')}" value="default"/>
+                        <s:DataItem label="{resourceManager.getString('BuilderStrings', 'scaleBar.metric')}" value="metric"/>
+                        <s:DataItem label="{resourceManager.getString('BuilderStrings', 'scaleBar.us')}" value="us"/>
+                    </s:ArrayList>
+                </s:DropDownList>
+            </s:HGroup>
+        </s:Group>
+    </s:Group>
+
+    <components:LayoutWidgetContainer id="directionsWidgetContainer"
+                                      width="120" height="100%"
+                                      left="10" top="40" bottom="70"
+                                      editClick="editDirectionsWidget()"
+                                      inclusionChange="updateDirectionsWidgetInclusion(event)"
+                                      isLayoutWidgetPartOfPanel="true"
+                                      label="{resourceManager.getString('BuilderStrings', 'directions.widgetLabel')}"
+                                      skinClass="com.esri.builder.skins.LayoutWidgetWireframeSkin">
+        <components:layout>
+            <s:VerticalLayout horizontalAlign="center" verticalAlign="middle"/>
+        </components:layout>
+    </components:LayoutWidgetContainer>
+
+    <components:LayoutWidgetContainer id="attributeTableWidgetContainer"
+                                      width="100%"
+                                      left="10" right="10" bottom="0"
+                                      editClick="editAttributeTableWidget()"
+                                      inclusionChange="updateAttributeTableWidgetInclusion(event)"
+                                      isLayoutWidgetPartOfPanel="true"
+                                      label="{resourceManager.getString('BuilderStrings', 'attributeTable.widgetLabel')}"
+                                      skinClass="com.esri.builder.skins.LayoutWidgetWireframeSkin">
+        <components:layout>
+            <s:VerticalLayout horizontalAlign="center"/>
+        </components:layout>
+    </components:LayoutWidgetContainer>
+</s:NavigatorContent>

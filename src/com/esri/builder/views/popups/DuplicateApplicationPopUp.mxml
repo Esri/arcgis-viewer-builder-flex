@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:SkinnableContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                      xmlns:s="library://ns.adobe.com/flex/spark"
+                      xmlns:mx="library://ns.adobe.com/flex/mx"
+                      creationComplete="this_creationCompleteHandler(event)"
+                      minHeight="150"
+                      minWidth="450">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.Model;
+
+            import mx.events.CloseEvent;
+            import mx.events.FlexEvent;
+            import mx.utils.StringUtil;
+
+            private var originalAppName:String;
+            [Bindable]
+            private var duplicateApplicationName:String;
+            [Bindable]
+            private var hasValidApplicationName:Boolean;
+
+            public function set applicationName(value:String):void
+            {
+                duplicateApplicationName = value;
+                originalAppName = value;
+            }
+
+            private function validateApplicationNames():void
+            {
+                duplicateApplicationName = StringUtil.trim(applicationNameTextInput.text);
+                hasValidApplicationName = duplicateApplicationName.length && (duplicateApplicationName != originalAppName);
+            }
+
+            private function cancelButton_clickHandler(event:MouseEvent):void
+            {
+                dispatchEvent(new CloseEvent(CloseEvent.CLOSE));
+            }
+
+            private function okButton_clickHandler(event:MouseEvent):void
+            {
+                dispatchCloseAndDuplicateExecute();
+            }
+
+            private function dispatchCloseAndDuplicateExecute():void
+            {
+                dispatchDuplicateExecute();
+                dispatchEvent(new CloseEvent(CloseEvent.CLOSE));
+            }
+
+            private function dispatchDuplicateExecute():void
+            {
+                if (hasValidApplicationName)
+                {
+                    Model.instance.status = '';
+                    AppEvent.dispatch(AppEvent.DUPLICATE_EXECUTE, duplicateApplicationName);
+                }
+                else
+                {
+                    Model.instance.status = resourceManager.getString('BuilderStrings', 'duplicateApplicationPopUp.noApplicationName');
+                }
+            }
+
+            private function this_creationCompleteHandler(event:FlexEvent):void
+            {
+                applicationNameTextInput.text = originalAppName;
+                applicationNameTextInput.setFocus()
+            }
+
+            private function applicationNameTextInput_enterHandler(event:FlexEvent):void
+            {
+                if (hasValidApplicationName)
+                {
+                    dispatchCloseAndDuplicateExecute();
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <!--background-->
+    <s:Rect left="0" right="0" top="0" bottom="0">
+        <s:fill>
+            <s:SolidColor color="#FFFFFF"/>
+        </s:fill>
+
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:Rect height="25"
+            left="2" right="2" top="2">
+        <s:fill>
+            <s:LinearGradient rotation="90">
+                <s:GradientEntry alpha="1"
+                                 color="#FFFFFF"
+                                 ratio="0"/>
+                <s:GradientEntry alpha="1.0"
+                                 color="#CCCCCC"
+                                 ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Rect>
+
+    <s:Line left="0" right="0" top="26">
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Line>
+
+    <!--content-->
+    <s:Label left="10" top="9"
+             color="#000000"
+             fontSize="14"
+             fontWeight="bold"
+             text="{resourceManager.getString('BuilderStrings', 'duplicateApplicationPopUp.title')}"
+             textAlign="center"
+             verticalAlign="middle"/>
+
+    <s:Form horizontalCenter="0" verticalCenter="0">
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'duplicateApplicationPopUp.projectName')}">
+            <s:TextInput id="applicationNameTextInput"
+                         width="200"
+                         change="validateApplicationNames()"
+                         enter="applicationNameTextInput_enterHandler(event)"
+                         maxChars="100"
+                         restrict='\u0020-\u007E^/?\\&gt;&lt;:*|"”\^.#&apos;%;'/>
+        </s:FormItem>
+    </s:Form>
+
+    <s:HGroup bottom="5"
+              horizontalAlign="center"
+              horizontalCenter="0"
+              verticalAlign="middle">
+        <s:Button id="okButton"
+                  click="okButton_clickHandler(event)"
+                  enabled="{hasValidApplicationName}"
+                  label="{resourceManager.getString('BuilderStrings', 'duplicateApplicationPopUp.ok')}"
+                  skinClass="com.esri.builder.skins.BlueButtonSkin"/>
+
+        <s:Button id="cancelButton"
+                  click="cancelButton_clickHandler(event)"
+                  label="{resourceManager.getString('BuilderStrings', 'cancel')}"
+                  skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+    </s:HGroup>
+</s:SkinnableContainer>

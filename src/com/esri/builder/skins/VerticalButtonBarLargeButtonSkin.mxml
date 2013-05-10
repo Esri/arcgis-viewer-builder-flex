@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<!---
+Custom skin class for the Spark ButtonBarButton component.
+-->
+<s:SparkButtonSkin xmlns:fx="http://ns.adobe.com/mxml/2009"
+                   xmlns:s="library://ns.adobe.com/flex/spark"
+                   xmlns:fb="http://ns.adobe.com/flashbuilder/2009"
+                   alpha.disabledStates="0.5"
+                   maxWidth="130"
+                   minHeight="26">
+    <fx:Metadata>[HostComponent("spark.components.ButtonBarButton")]</fx:Metadata>
+
+    <!-- host component -->
+    <!-- states -->
+    <s:states>
+        <s:State name="up"/>
+        <s:State name="over" stateGroups="overStates"/>
+        <s:State name="down" stateGroups="downStates"/>
+        <s:State name="disabled" stateGroups="disabledStates"/>
+        <s:State name="upAndSelected" stateGroups="selectedStates, selectedUpStates"/>
+        <s:State name="overAndSelected" stateGroups="overStates, selectedStates"/>
+        <s:State name="downAndSelected" stateGroups="downStates, selectedStates"/>
+        <s:State name="disabledAndSelected" stateGroups="disabledStates, selectedStates"/>
+    </s:states>
+
+    <!-- UP / DEFAULT -->
+    <s:Path left="0" top="0" bottom="0"
+            data="M130 26 7.47656 26C3.62305 26 0 23.377 0 19.5234L0 6.47656C0 2.62305 3.62305 0 7.47656 0L130 0 130 26Z"
+            includeIn="up,down"
+            winding="nonZero">
+        <s:fill>
+            <s:SolidColor color="#666666"/>
+        </s:fill>
+    </s:Path>
+    <s:Path x="1" y="1"
+            left="1" top="1" bottom="1"
+            data="M7.47656 0C3.78516 0 0.286133 2 0 6L0 17.5234C0 21.377 3.62305 24 7.47656 24L129 24 129 0 7.47656 0Z"
+            includeIn="up,down"
+            winding="nonZero">
+        <s:fill>
+            <s:LinearGradient x="99.5" y="0"
+                              rotation="90"
+                              scaleX="24">
+                <s:GradientEntry color="#FFFFFF" ratio="0"/>
+                <s:GradientEntry color="#DADADA" ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Path>
+
+    <!-- DISABLED -->
+    <s:Path left="0" top="0" bottom="0"
+            data="M130 26 7.47656 26C3.62305 26 0 23.377 0 19.5234L0 6.47656C0 2.62305 3.62305 0 7.47656 0L130 0 130 26Z"
+            includeIn="disabled,disabledAndSelected"
+            winding="nonZero">
+        <s:fill>
+            <s:SolidColor color="#666666"/>
+        </s:fill>
+    </s:Path>
+    <s:Path x="1" y="1"
+            left="1" top="1" bottom="1"
+            data="M7.47656 0C3.78516 0 0.286133 2 0 6L0 17.5234C0 21.377 3.62305 24 7.47656 24L129 24 129 0 7.47656 0Z"
+            includeIn="disabled,disabledAndSelected"
+            winding="nonZero">
+        <s:fill>
+            <s:LinearGradient x="99.5" y="0"
+                              rotation="90"
+                              scaleX="24">
+                <s:GradientEntry color="#B3B3B3" ratio="0"/>
+                <s:GradientEntry color="#666666" ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Path>
+
+    <!-- SELECTED -->
+    <s:Path left="0" top="0" bottom="0"
+            data="M130 26 7.47656 26C3.62305 26 0 23.377 0 19.5234L0 6.47656C0 2.62305 3.62305 0 7.47656 0L130 0 130 26Z"
+            includeIn="upAndSelected,downAndSelected"
+            winding="nonZero">
+        <s:fill>
+            <s:SolidColor color="#578D1E"/>
+        </s:fill>
+    </s:Path>
+    <s:Path x="1" y="1"
+            left="1" top="1" bottom="1"
+            data="M7.47656 0C3.78516 0 0.286133 2 0 6L0 17.5234C0 21.377 3.62305 24 7.47656 24L129 24 129 0 7.47656 0Z"
+            includeIn="upAndSelected,downAndSelected"
+            winding="nonZero">
+        <s:fill>
+            <s:LinearGradient x="99.5" y="0"
+                              rotation="90"
+                              scaleX="24">
+                <s:GradientEntry color="#BAD995" ratio="0"/>
+                <s:GradientEntry color="#578D1E" ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Path>
+
+    <!-- OVER -->
+    <s:Path left="0" top="0" bottom="0"
+            data="M130 26 7.47656 26C3.62305 26 0 23.377 0 19.5234L0 6.47656C0 2.62305 3.62305 0 7.47656 0L130 0 130 26Z"
+            includeIn="over,overAndSelected"
+            winding="nonZero">
+        <s:fill>
+            <s:SolidColor color="#0C77A1"/>
+        </s:fill>
+    </s:Path>
+    <s:Path x="1" y="1"
+            left="1" top="1" bottom="1"
+            data="M7.47656 0C3.78516 0 0.286133 2 0 6L0 17.5234C0 21.377 3.62305 24 7.47656 24L129 24 129 0 7.47656 0Z"
+            includeIn="over,overAndSelected"
+            winding="nonZero">
+        <s:fill>
+            <s:LinearGradient x="99.5" y="0"
+                              rotation="90"
+                              scaleX="24">
+                <s:GradientEntry color="#97C6D8" ratio="0"/>
+                <s:GradientEntry color="#0C77A1" ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Path>
+
+    <!-- LABEL -->
+    <s:Label id="labelDisplay"
+             left="5" right="5" top="8" bottom="6"
+             color="#FFFFFF"
+             color.down="#000000"
+             color.up="#000000"
+             fontSize="12"
+             fontWeight="bold"
+             kerning="off"
+             maxDisplayedLines="2"
+             textAlign="start"/>
+</s:SparkButtonSkin>

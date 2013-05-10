@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:views="com.esri.builder.views.*"
+         width="100%" height="100%"
+         creationComplete="init()">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.portal.supportClasses.PortalItem;
+            import com.esri.ags.tasks.JSONTask;
+            import com.esri.builder.components.serviceBrowser.nodes.FeatureServerNode;
+            import com.esri.builder.components.serviceBrowser.nodes.ImageServerNode;
+            import com.esri.builder.components.serviceBrowser.nodes.LayerNode;
+            import com.esri.builder.components.serviceBrowser.nodes.MapServerNode;
+            import com.esri.builder.components.serviceBrowser.nodes.ServiceDirectoryNode;
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.ConfigLayer;
+            import com.esri.builder.model.ConfigLayerStore;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.model.PortalLayer;
+            import com.esri.builder.supportClasses.ErrorMessageUtil;
+            import com.esri.builder.supportClasses.LogUtil;
+            import com.esri.builder.views.supportClasses.LayerSelectionEvent;
+
+            import mx.collections.ArrayList;
+            import mx.events.FlexEvent;
+            import mx.logging.ILogger;
+            import mx.logging.Log;
+            import mx.rpc.AsyncResponder;
+            import mx.rpc.Fault;
+
+            import spark.components.List;
+
+            private static const LOG:ILogger = LogUtil.createLogger(OperationalLayersView);
+
+            //TODO: shares similar code with BasemapsView - extract common class
+
+            private function init():void
+            {
+                operationalLayersSearch.addEventListener(LayerSelectionEvent.INCLUDE_LAYER, includeLayerHandler);
+            }
+
+            private function includeLayerHandler(event:Event):void
+            {
+                includeLayer();
+            }
+
+            private function activeOperationalLayersListView_addHandler(event:FlexEvent):void
+            {
+                syncConfigMap();
+            }
+
+            protected function includeButton_clickHandler(event:MouseEvent):void
+            {
+                includeLayer();
+            }
+
+            private function includeLayer():void
+            {
+                if (Log.isInfo())
+                {
+                    LOG.info("Include layer");
+                }
+
+                if (operationalLayersSearch.currentState == 'portal')
+                {
+                    if (operationalLayersSearch.portalLayersView.portalLayerList && operationalLayersSearch.portalLayersView.portalLayerList.selectedItem)
+                    {
+                        if (Log.isDebug())
+                        {
+                            LOG.debug("Include Portal search layer");
+                        }
+
+                        getPortalLayer(operationalLayersSearch.portalLayersView.portalLayerList, PortalLayer(operationalLayersSearch.portalLayersView.portalLayerList.selectedItem).itemType);
+                    }
+                    else if (operationalLayersSearch.portalLayersView.portalLayersMyContentView.list && operationalLayersSearch.portalLayersView.portalLayersMyContentView.list.selectedItem)
+                    {
+                        if (Log.isDebug())
+                        {
+                            LOG.debug("Include My Content layer");
+                        }
+
+                        getPortalLayer(operationalLayersSearch.portalLayersView.portalLayersMyContentView.list, PortalLayer(operationalLayersSearch.portalLayersView.portalLayersMyContentView.list.selectedItem).itemType);
+                    }
+                }
+                else if (operationalLayersSearch.currentState == "mapserver")
+                {
+                    if (Log.isDebug())
+                    {
+                        LOG.debug("Include service browser layer");
+                    }
+
+                    processServiceSelection(Model.instance.configOpsLayerList);
+
+                    Model.instance.config.isDirty = true;
+                }
+                else
+                {
+                    const configLayerFromWeb:ConfigLayer =
+                        operationalLayersSearch.layerFromWebView.getConfiguredLayer();
+                    if (configLayerFromWeb)
+                    {
+                        if (Log.isDebug())
+                        {
+                            LOG.debug("Include layer from Web");
+                        }
+
+                        Model.instance.configOpsLayerList.addLayer(configLayerFromWeb);
+                        syncConfigMap();
+                        Model.instance.config.isDirty = true;
+                    }
+                }
+            }
+
+            private function getPortalLayer(portalLayerList:List, type:String):void
+            {
+                if (Log.isInfo())
+                {
+                    LOG.info("Fetching Portal layer item");
+                }
+
+                const layer:PortalLayer = portalLayerList.selectedItem as PortalLayer;
+
+                const configLayer1:ConfigLayer = new ConfigLayer();
+                configLayer1.visible = true;
+                configLayer1.label = layer.title;
+                configLayer1.icon = layer.thumbnailURL;
+                if (layer.serviceURL)
+                {
+                    configLayer1.url = layer.serviceURL;
+                    if (type == PortalItem.TYPE_MAP_SERVICE)
+                    {
+                        if (Log.isDebug())
+                        {
+                            LOG.debug("Fetching map service item");
+                        }
+
+                        // wait for the response to add config layer
+                        const param:URLVariables = new URLVariables();
+                        param.f = "json";
+                        var jsonTask:JSONTask = new JSONTask;
+                        jsonTask.url = layer.serviceURL;
+                        jsonTask.requestTimeout = Model.REQUEST_TIMEOUT;
+                        jsonTask.showBusyCursor = true;
+                        jsonTask.execute(param, new AsyncResponder(jsonTask_resultHandler, jsonTask_faultHandler, configLayer1));
+                        function jsonTask_resultHandler(resultObject:Object, token:Object = null):void {
+                            if (Log.isDebug()) {
+                                LOG.debug("Map service fetch success");
+                            }
+
+                            if (resultObject.singleFusedMapCache) {
+                                ConfigLayer(token).type = ConfigLayer.TILED;
+                            }
+                            else if (resultObject.bandCount) {
+                                ConfigLayer(token).type = ConfigLayer.IMAGE;
+                            }
+                            else {
+                                if (!isNaN(Number(layer.serviceURL.charAt(layer.serviceURL.length)))) {
+                                    ConfigLayer(token).type = ConfigLayer.DYNAMIC;
+                                }
+                                else {
+                                    ConfigLayer(token).type = ConfigLayer.FEATURE;
+                                }
+                            }
+
+                            if (Log.isDebug()) {
+                                LOG.debug("Add portal config layer - type: {0}, url: {1}", configLayer1.type, configLayer1.url);
+                            }
+
+                            Model.instance.configOpsLayerList.addLayer(configLayer1);
+                            updateConfigLayerList();
+                        }
+
+                        function jsonTask_faultHandler(fault:Fault, token:Object = null):void {
+                            if (fault.faultString != "Sign in aborted") {
+                                if (Log.isDebug()) {
+                                    LOG.debug("Map service fetch fault");
+                                }
+
+                                const errorMessage:String = resourceManager.getString('BuilderStrings',
+                                                                                      'mapsView.couldNotAddLayer',
+                                                                                      [ layer.title, ErrorMessageUtil.getKnownErrorCauseMessage(fault)]);
+                                AppEvent.dispatch(AppEvent.SHOW_ERROR, errorMessage);
+                            }
+                            else {
+                                if (Log.isDebug()) {
+                                    LOG.debug("Sign in aborded for layer ", layer.title);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        configLayer1.type = getConfigLayerType(type);
+                        if (configLayer1.type)
+                        {
+                            if (configLayer1.type == ConfigLayer.FEATURE)
+                            {
+                                // check to see if it points to the feature service or actual layer
+                                if (isNaN(Number(layer.serviceURL.charAt(layer.serviceURL.length - 1))))
+                                {
+                                    if (Log.isDebug())
+                                    {
+                                        LOG.debug("Fetching feature service item");
+                                    }
+
+                                    const param1:URLVariables = new URLVariables();
+                                    param1.f = "json";
+                                    var jsonTask1:JSONTask = new JSONTask;
+                                    jsonTask1.url = layer.serviceURL;
+                                    jsonTask1.requestTimeout = Model.REQUEST_TIMEOUT;
+                                    jsonTask1.showBusyCursor = true;
+                                    jsonTask1.execute(param1, new AsyncResponder(jsonTask1_resultHandler, jsonTask1_faultHandler));
+                                    function jsonTask1_resultHandler(resultObject:Object, token:Object = null):void {
+                                        if (Log.isDebug()) {
+                                            LOG.debug("Feature service item fetch success");
+                                        }
+
+                                        const layers:Array = resultObject.layers;
+                                        if (layers && layers.length) {
+                                            const totalLayers:uint = layers.length - 1;
+                                            for (var i:int = totalLayers; i >= 0; i--) {
+                                                const configLayer:ConfigLayer = new ConfigLayer();
+                                                configLayer.visible = true;
+                                                configLayer.label = layers[i].name;
+                                                configLayer.icon = layer.thumbnailURL;
+                                                configLayer.type = ConfigLayer.FEATURE;
+                                                configLayer.url = layer.serviceURL + "/" + layers[i].id;
+                                                Model.instance.configOpsLayerList.addLayer(configLayer);
+                                            }
+                                            updateConfigLayerList();
+                                        }
+                                    }
+
+                                    function jsonTask1_faultHandler(fault:Fault, token:Object = null):void {
+                                        if (fault.faultString != "Sign in aborted") {
+                                            if (Log.isDebug()) {
+                                                LOG.debug("Add portal config layer - type: {0}, url: {1}", configLayer1.type, configLayer1.url);
+                                            }
+                                            if (Log.isDebug()) {
+                                                LOG.debug("Feature service item fetch fault");
+                                            }
+
+                                            const errorMessage:String = resourceManager.getString('BuilderStrings',
+                                                                                                  'mapsView.couldNotAddLayer',
+                                                                                                  [ layer.title, fault.faultString ]);
+                                            AppEvent.dispatch(AppEvent.SHOW_ERROR, errorMessage);
+                                        }
+                                        else {
+                                            if (Log.isDebug()) {
+                                                LOG.debug("Sign in aborded for layer ", layer.title);
+                                            }
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    if (Log.isDebug())
+                                    {
+                                        LOG.debug("Add portal config layer - type: {0}, url: {1}", configLayer1.type, configLayer1.url);
+                                    }
+
+                                    configLayer1.url = layer.serviceURL;
+                                    Model.instance.configOpsLayerList.addLayer(configLayer1);
+                                    updateConfigLayerList();
+                                }
+                            }
+                            else
+                            {
+                                if (Log.isDebug())
+                                {
+                                    LOG.debug("Add portal config layer - type: {0}, url: {1}", configLayer1.type, configLayer1.url);
+                                }
+
+                                configLayer1.url = layer.serviceURL;
+                                Model.instance.configOpsLayerList.addLayer(configLayer1);
+                                updateConfigLayerList();
+                            }
+                        }
+                    }
+                }
+            }
+
+            private function getConfigLayerType(type:String, url:String = null):String
+            {
+                var result:String;
+                switch (type)
+                {
+                    case PortalItem.TYPE_FEATURE_SERVICE:
+                    {
+                        result = ConfigLayer.FEATURE;
+                        break;
+                    }
+                    case PortalItem.TYPE_IMAGE_SERVICE:
+                    {
+                        result = ConfigLayer.IMAGE;
+                        break;
+                    }
+                    case PortalItem.TYPE_KML_SERVICE:
+                    {
+                        result = ConfigLayer.KML;
+                        break;
+                    }
+                }
+                return result;
+            }
+
+            private function updateConfigLayerList():void
+            {
+                syncConfigMap();
+                Model.instance.config.isDirty = true;
+            }
+
+            private function configureNonEsriLayer(configLayer:ConfigLayer, layerType:String):void
+            {
+                if (layerType == 'OpenStreetMap')
+                {
+                    configLayer.type = ConfigLayer.OSM;
+                }
+                else if (layerType.indexOf('BingMaps') > -1)
+                {
+                    configLayer.type = ConfigLayer.BING;
+                    configLayer.style = mapBingStyleFromBasemapType(layerType);
+                    configLayer.culture = Model.instance.cultureCode;
+                }
+            }
+
+            private function mapBingStyleFromBasemapType(basemapType:String):String
+            {
+                if (basemapType == 'BingMapsAerial')
+                {
+                    return 'aerial';
+                }
+                else if (basemapType == 'BingMapsHybrid')
+                {
+                    return 'aerialWithLabels';
+                }
+                else
+                {
+                    //default - BingMapsRoad
+                    return 'road';
+                }
+            }
+
+            private function processServiceSelection(configLayerStore:ConfigLayerStore):void
+            {
+                if (Log.isDebug())
+                {
+                    LOG.debug("Processing service browser layer");
+                }
+
+                var serviceSelection:ArrayList = operationalLayersSearch.mapServerView.serviceBrowser.serviceSelection;
+                var totalServices:int = serviceSelection.length;
+
+                var selectedNode:ServiceDirectoryNode;
+                for (var i:int = 0; i < totalServices; i++)
+                {
+                    selectedNode = serviceSelection.getItemAt(i) as ServiceDirectoryNode;
+
+                    if (selectedNode is MapServerNode || selectedNode is FeatureServerNode || selectedNode is ImageServerNode)
+                    {
+                        if (Log.isDebug())
+                        {
+                            LOG.debug("Adding map server node");
+                        }
+
+                        AppEvent.addListener(AppEvent.MAP_SERVICE_ADDED, layerAdded);
+                        AppEvent.dispatch(AppEvent.ADD_MAP_SERVICE, { mapServer: selectedNode, configLayerStore: configLayerStore });
+                    }
+                    else if (selectedNode is LayerNode)
+                    {
+                        if (Log.isDebug())
+                        {
+                            LOG.debug("Adding layer node");
+                        }
+
+                        AppEvent.addListener(AppEvent.LAYER_SERVICE_ADDED, layerAdded);
+                        AppEvent.dispatch(AppEvent.ADD_LAYER_SERVICE, { layerServer: selectedNode, configLayerStore: configLayerStore });
+                    }
+                }
+            }
+
+            private function layerAdded(event:AppEvent):void
+            {
+                syncConfigMap();
+            }
+
+            private function syncConfigMap():void
+            {
+                if (Log.isDebug())
+                {
+                    LOG.debug("Syncing basemaps");
+                }
+
+                Model.instance.config.configMap.operationalLayers.importLayers(Model.instance.configOpsLayerList.getAllLayers());
+            }
+        ]]>
+    </fx:Script>
+
+    <s:Label left="10" top="10"
+             fontSize="18"
+             fontWeight="bold"
+             text="{resourceManager.getString('BuilderStrings', 'mapsView.operationalLayersView.title')}"/>
+
+    <s:Label left="10" top="30"
+             alpha="0.7"
+             fontSize="14"
+             text="{resourceManager.getString('BuilderStrings', 'mapsView.operationalLayersView.subtitle')}"/>
+
+    <views:OperationalLayersSearch id="operationalLayersSearch"
+                                   width="425" height="100%"
+                                   left="10" top="50" bottom="10"/>
+
+    <s:Button left="458" top="220"
+              click="includeButton_clickHandler(event)"
+              enabled="{operationalLayersSearch.isItemSelected}"
+              label="{resourceManager.getString('BuilderStrings', 'include')}"
+              skinClass="com.esri.builder.skins.GreenNextButtonSkin"/>
+
+    <views:ConfigLayerListView id="activeOperationalLayersListView"
+                               width="100%" height="60%"
+                               left="550" right="10" top="64" bottom="10"
+                               add="activeOperationalLayersListView_addHandler(event)"
+                               dataProvider="{Model.instance.configOpsLayerList.configLayerList}"
+                               itemRenderer="com.esri.builder.renderers.OperationalConfigLayerRenderer"
+                               listTitle="{resourceManager.getString('BuilderStrings', 'mapsView.operationalLayersView.listTitle')}"
+                               noLayerText="{resourceManager.getString('BuilderStrings', 'mapsView.operationalLayersView.noOperationalLayerSelected')}"/>
+</s:Group>

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Skin xmlns:s="library://ns.adobe.com/flex/spark"
+        xmlns:fx="http://ns.adobe.com/mxml/2009"
+        preinitialize="init()">
+    <fx:Script>
+        <![CDATA[
+            import mx.core.FlexGlobals;
+            import mx.core.LayoutDirection;
+
+            protected function init():void
+            {
+                FlexGlobals.topLevelApplication.addEventListener("localeChanged", localeChangeHandler, false, 0, true);
+                updateLayoutDirection();
+            }
+
+            protected function localeChangeHandler(event:Event):void
+            {
+                updateLayoutDirection();
+            }
+
+            private function updateLayoutDirection():void
+            {
+                var currentLocale:String = getStyle("locale");
+                var currentLayoutDirection:String = getStyle("layoutDirection");
+
+                //question mark is only mirrored (RTL) for Arabic locale
+                //see http://en.wikipedia.org/wiki/Hebrew_punctuation#Period.2C_question_mark.2C_exclamation_mark.2C_comma
+                var targetLayoutDirection:String = (getStyle("locale") == "ar") ? LayoutDirection.RTL : LayoutDirection.LTR;
+
+                if (currentLayoutDirection != targetLayoutDirection)
+                {
+                    setStyle("layoutDirection", targetLayoutDirection);
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <fx:Metadata>[HostComponent("com.esri.builder.views.HelpButton")]</fx:Metadata>
+
+    <s:states>
+        <s:State name="up"/>
+        <s:State name="over"/>
+        <s:State name="down"/>
+        <s:State name="disabled"/>
+    </s:states>
+
+    <s:Ellipse left="0" right="0" top="0" bottom="0"
+               includeIn="disabled,over,up"
+               visible.over="false"
+               visible.up="false">
+        <s:fill>
+            <s:LinearGradient x="8.798" y="0"
+                              rotation="90"
+                              scaleX="17.597">
+                <s:GradientEntry color="#B3B3B3" ratio="0"/>
+                <s:GradientEntry color="#666666" ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#666666"
+                                joints="miter"
+                                miterLimit="10"/>
+        </s:stroke>
+    </s:Ellipse>
+    <s:Ellipse left="0" right="0" top="0" bottom="0"
+               includeIn="over,up"
+               visible.up="false">
+        <s:fill>
+            <s:LinearGradient x="8.798" y="0"
+                              rotation="90"
+                              scaleX="17.597">
+                <s:GradientEntry color="#BAD995" ratio="0"/>
+                <s:GradientEntry color="#578D1E" ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#578D1E"
+                                joints="miter"
+                                miterLimit="10"/>
+        </s:stroke>
+    </s:Ellipse>
+    <s:Ellipse left="0" right="0" top="0" bottom="0"
+               includeIn="down,over,up"
+               visible.over="false">
+        <s:fill>
+            <s:LinearGradient x="8.798" y="0"
+                              rotation="90"
+                              scaleX="17.597">
+                <s:GradientEntry color="#97C6D8" ratio="0"/>
+                <s:GradientEntry color="#0C77A1" ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#0C77A1"
+                                joints="miter"
+                                miterLimit="10"/>
+        </s:stroke>
+    </s:Ellipse>
+    <s:Path left="5.327" right="5.24" top="3.001" bottom="4.01"
+            data="M 6.299 10.772 L 3.809 10.772 C 3.802 10.413 3.799 10.195 3.799 10.117 C 3.799 9.31 3.933 8.646 4.199 8.125 C 4.466 7.604 5 7.019 5.801 6.367 C 6.602 5.716 7.08 5.29 7.236 5.088 C 7.478 4.769 7.598 4.417 7.598 4.033 C 7.598 3.499 7.385 3.042 6.958 2.661 C 6.531 2.28 5.957 2.09 5.234 2.09 C 4.538 2.09 3.955 2.288 3.486 2.686 C 3.018 3.083 2.695 3.688 2.52 4.502 L 0 4.189 C 0.071 3.024 0.568 2.034 1.489 1.221 C 2.41 0.407 3.62 0 5.117 0 C 6.692 0 7.946 0.412 8.877 1.235 C 9.808 2.059 10.273 3.018 10.273 4.111 C 10.273 4.717 10.103 5.29 9.761 5.83 C 9.419 6.37 8.688 7.106 7.568 8.037 C 6.989 8.519 6.629 8.906 6.489 9.199 C 6.35 9.492 6.286 10.017 6.299 10.772 Z M 3.809 14.463 L 3.809 11.719 L 6.553 11.719 L 6.553 14.463 L 3.809 14.463 Z"
+            winding="nonZero">
+        <s:fill>
+            <s:SolidColor color="#FFFFFF"/>
+        </s:fill>
+    </s:Path>
+</s:Skin>

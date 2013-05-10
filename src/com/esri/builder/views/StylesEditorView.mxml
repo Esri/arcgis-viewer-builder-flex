@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:NavigatorContent xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark"
+                    xmlns:mx="library://ns.adobe.com/flex/mx"
+                    width="100%" height="100%"
+                    initialize="this_initializeHandler(event)">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.Model;
+
+            import mx.events.ColorPickerEvent;
+            import mx.events.FlexEvent;
+
+            import spark.events.IndexChangeEvent;
+
+            private var _isConfigXMLSaved:Boolean;
+
+            [Bindable]
+            private var transparencyValue:Number;
+
+            private function textcolor_changeHandler(event:ColorPickerEvent):void
+            {
+                AppEvent.dispatch(AppEvent.CHANGE_TEXT_COLOR, event.color);
+            }
+
+            private function backgroundColor_changeHandler(event:ColorPickerEvent):void
+            {
+                AppEvent.dispatch(AppEvent.CHANGE_BACKGROUND_COLOR, event.color);
+            }
+
+            private function rolloverColor_changeHandler(event:ColorPickerEvent):void
+            {
+                AppEvent.dispatch(AppEvent.CHANGE_ROLLOVER_COLOR, event.color);
+            }
+
+            private function selectionColor_changeHandler(event:ColorPickerEvent):void
+            {
+                AppEvent.dispatch(AppEvent.CHANGE_SELECTION_COLOR, event.color);
+            }
+
+            private function titleColor_changeHandler(event:ColorPickerEvent):void
+            {
+                AppEvent.dispatch(AppEvent.CHANGE_TITLE_COLOR, event.color);
+            }
+
+            private function predefinedStyles_changeHandler(event:IndexChangeEvent):void
+            {
+                const value:String = predefinedStyles.selectedItem ? predefinedStyles.selectedItem.value : '';
+                switch (value)
+                {
+                    case 'blackGold':
+                    {
+                        doBlackGold();
+                        break;
+                    }
+                    case 'cobaltBlue':
+                    {
+                        doCobaltBlue();
+                        break;
+                    }
+                    case 'desertSand':
+                    {
+                        doDesertSand();
+                        break;
+                    }
+                    case 'graphiteGray':
+                    {
+                        doGraphiteGray();
+                        break;
+                    }
+                    case 'sageGreen':
+                    {
+                        doSageGreen();
+                        break;
+                    }
+                    case 'skyBlue':
+                    {
+                        doSkyBlue();
+                        break;
+                    }
+                    case 'plain':
+                    {
+                        doPlain();
+                        break;
+                    }
+                }
+            }
+
+            private function setPredefinedStyles(values:Object):void
+            {
+                Model.instance.config.textColor = values.textColor;
+                Model.instance.config.backgroundColor = values.backgroundColor;
+                Model.instance.config.rolloverColor = values.rolloverColor;
+                Model.instance.config.selectionColor = values.selectionColor;
+                Model.instance.config.titleColor = values.titleColor;
+                Model.instance.config.alpha = values.alpha;
+
+                AppEvent.dispatch(AppEvent.SET_PREDEFINED_STYLES, values);
+            }
+
+            private function doBlackGold():void
+            {
+                const values:Object = { textColor: 0xFFFFFF, backgroundColor: 0x333333, rolloverColor: 0x101010, selectionColor: 0x000000, titleColor: 0xFFD700, alpha: 0.8 };
+                setPredefinedStyles(values);
+            }
+
+            private function doCobaltBlue():void
+            {
+                const values:Object = { textColor: 0xCEE7F4, backgroundColor: 0x39628C, rolloverColor: 0x355D89, selectionColor: 0x294867, titleColor: 0xCEE7F4, alpha: 0.8 };
+                setPredefinedStyles(values);
+            }
+
+            private function doDesertSand():void
+            {
+                const values:Object = { textColor: 0x4C2600, backgroundColor: 0xFFEDB8, rolloverColor: 0xB2AD81, selectionColor: 0x6F6750, titleColor: 0x4C2600, alpha: 0.8 };
+                setPredefinedStyles(values);
+            }
+
+            private function doGraphiteGray():void
+            {
+                const values:Object = { textColor: 0xCCCCCC, backgroundColor: 0x777777, rolloverColor: 0x555555, selectionColor: 0x333333, titleColor: 0xCCCCCC, alpha: 0.8 };
+                setPredefinedStyles(values);
+            }
+
+            private function doSageGreen():void
+            {
+                const values:Object = { textColor: 0x333333, backgroundColor: 0xAFCFAF, rolloverColor: 0xFFFFAB, selectionColor: 0xEAEA9D, titleColor: 0x333333, alpha: 0.8 };
+                setPredefinedStyles(values);
+            }
+
+            private function doSkyBlue():void
+            {
+                const values:Object = { textColor: 0x444444, backgroundColor: 0xEBF4FF, rolloverColor: 0xEBF4FF, selectionColor: 0xDEEBFF, titleColor: 0x444444, alpha: 0.8 };
+                setPredefinedStyles(values);
+            }
+
+            private function doPlain():void
+            {
+                const values:Object = { textColor: 0x000000, backgroundColor: 0xFFFFFF, rolloverColor: 0xEFEFEF, selectionColor: 0xFFFFFF, titleColor: 0x000000, alpha: 1.0 };
+                setPredefinedStyles(values);
+            }
+
+            protected function this_initializeHandler(event:FlexEvent):void
+            {
+                AppEvent.addListener(AppEvent.APP_READY_TO_EDIT, appReadyToEditHandler);
+                AppEvent.addListener(AppEvent.CONFIG_XML_SAVED, configXMLSaved);
+                AppEvent.addListener(AppEvent.CHANGES_SAVED, changesSavedHandler);
+            }
+
+            private function appReadyToEditHandler(event:AppEvent):void
+            {
+                setUpTransparency();
+            }
+
+            private function setUpTransparency():void
+            {
+                transparencyValue = (1 - Model.instance.config.alpha) * 100;
+            }
+
+            private function configXMLSaved(event:AppEvent):void
+            {
+                if (event.data == "styles")
+                {
+                    _isConfigXMLSaved = true;
+                }
+            }
+
+            private function changesSavedHandler(event:AppEvent):void
+            {
+                setUpTransparency();
+            }
+
+            private function transparency_changeHandler(event:Event):void
+            {
+                const alphaValue:Number = 1.0 - (transparencyValue / 100.0);
+                Model.instance.config.alpha = alphaValue;
+                AppEvent.dispatch(AppEvent.CHANGE_ALPHA, alphaValue);
+            }
+        ]]>
+    </fx:Script>
+
+    <s:HGroup gap="0" verticalAlign="bottom">
+        <s:Form>
+            <s:layout>
+                <s:FormLayout gap="-14"/>
+            </s:layout>
+
+            <s:FormItem label="{resourceManager.getString('BuilderStrings', 'stylesWindow.predefinedStyles')}">
+                <s:DropDownList id="predefinedStyles"
+                                change="predefinedStyles_changeHandler(event)"
+                                requireSelection="true"
+                                typicalItem="mmmmmmmmmmmmm">
+                    <s:dataProvider>
+                        <s:ArrayList>
+                            <s:DataItem label="{resourceManager.getString('BuilderStrings', 'stylesWindow.blackGold')}" value="blackGold"/>
+                            <s:DataItem label="{resourceManager.getString('BuilderStrings', 'stylesWindow.cobaltBlue')}" value="cobaltBlue"/>
+                            <s:DataItem label="{resourceManager.getString('BuilderStrings', 'stylesWindow.desertSand')}" value="desertSand"/>
+                            <s:DataItem label="{resourceManager.getString('BuilderStrings', 'stylesWindow.graphiteGray')}" value="graphiteGray"/>
+                            <s:DataItem label="{resourceManager.getString('BuilderStrings', 'stylesWindow.sageGreen')}" value="sageGreen"/>
+                            <s:DataItem label="{resourceManager.getString('BuilderStrings', 'stylesWindow.skyBlue')}" value="skyBlue"/>
+                            <s:DataItem label="{resourceManager.getString('BuilderStrings', 'stylesWindow.plain')}" value="plain"/>
+                        </s:ArrayList>
+                    </s:dataProvider>
+                </s:DropDownList>
+            </s:FormItem>
+
+            <s:FormItem label="{resourceManager.getString('BuilderStrings', 'stylesWindow.buildYourOwn')}">
+                <s:layout>
+                    <s:HorizontalLayout gap="25"/>
+                </s:layout>
+
+                <s:HGroup verticalAlign="middle">
+                    <mx:ColorPicker change="textcolor_changeHandler(event)" selectedColor="@{Model.instance.config.textColor}"/>
+                    <s:Label fontWeight="bold" text="{resourceManager.getString('BuilderStrings', 'stylesWindow.textColor')}"/>
+                </s:HGroup>
+
+                <s:HGroup paddingLeft="25" verticalAlign="middle">
+                    <mx:ColorPicker change="titleColor_changeHandler(event)" selectedColor="@{Model.instance.config.titleColor}"/>
+                    <s:Label fontWeight="bold" text="{resourceManager.getString('BuilderStrings', 'stylesWindow.titleColor')}"/>
+                </s:HGroup>
+
+                <s:HGroup verticalAlign="middle">
+                    <mx:ColorPicker change="backgroundColor_changeHandler(event)" selectedColor="@{Model.instance.config.backgroundColor}"/>
+                    <s:Label fontWeight="bold" text="{resourceManager.getString('BuilderStrings', 'stylesWindow.backgroundColor')}"/>
+                </s:HGroup>
+            </s:FormItem>
+
+            <s:FormItem>
+                <s:layout>
+                    <s:HorizontalLayout gap="25"/>
+                </s:layout>
+
+                <s:HGroup verticalAlign="middle">
+                    <mx:ColorPicker change="rolloverColor_changeHandler(event)" selectedColor="@{Model.instance.config.rolloverColor}"/>
+                    <s:Label fontWeight="bold" text="{resourceManager.getString('BuilderStrings', 'stylesWindow.rolloverColor')}"/>
+                </s:HGroup>
+
+                <s:HGroup verticalAlign="middle">
+                    <mx:ColorPicker change="selectionColor_changeHandler(event)" selectedColor="@{Model.instance.config.selectionColor}"/>
+                    <s:Label fontWeight="bold" text="{resourceManager.getString('BuilderStrings', 'stylesWindow.selectionColor')}"/>
+                </s:HGroup>
+            </s:FormItem>
+        </s:Form>
+
+        <s:VGroup gap="0">
+            <s:Label fontWeight="bold"
+                     text="{resourceManager.getString('BuilderStrings', 'stylesWindow.alpha')}"
+                     textAlign="left"/>
+
+            <mx:HSlider id="tpSlider"
+                        width="100%"
+                        change="transparency_changeHandler(event)"
+                        dataTipPrecision="0"
+                        labelOffset="30"
+                        labels="{['0%','50%','100%']}"
+                        liveDragging="true"
+                        maximum="100"
+                        minimum="0"
+                        snapInterval="1"
+                        value="@{transparencyValue}"/>
+        </s:VGroup>
+    </s:HGroup>
+
+    <s:Button right="10" top="10"
+              click="AppEvent.dispatch(AppEvent.SAVE_CONFIG_XML, 'styles')"
+              label="{resourceManager.getString('BuilderStrings', 'save')}"
+              skinClass="com.esri.builder.skins.BlueSaveButtonSkin"/>
+
+    <s:RichEditableText right="10" bottom="10"
+                        editable="false"
+                        selectable="true">
+        <s:textFlow>
+            <s:TextFlow>
+                <s:a href="{resourceManager.getString('BuilderStrings', 'designView.stylesHelpURL')}" target="_blank">{resourceManager.getString('BuilderStrings', 'layoutView.learnMore')}</s:a>
+            </s:TextFlow>
+        </s:textFlow>
+    </s:RichEditableText>
+</s:NavigatorContent>

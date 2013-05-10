@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:GridItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark"
+                    xmlns:mx="library://ns.adobe.com/flex/mx"
+                    xmlns:fb="http://ns.adobe.com/flashbuilder/2009"
+                    clipAndEnableScrolling="true">
+    <fx:Script fb:purpose="styling">
+        <![CDATA[
+            import spark.primitives.supportClasses.GraphicElement;
+
+            // chrome color constants and variables
+            private static const DEFAULT_COLOR_VALUE:uint = 0xCC;
+            private static const DEFAULT_COLOR:uint = 0xCCCCCC;
+            private static const DEFAULT_SYMBOL_COLOR:uint = 0x000000;
+
+            private static var colorTransform:ColorTransform = new ColorTransform();
+
+            private var chromeColorChanged:Boolean = false;
+            private var colorized:Boolean = false;
+
+            /**
+             *  @private
+             *  Apply chromeColor style.
+             */
+            override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void
+            {
+                // Apply chrome color
+                if (chromeColorChanged)
+                {
+                    var chromeColor:uint = getStyle("chromeColor");
+
+                    if (chromeColor != DEFAULT_COLOR || colorized)
+                    {
+                        colorTransform.redOffset = ((chromeColor & (0xFF << 16)) >> 16) - DEFAULT_COLOR_VALUE;
+                        colorTransform.greenOffset = ((chromeColor & (0xFF << 8)) >> 8) - DEFAULT_COLOR_VALUE;
+                        colorTransform.blueOffset = (chromeColor & 0xFF) - DEFAULT_COLOR_VALUE;
+                        colorTransform.alphaMultiplier = alpha;
+
+                        transform.colorTransform = colorTransform;
+
+                        var exclusions:Array = [ labelDisplay, checkBox ];
+
+                        // Apply inverse colorizing to exclusions
+                        if (exclusions && exclusions.length > 0)
+                        {
+                            colorTransform.redOffset = -colorTransform.redOffset;
+                            colorTransform.greenOffset = -colorTransform.greenOffset;
+                            colorTransform.blueOffset = -colorTransform.blueOffset;
+
+                            for (var i:int = 0; i < exclusions.length; i++)
+                            {
+                                var exclusionObject:Object = exclusions[i];
+
+                                if (exclusionObject &&
+                                    (exclusionObject is DisplayObject ||
+                                    exclusionObject is GraphicElement))
+                                {
+                                    colorTransform.alphaMultiplier = exclusionObject.alpha;
+                                    exclusionObject.transform.colorTransform = colorTransform;
+                                }
+                            }
+                        }
+
+                        colorized = true;
+                    }
+
+                    chromeColorChanged = false;
+                }
+
+                super.updateDisplayList(unscaledWidth, unscaledHeight);
+            }
+
+            /**
+             *  @private
+             */
+            override public function styleChanged(styleProp:String):void
+            {
+                var allStyles:Boolean = !styleProp || styleProp == "styleName";
+
+                super.styleChanged(styleProp);
+
+                if (allStyles || styleProp == "chromeColor")
+                {
+                    chromeColorChanged = true;
+                    invalidateDisplayList();
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <fx:Script>
+        <![CDATA[
+            import mx.events.CollectionEventKind;
+            import mx.events.CollectionEvent;
+            import mx.events.FlexEvent;
+            import mx.events.PropertyChangeEvent;
+            import mx.events.PropertyChangeEventKind;
+
+            override public function prepare(hasBeenRecycled:Boolean):void
+            {
+                grid.dataProvider.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE,
+                                                   gridDataProvider_propertyChangeHandler,
+                                                   false, 0, true);
+                updateOwnSelection();
+            }
+
+            private function gridDataProvider_propertyChangeHandler(event:PropertyChangeEvent):void
+            {
+                if (event.kind == PropertyChangeEventKind.UPDATE)
+                {
+                    updateOwnSelection();
+                }
+            }
+
+            //optimized because of frequent calls
+            private function updateOwnSelection():void
+            {
+                if (!grid.dataProvider)
+                {
+                    return;
+                }
+
+                var allItemsSelected:Boolean = true;
+                const items:Array = grid.dataProvider.toArray();
+                for (var i:int = items.length - 1; i >= 0; i--)
+                {
+                    //is the current item's selected property false?
+                    if (!items[i][column.dataField])
+                    {
+                        allItemsSelected = false;
+                        break;
+                    }
+                }
+
+                checkBox.selected = allItemsSelected;
+            }
+
+            override public function discard(willBeRecycled:Boolean):void
+            {
+                grid.dataProvider.removeEventListener(PropertyChangeEvent.PROPERTY_CHANGE,
+                                                      gridDataProvider_propertyChangeHandler);
+            }
+
+            private function updateSelectionOfAllItems(selected:Boolean):void
+            {
+                for each (var item:Object in grid.dataProvider.toArray())
+                {
+                    item[column.dataField] = selected;
+                }
+
+                grid.dataProvider.dispatchEvent(
+                    new CollectionEvent(CollectionEvent.COLLECTION_CHANGE,
+                                        false, false, CollectionEventKind.REFRESH));
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="hovered"/>
+        <s:State name="down"/>
+    </s:states>
+
+    <!-- layer 1: shadow -->
+    <!--- @private -->
+    <s:Rect id="shadow"
+            left="-1" right="-1" top="-1" bottom="-1"
+            radiusX="2">
+        <s:fill>
+            <s:LinearGradient rotation="90">
+                <s:GradientEntry alpha="0.01"
+                                 alpha.down="0"
+                                 color="0x000000"
+                                 color.down="0xFFFFFF"/>
+                <s:GradientEntry alpha="0.07"
+                                 alpha.down="0.5"
+                                 color="0x000000"
+                                 color.down="0xFFFFFF"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Rect>
+
+    <!-- layer 2: fill -->
+    <!--- @private -->
+    <s:Rect id="fill"
+            left="0" right="0" top="0" bottom="0">
+        <s:fill>
+            <s:LinearGradient rotation="90">
+                <s:GradientEntry alpha="0.85"
+                                 color="0xFFFFFF"
+                                 color.down="0xAAAAAA"
+                                 color.hovered="0xBBBDBD"/>
+                <s:GradientEntry alpha="0.85"
+                                 color="0xD8D8D8"
+                                 color.down="0x929496"
+                                 color.hovered="0x9FA0A1"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Rect>
+
+    <!-- layer 3: fill lowlight -->
+    <!--- @private -->
+    <s:Rect id="lowlight"
+            left="0" right="0" top="0" bottom="0">
+        <s:fill>
+            <s:LinearGradient rotation="270">
+                <s:GradientEntry alpha="0.0627"
+                                 color="0x000000"
+                                 ratio="0.0"/>
+                <s:GradientEntry alpha="0.0099"
+                                 color="0x000000"
+                                 ratio="0.48"/>
+                <s:GradientEntry alpha="0"
+                                 color="0x000000"
+                                 ratio="0.48001"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Rect>
+
+    <!-- layer 4: fill highlight -->
+    <!--- @private -->
+    <s:Rect id="highlight"
+            left="0" right="0" top="0" bottom="0">
+        <s:fill>
+            <s:LinearGradient rotation="90">
+                <s:GradientEntry alpha="0.33"
+                                 alpha.down="0.12"
+                                 alpha.hovered="0.22"
+                                 color="0xFFFFFF"
+                                 ratio="0.0"/>
+                <s:GradientEntry alpha="0.33"
+                                 alpha.down="0.12"
+                                 alpha.hovered="0.22"
+                                 color="0xFFFFFF"
+                                 ratio="0.48"/>
+                <s:GradientEntry alpha="0"
+                                 color="0xFFFFFF"
+                                 ratio="0.48001"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Rect>
+
+    <!-- layer 5: highlight stroke (all states except down) -->
+    <!--- @private -->
+    <s:Rect id="highlightStroke"
+            left="0" right="0" top="0" bottom="0"
+            excludeFrom="down">
+        <s:stroke>
+            <s:LinearGradientStroke rotation="90" weight="1">
+                <s:GradientEntry alpha.hovered="0.22" color="0xFFFFFF"/>
+                <s:GradientEntry alpha.hovered="0.22" color="0xD8D8D8"/>
+            </s:LinearGradientStroke>
+        </s:stroke>
+    </s:Rect>
+
+    <!-- layer 6: highlight stroke (down state only) -->
+    <!--- @private -->
+    <s:Rect id="hldownstroke1"
+            left="0" right="0" top="0" bottom="0"
+            includeIn="down">
+        <s:stroke>
+            <s:LinearGradientStroke rotation="90" weight="1">
+                <s:GradientEntry alpha="0.25"
+                                 color="0x000000"
+                                 ratio="0.0"/>
+                <s:GradientEntry alpha="0.25"
+                                 color="0x000000"
+                                 ratio="0.001"/>
+                <s:GradientEntry alpha="0.07"
+                                 color="0x000000"
+                                 ratio="0.0011"/>
+                <s:GradientEntry alpha="0.07"
+                                 color="0x000000"
+                                 ratio="0.965"/>
+                <s:GradientEntry alpha="0.00"
+                                 color="0x000000"
+                                 ratio="0.9651"/>
+            </s:LinearGradientStroke>
+        </s:stroke>
+    </s:Rect>
+    <!--- @private -->
+    <s:Rect id="hldownstroke2"
+            left="1" right="1" top="1" bottom="1"
+            includeIn="down">
+        <s:stroke>
+            <s:LinearGradientStroke rotation="90" weight="1">
+                <s:GradientEntry alpha="0.09"
+                                 color="0x000000"
+                                 ratio="0.0"/>
+                <s:GradientEntry alpha="0.00"
+                                 color="0x000000"
+                                 ratio="0.0001"/>
+            </s:LinearGradientStroke>
+        </s:stroke>
+    </s:Rect>
+
+    <s:CheckBox id="checkBox"
+                change="updateSelectionOfAllItems(checkBox.selected)"
+                horizontalCenter="0"
+                verticalCenter="0"/>
+</s:GridItemRenderer>

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                xmlns:mx="library://ns.adobe.com/flex/mx"
+                width="105" height="95"
+                autoDrawBackground="false"
+                doubleClickEnabled="true">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
+            import com.esri.builder.model.WidgetType;
+
+            private var widgetType:WidgetType;
+
+            override public function set data(value:Object):void
+            {
+                super.data = value;
+
+                widgetType = value as WidgetType;
+                if (widgetType)
+                {
+                    setWidgetTypeIcon();
+                    updateLabelsAndTooltips();
+                }
+            }
+
+            override protected function resourcesChanged():void
+            {
+                super.resourcesChanged();
+                updateLabelsAndTooltips();
+            }
+
+            private function updateLabelsAndTooltips():void
+            {
+                if (!widgetType)
+                {
+                    return;
+                }
+
+                widgetTypeLabel.text = widgetType.label;
+                widgetTypeIcon.toolTip = widgetType.description;
+                widgetTypeLabel.toolTip = widgetType.description;
+            }
+
+            private function setWidgetTypeIcon():void
+            {
+                //TODO: REFACTOR
+                if (widgetType.isCustom)
+                {
+                    //TODO: improve this
+                    //Look for icon in custom viewer, then in bundled viewer
+                    var customWidgetIcon:File = WellKnownDirectories.getInstance().customFlexViewer.resolvePath(widgetType.iconLocation);
+                    if (customWidgetIcon.exists)
+                    {
+                        widgetTypeIcon.source = customWidgetIcon.url;
+                    }
+                    else
+                    {
+                        customWidgetIcon = WellKnownDirectories.getInstance().bundledFlexViewer.resolvePath(widgetType.iconLocation);
+                        widgetTypeIcon.source = customWidgetIcon.url;
+                    }
+                }
+                else
+                {
+                    widgetTypeIcon.source = WellKnownDirectories.getInstance().bundledFlexViewer.resolvePath(widgetType.iconLocation).url;
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="hovered" stateGroups="hoveredSelected"/>
+        <s:State name="selected" stateGroups="hoveredSelected"/>
+    </s:states>
+
+    <s:Rect left="2" right="2" top="2" bottom="2"
+            radiusX="5">
+        <s:stroke>
+            <s:SolidColorStroke color="0xBABABA"
+                                color.selected="0x8F8F8F"
+                                weight.hoveredSelected="2"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:Image id="widgetTypeIcon"
+             width="40" height="40"
+             horizontalCenter="0"
+             smooth="true"
+             verticalCenter="-15"/>
+
+    <s:Label id="widgetTypeLabel"
+             left="5" right="5"
+             horizontalCenter="0"
+             maxDisplayedLines="2"
+             maxWidth="{width - 10}"
+             showTruncationTip="true"
+             textAlign="center"
+             verticalCenter="25"/>
+</s:ItemRenderer>

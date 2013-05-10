@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         creationComplete="init()">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.model.ViewerApp;
+
+            import spark.events.GridEvent;
+
+            private var selectedApp:ViewerApp;
+
+            private function init():void
+            {
+                resourceManager.addEventListener(Event.CHANGE, resourceManager_changeHandler);
+                resizeActionsColumnWidthBasedOnHeaderText();
+
+                AppEvent.addListener(AppEvent.APP_SELECTED, appSelectedHandler, false, 0, true);
+                AppEvent.addListener(AppEvent.DELETE_APP_SELECTED, deleteAppSelectedHandler, false, 0, true);
+                AppEvent.addListener(AppEvent.DUPLICATE_APP_SELECTED, duplicateAppSelectedHandler, false, 0, true);
+                AppEvent.addListener(AppEvent.RENAME_APP_SELECTED, renameAppSelectedHandler, false, 0, true);
+                AppEvent.addListener(AppEvent.PREVIEW_APP_IN_BROWSER_SELECTED, previewAppInBrowserSelectedHandler, false, 0, true);
+                AppEvent.addListener(AppEvent.EXPORT_APP_SELECTED, exportAppSelectedHandler, false, 0, true);
+            }
+
+            private function resizeActionsColumnWidthBasedOnHeaderText():void
+            {
+                var appListHeaderText:String = resourceManager.getString('BuilderStrings', 'appList.actions');
+                var appListHeaderMetrics:TextLineMetrics = measureText(appListHeaderText);
+                appListColumn.width = appListHeaderMetrics.width + 20;
+            }
+
+            private function resourceManager_changeHandler(event:Event):void
+            {
+                resizeActionsColumnWidthBasedOnHeaderText();
+            }
+
+            private function appSelectedHandler(event:AppEvent):void
+            {
+                const viewerApp:ViewerApp = appList.selectedItem as ViewerApp;
+                if (viewerApp)
+                {
+                    Model.instance.status = '';
+                    AppEvent.dispatch(AppEvent.LOAD_APP, viewerApp);
+                }
+            }
+
+            private function deleteAppSelectedHandler(event:AppEvent):void
+            {
+                const viewerApp:ViewerApp = appList.selectedItem as ViewerApp;
+                if (viewerApp)
+                {
+                    AppEvent.dispatch(AppEvent.DELETE_APP, viewerApp);
+                }
+            }
+
+            private function duplicateAppSelectedHandler(event:AppEvent):void
+            {
+                const viewerApp:ViewerApp = appList.selectedItem as ViewerApp;
+                if (viewerApp)
+                {
+                    AppEvent.dispatch(AppEvent.DUPLICATE_APP, viewerApp);
+                }
+            }
+
+            private function renameAppSelectedHandler(event:AppEvent):void
+            {
+                const viewerApp:ViewerApp = appList.selectedItem as ViewerApp;
+                if (viewerApp)
+                {
+                    AppEvent.dispatch(AppEvent.RENAME_APP, viewerApp);
+                }
+            }
+
+            private function previewAppInBrowserSelectedHandler(event:AppEvent):void
+            {
+                const viewerApp:ViewerApp = appList.selectedItem as ViewerApp;
+                if (viewerApp)
+                {
+                    navigateToURL(new URLRequest(viewerApp.url));
+                }
+            }
+
+            private function exportAppSelectedHandler(event:AppEvent):void
+            {
+                const viewerApp:ViewerApp = appList.selectedItem as ViewerApp;
+                if (viewerApp)
+                {
+                    AppEvent.dispatch(AppEvent.EXPORT_WINDOW, viewerApp);
+                }
+            }
+
+            private function modifiedDateLabelFunction(viewerApp:ViewerApp, column:GridColumn):String
+            {
+                return dateFormatter.format(viewerApp.modifiedDate);
+            }
+
+            protected function appList_gridDoubleClickHandler(event:GridEvent):void
+            {
+                const wasGridRowDoubleClicked:Object = event.rowIndex > -1;
+                const wasActionsColumnDoubleClicked:Boolean = (event.columnIndex == 2);
+
+                if (!wasGridRowDoubleClicked
+                    || wasActionsColumnDoubleClicked)
+                {
+                    return;
+                }
+
+                const viewerApp:ViewerApp = appList.selectedItem as ViewerApp;
+                if (viewerApp)
+                {
+                    Model.instance.status = '';
+                    AppEvent.dispatch(AppEvent.LOAD_APP, viewerApp);
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <fx:Declarations>
+        <s:DateTimeFormatter id="dateFormatter"
+                             dateStyle="short"
+                             locale="{Model.instance.locale}"
+                             timeStyle="medium"/>
+    </fx:Declarations>
+
+    <s:DataGrid id="appList"
+                width="100%" height="100%"
+                alternatingRowColors="{[0xCCCCCC, 0xDADADA]}"
+                contentBackgroundAlpha="0"
+                dataProvider="{Model.instance.viewerAppList}"
+                doubleClickEnabled="true"
+                gridDoubleClick="appList_gridDoubleClickHandler(event)"
+                requireSelection="true">
+        <s:columns>
+            <s:ArrayList>
+                <s:GridColumn id="labelColumn"
+                              dataField="label"
+                              headerText="{resourceManager.getString('BuilderStrings', 'appList.applicationName')}"/>
+
+                <s:GridColumn dataField="modifiedDate"
+                              headerText="{resourceManager.getString('BuilderStrings', 'appList.dateModified')}"
+                              labelFunction="modifiedDateLabelFunction"/>
+
+                <s:GridColumn id="appListColumn"
+                              headerText="{resourceManager.getString('BuilderStrings', 'appList.actions')}"
+                              itemRenderer="com.esri.builder.renderers.AppMenuGridItemRenderer"
+                              sortable="false"/>
+            </s:ArrayList>
+        </s:columns>
+    </s:DataGrid>
+</s:Group>

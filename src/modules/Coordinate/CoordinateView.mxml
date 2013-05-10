@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Form xmlns:fx="http://ns.adobe.com/mxml/2009"
+        xmlns:s="library://ns.adobe.com/flex/spark"
+        width="100%" height="100%"
+        implements="modules.IWidgetView">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.supportClasses.LabelUtil;
+
+            import modules.IWidgetModel;
+
+            import mx.events.FlexEvent;
+
+            import spark.events.IndexChangeEvent;
+
+            [Bindable]
+            public var coordinateModel:CoordinateModel;
+
+            public function set widgetModel(value:IWidgetModel):void
+            {
+                coordinateModel = value as CoordinateModel;
+
+                if (!coordinateModel)
+                {
+                    throw new Error('argument is not an instance of MapSwitcherModel');
+                }
+            }
+
+            public function get widgetModel():IWidgetModel
+            {
+                return coordinateModel;
+            }
+
+            public function submit():Boolean
+            {
+                return true;
+            }
+
+            public function cancel():void
+            {
+                // NOOP
+            }
+
+            private function outputUnits_changeHandler(event:IndexChangeEvent):void
+            {
+                coordinateModel.outputUnit = outputUnits.selectedItem.value;
+            }
+
+            private function textToFontSizeFunction(text:String):Number
+            {
+                var parsedValue:Number = parseFloat(text);
+                return isNaN(parsedValue) ? CoordinateModel.DEFAULT_FONT_SIZE : parsedValue;
+            }
+
+            private function preselectOutputUnit():void
+            {
+                var outputUnit:String = coordinateModel.outputUnit;
+                var outputUnitOptionsArray:Array = outputUnitOptions.toArray();
+
+                for each (var outputUnitOption:Object in outputUnitOptionsArray)
+                {
+                    if (outputUnitOption.value == outputUnit)
+                    {
+                        outputUnits.selectedItem = outputUnitOption;
+                        break;
+                    }
+                }
+            }
+
+            protected function outputUnits_creationCompleteHandler(event:FlexEvent):void
+            {
+                preselectOutputUnit();
+                outputUnits.typicalItem =
+                    LabelUtil.findLongestLabelItem(outputUnitOptions.toArray(), "label");
+            }
+        ]]>
+    </fx:Script>
+
+    <s:layout>
+        <s:FormLayout gap="-10"/>
+    </s:layout>
+
+    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'coordinate.outputUnit')}" skinClass="spark.skins.spark.StackedFormItemSkin">
+        <s:DropDownList id="outputUnits"
+                        change="outputUnits_changeHandler(event)"
+                        creationComplete="outputUnits_creationCompleteHandler(event)"
+                        requireSelection="true">
+            <s:ArrayList id="outputUnitOptions">
+                <fx:Object label="{resourceManager.getString('BuilderStrings', 'coordinate.geo')}" value="geo"/>
+                <fx:Object label="{resourceManager.getString('BuilderStrings', 'coordinate.dms')}" value="dms"/>
+                <fx:Object label="{resourceManager.getString('BuilderStrings', 'coordinate.mercator')}" value="mercator"/>
+            </s:ArrayList>
+        </s:DropDownList>
+    </s:FormItem>
+
+    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'coordinate.fontSize')}" skinClass="spark.skins.spark.StackedFormItemSkin">
+        <s:NumericStepper maximum="15"
+                          minimum="4"
+                          value="@{coordinateModel.fontSize}"
+                          valueParseFunction="textToFontSizeFunction"/>
+    </s:FormItem>
+</s:Form>

@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:SkinnablePopUpContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                           xmlns:s="library://ns.adobe.com/flex/spark"
+                           xmlns:mx="library://ns.adobe.com/flex/mx"
+                           xmlns:components="com.esri.builder.components.*"
+                           minHeight="85"
+                           minWidth="250"
+                           open="init()">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.components.FieldPickerEvent;
+            import com.esri.builder.views.supportClasses.*;
+
+            import mx.collections.IList;
+            import mx.managers.PopUpManager;
+
+            [Bindable]
+            public var popUpFieldInfos:IList;
+
+            [Bindable]
+            private var url:String;
+            [Bindable]
+            private var description:String;
+
+            public function overrideDescription(description:String):void
+            {
+                this.description = description;
+            }
+
+            private function init():void
+            {
+                urlInput.setFocus();
+            }
+
+            override public function updatePopUpPosition():void
+            {
+                PopUpManager.centerPopUp(this);
+            }
+
+            private function commitAndClose():void
+            {
+                if (url)
+                {
+                    close(true, new LinkProperties(url, description));
+                }
+                else
+                {
+                    close(false);
+                }
+            }
+
+            protected function urlFieldPicker_fieldSelectedHandler(event:FieldPickerEvent):void
+            {
+                FieldPickerSelectionUtil.insertIntoTextSelectionAndFocus(event.template, urlInput);
+                url = urlInput.text; //updating text manually since binding does not kick in
+            }
+
+            protected function descriptionFieldPicker_fieldSelectedHandler(event:FieldPickerEvent):void
+            {
+                FieldPickerSelectionUtil.insertIntoTextSelectionAndFocus(event.template, descriptionInput);
+                description = descriptionInput.text; //updating text manually since binding does not kick in
+            }
+        ]]>
+    </fx:Script>
+
+    <!--background-->
+    <s:Rect left="0" right="0" top="0" bottom="0">
+        <s:fill>
+            <s:SolidColor color="#FFFFFF"/>
+        </s:fill>
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:Rect height="25"
+            left="2" right="2" top="2">
+        <s:fill>
+            <s:LinearGradient rotation="90">
+                <s:GradientEntry alpha="1"
+                                 color="#FFFFFF"
+                                 ratio="0"/>
+                <s:GradientEntry alpha="1.0"
+                                 color="#CCCCCC"
+                                 ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Rect>
+
+    <s:Line left="0" right="0" top="26">
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Line>
+
+    <!--content-->
+    <s:Label left="10" top="9"
+             color="#000000"
+             fontSize="14"
+             fontWeight="bold"
+             text="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.linkProperties')}"
+             textAlign="center"
+             verticalAlign="middle"/>
+
+    <s:Form left="10" top="15" bottom="-15">
+        <s:layout>
+            <s:FormLayout gap="-10"/>
+        </s:layout>
+
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.url')}">
+            <s:layout>
+                <s:HorizontalLayout verticalAlign="middle"/>
+            </s:layout>
+
+            <s:TextInput id="urlInput"
+                         width="300"
+                         enter="commitAndClose()"
+                         text="@{url}"/>
+
+            <components:PopUpFieldPicker fieldSelected="urlFieldPicker_fieldSelectedHandler(event)"
+                                         fields="{popUpFieldInfos}"
+                                         includeInLayout="{popUpFieldInfos 
+                                                            &amp;&amp; popUpFieldInfos.length &gt; 0}"
+                                         visible="{popUpFieldInfos 
+                                                    &amp;&amp; popUpFieldInfos.length &gt; 0}"/>
+        </s:FormItem>
+
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.popUpDescription')}">
+            <s:layout>
+                <s:HorizontalLayout verticalAlign="middle"/>
+            </s:layout>
+
+            <s:TextInput id="descriptionInput"
+                         width="300"
+                         enter="commitAndClose()"
+                         text="@{description}"/>
+
+            <components:PopUpFieldPicker fieldSelected="descriptionFieldPicker_fieldSelectedHandler(event)"
+                                         fields="{popUpFieldInfos}"
+                                         includeInLayout="{popUpFieldInfos 
+                                                            &amp;&amp; popUpFieldInfos.length &gt; 0}"
+                                         visible="{popUpFieldInfos 
+                                                    &amp;&amp; popUpFieldInfos.length &gt; 0}"/>
+        </s:FormItem>
+
+        <s:FormItem>
+            <s:layout>
+                <s:HorizontalLayout horizontalAlign="center" verticalAlign="middle"/>
+            </s:layout>
+
+            <s:Button click="commitAndClose()"
+                      label="{resourceManager.getString('BuilderStrings', 'ok')}"
+                      skinClass="com.esri.builder.skins.BlueButtonSkin"/>
+
+            <s:Button click="close(false)"
+                      label="{resourceManager.getString('BuilderStrings', 'cancel')}"
+                      skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+        </s:FormItem>
+    </s:Form>
+</s:SkinnablePopUpContainer>

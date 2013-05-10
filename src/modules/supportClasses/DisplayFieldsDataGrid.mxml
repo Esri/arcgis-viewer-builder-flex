@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<components:ItemModifierDataGrid xmlns:fx="http://ns.adobe.com/mxml/2009"
+                                 xmlns:s="library://ns.adobe.com/flex/spark"
+                                 xmlns:components="com.esri.builder.components.*"
+                                 doubleClickEnabled="false"
+                                 editable="true"
+                                 moveItemDown="this_moveItemDownHandler(event)"
+                                 moveItemUp="this_moveItemUpHandler(event)"
+                                 removeItem="this_removeItemHandler(event)">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.layers.supportClasses.Field;
+            import com.esri.builder.components.ModifyItemEvent;
+
+            import mx.collections.IList;
+            import mx.events.CollectionEvent;
+
+            protected function this_moveItemDownHandler(event:ModifyItemEvent):void
+            {
+                const itemIndex:int = dataProvider.getItemIndex(event.item);
+
+                const isItemAtBottom:Boolean = (itemIndex == (dataProvider.length - 1));
+                if (isItemAtBottom)
+                {
+                    return;
+                }
+
+                removeDataProviderListeners();
+                const removedItem:Object = dataProvider.removeItemAt(itemIndex);
+                dataProvider.addItemAt(removedItem, ++itemIndex);
+                addDataProviderListeners();
+            }
+
+            private function removeDataProviderListeners():void
+            {
+                if (dataProvider)
+                {
+                    dataProvider.removeEventListener(CollectionEvent.COLLECTION_CHANGE, dataProvider_collectionChangeHandler);
+                }
+            }
+
+            protected function this_moveItemUpHandler(event:ModifyItemEvent):void
+            {
+                const itemIndex:int = dataProvider.getItemIndex(event.item);
+
+                const isItemAtTop:Boolean = (itemIndex == 0);
+                if (isItemAtTop)
+                {
+                    return;
+                }
+
+                removeDataProviderListeners();
+                const removedItem:Object = dataProvider.removeItemAt(itemIndex);
+                dataProvider.addItemAt(removedItem, --itemIndex);
+                addDataProviderListeners();
+            }
+
+            protected function this_removeItemHandler(event:ModifyItemEvent):void
+            {
+                const itemIndex:int = dataProvider.getItemIndex(event.item);
+                if (itemIndex > -1)
+                {
+                    dataProvider.removeItemAt(itemIndex);
+                }
+            }
+
+            private var _titleFieldName:String;
+
+            public function get titleFieldName():String
+            {
+                return _titleFieldName;
+            }
+
+            public function updateTitleField(field:Field):void
+            {
+                _titleField = getSuitableField(field);
+                _titleFieldName = _titleField ? _titleField.name : "";
+            }
+
+            private var _titleField:Field;
+
+            public function get titleField():Field
+            {
+                return _titleField;
+            }
+
+            public function set titleField(value:Field):void
+            {
+                _titleField = value;
+                if (_titleField)
+                {
+                    _titleFieldName = _titleField.name;
+                }
+                else
+                {
+                    _titleFieldName = "";
+                }
+            }
+
+            private var _orderByFieldName:String;
+
+            public function get orderByFieldName():String
+            {
+                return _orderByFieldName;
+            }
+
+            private var _orderByField:Field;
+
+            internal function get orderByField():Field
+            {
+                return _orderByField;
+            }
+
+            internal function set orderByField(value:Field):void
+            {
+                _orderByField = value;
+                if (_orderByField)
+                {
+                    _orderByFieldName = _orderByField.name;
+                }
+                else
+                {
+                    _orderByFieldName = "";
+                }
+
+            }
+
+            public function updateOrderByField(field:Field, direction:String):void
+            {
+                var suitableField:Field = getSuitableField(field);
+                if (suitableField)
+                {
+                    direction = getValidDirection(direction);
+                    orderByField = suitableField;
+                    _orderByFieldDirection = direction;
+                    fieldToSortByDirection[suitableField] = direction;
+                }
+            }
+
+            private function getValidDirection(direction:String):String
+            {
+                return direction == OrderByFieldDirection.ASCENDING
+                    || direction == OrderByFieldDirection.DESCENDING ?
+                    direction : OrderByFieldDirection.ASCENDING;
+            }
+
+            internal function getSortByDirection(field:Field):String
+            {
+                var sortByDirection:String = fieldToSortByDirection[field];
+                return sortByDirection ? sortByDirection : OrderByFieldDirection.ASCENDING;
+            }
+
+            private var _orderByFieldDirection:String = OrderByFieldDirection.ASCENDING;
+
+            public function get orderByFieldDirection():String
+            {
+                return _orderByFieldDirection;
+            }
+
+            private var fieldToSortByDirection:Dictionary = new Dictionary(true);
+
+            private function getSuitableField(field:Field):Field
+            {
+                var suitableField:Field;
+
+                if (field)
+                {
+                    suitableField = field;
+                }
+                else if (dataProvider.length)
+                {
+                    suitableField = dataProvider.getItemAt(0) as Field;
+                }
+
+                return suitableField;
+            }
+
+            override public function set dataProvider(value:IList):void
+            {
+                super.dataProvider = value;
+                addDataProviderListeners();
+
+                if (value)
+                {
+                    clearFieldToSortByDirection();
+                    updateSortByDirectionMap(value.toArray());
+                }
+            }
+
+            private function updateSortByDirectionMap(value:Array):void
+            {
+                for each (var field:Field in value)
+                {
+                    fieldToSortByDirection[field] = OrderByFieldDirection.ASCENDING;
+                }
+            }
+
+            private function addDataProviderListeners():void
+            {
+                if (dataProvider)
+                {
+                    dataProvider.addEventListener(CollectionEvent.COLLECTION_CHANGE, dataProvider_collectionChangeHandler, false, 0, true);
+                }
+            }
+
+            private function dataProvider_collectionChangeHandler(event:CollectionEvent):void
+            {
+                updateSortByDirectionMap(event.items);
+
+                const hasItems:Boolean = dataProvider.length > 0;
+
+                const isTitleFieldInDataProvider:Boolean = (dataProvider.getItemIndex(titleField) > -1);
+                if (!isTitleFieldInDataProvider)
+                {
+                    titleField = hasItems ? dataProvider.getItemAt(0) as Field : null;
+                }
+
+                const isOrderByFieldInDataProvider:Boolean = (dataProvider.getItemIndex(orderByField) > -1);
+                if (isOrderByFieldInDataProvider)
+                {
+                    _orderByFieldDirection = fieldToSortByDirection[orderByField];
+                }
+                else
+                {
+                    if (hasItems)
+                    {
+                        orderByField = dataProvider.getItemAt(0) as Field;
+                        _orderByFieldDirection = fieldToSortByDirection[orderByField];
+                    }
+                    else
+                    {
+                        orderByField = null;
+                        _orderByFieldDirection = OrderByFieldDirection.ASCENDING;
+                        clearFieldToSortByDirection();
+                    }
+                }
+
+                invalidateDisplayList();
+            }
+
+            private function clearFieldToSortByDirection():void
+            {
+                for (var key:Object in fieldToSortByDirection)
+                {
+                    delete fieldToSortByDirection[key];
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <components:columns>
+        <s:ArrayList>
+            <s:GridColumn dataField="name"
+                          editable="false"
+                          headerText="{resourceManager.getString('BuilderStrings', 'displayFields.name')}"
+                          sortable="true"/>
+
+            <s:GridColumn dataField="alias"
+                          editable="true"
+                          headerText="{resourceManager.getString('BuilderStrings', 'displayFields.alias')}"/>
+
+            <s:GridColumn width="70"
+                          editable="false"
+                          headerText="{resourceManager.getString('BuilderStrings', 'displayFields.title')}"
+                          itemRenderer="modules.supportClasses.DisplayFieldsTitleFieldGridItemRenderer"/>
+
+            <s:GridColumn editable="false"
+                          headerText="{resourceManager.getString('BuilderStrings', 'displayFields.orderBy')}"
+                          itemRenderer="modules.supportClasses.DisplayFieldsOrderByFieldGridItemRenderer"
+                          maxWidth="90"/>
+
+            <s:GridColumn width="100"
+                          editable="false"
+                          headerText="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.media.actions')}"
+                          itemRenderer="com.esri.builder.renderers.MovableRemovableGridItemRenderer"/>
+        </s:ArrayList>
+    </components:columns>
+</components:ItemModifierDataGrid>

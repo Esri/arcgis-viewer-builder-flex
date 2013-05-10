@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:supportClasses="modules.Geoprocessing.supportClasses.*"
+         xmlns:components="com.esri.builder.components.*"
+         creationComplete="init()">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.renderers.ClassBreaksRenderer;
+            import com.esri.ags.renderers.IRenderer;
+            import com.esri.ags.renderers.SimpleRenderer;
+            import com.esri.ags.renderers.UniqueValueRenderer;
+            import com.esri.ags.renderers.supportClasses.ClassBreakInfo;
+            import com.esri.ags.renderers.supportClasses.UniqueValueInfo;
+            import com.esri.ags.symbols.Symbol;
+            import com.esri.builder.components.FieldPickerEvent;
+
+            import modules.Geoprocessing.parameters.BaseParameter;
+            import modules.Geoprocessing.parameters.FeatureLayerParameter;
+
+            [Bindable]
+            private var rendererAttribute:String = "";
+            [Bindable]
+            private var uniqueValueInfosList:ArrayList = new ArrayList();
+            [Bindable]
+            private var classBreakInfosList:ArrayList = new ArrayList();
+            [Bindable]
+            private var popUpFieldInfos:ArrayList = new ArrayList();
+
+            [Bindable]
+            private var renderer:IRenderer;
+
+            private function init():void
+            {
+                uniqueValueRendererInfosDataGroup.addEventListener(InfoEditEvent.REMOVE_INFO, uniqueValueRenderererInfosDataGroup_infoRemoveHandler, false, 0, true);
+                classBreaksRendererInfosDataGroup.addEventListener(InfoEditEvent.REMOVE_INFO, classBreaksRenderererInfosDataGroup_infoRemoveHandler, false, 0, true);
+            }
+
+            private function uniqueValueRenderererInfosDataGroup_infoRemoveHandler(event:InfoEditEvent):void
+            {
+                uniqueValueInfosList.removeItem(event.info);
+            }
+
+            private function classBreaksRenderererInfosDataGroup_infoRemoveHandler(event:InfoEditEvent):void
+            {
+                classBreakInfosList.removeItem(event.info);
+            }
+
+            private var _simpleRenderer:SimpleRenderer;
+
+            public function get simpleRenderer():SimpleRenderer
+            {
+                return _simpleRenderer ||= new SimpleRenderer();
+            }
+
+            private var _uniqueValueRenderer:UniqueValueRenderer;
+
+            public function get uniqueValueRenderer():UniqueValueRenderer
+            {
+                return _uniqueValueRenderer ||= new UniqueValueRenderer();
+            }
+
+            private var _classBreaksRenderer:ClassBreaksRenderer;
+
+            public function get classBreaksRenderer():ClassBreaksRenderer
+            {
+                return _classBreaksRenderer ||= new ClassBreaksRenderer();
+            }
+
+            private var featureParam:FeatureLayerParameter;
+            private var _param:BaseParameter;
+
+            [Bindable]
+            public function get param():BaseParameter
+            {
+                return _param;
+            }
+
+            public function set param(value:BaseParameter):void
+            {
+                featureParam = value as FeatureLayerParameter;
+                if (featureParam)
+                {
+                    _param = value;
+                    if (featureParam.renderer)
+                    {
+                        if (featureParam.popUpInfo)
+                        {
+                            popUpFieldInfos.source = featureParam.popUpInfo.popUpFieldInfos;
+                        }
+                        renderer = featureParam.renderer;
+                        callLater(setupRenderer);
+                    }
+                    else
+                    {
+                        currentState = 'cannotEditRenderer';
+                    }
+                }
+            }
+
+            private function setupRenderer():void
+            {
+                if (renderer is SimpleRenderer)
+                {
+                    setupSimpleRenderer(renderer as SimpleRenderer);
+                }
+                else if (renderer is UniqueValueRenderer)
+                {
+                    setupUniqueValueRenderer(renderer as UniqueValueRenderer);
+                }
+                else if (renderer is ClassBreaksRenderer)
+                {
+                    setupClassBreaksRenderer(renderer as ClassBreaksRenderer);
+                }
+            }
+
+            private function setupSimpleRenderer(simpleRenderer:SimpleRenderer):void
+            {
+                _simpleRenderer = simpleRenderer;
+                currentState = "editingSimpleRenderer"
+                rendererSelection.selectedItem = resourceManager.getString('BuilderStrings', 'geoprocessing.simpleRenderer');
+                setRendererSymbolProperties(simpleRenderer.symbol);
+            }
+
+            private function setupUniqueValueRenderer(uniqueValueRenderer:UniqueValueRenderer):void
+            {
+                _uniqueValueRenderer = uniqueValueRenderer;
+                currentState = "editingUniqueValueRenderer"
+                rendererSelection.selectedItem = resourceManager.getString('BuilderStrings', 'geoprocessing.uniqueValueRenderer');
+                setRendererSymbolProperties(uniqueValueRenderer.defaultSymbol);
+                uniqueValueInfosList.source = uniqueValueRenderer.infos;
+                uniqueValueRenderer.infos = uniqueValueInfosList.source;
+                if (uniqueValueRenderer.field)
+                {
+                    rendererAttribute = uniqueValueRenderer.field;
+                }
+            }
+
+            private function setupClassBreaksRenderer(classBreaksRenderer:ClassBreaksRenderer):void
+            {
+                _classBreaksRenderer = classBreaksRenderer;
+                currentState = "editingClassBreaksRenderer"
+                rendererSelection.selectedItem = resourceManager.getString('BuilderStrings', 'geoprocessing.classBreaksRenderer');
+                setRendererSymbolProperties(classBreaksRenderer.defaultSymbol);
+                classBreakInfosList.source = classBreaksRenderer.infos;
+                classBreaksRenderer.infos = classBreakInfosList.source;
+                if (classBreaksRenderer.field)
+                {
+                    rendererAttribute = classBreaksRenderer.field;
+                }
+            }
+
+            private function setRendererSymbolProperties(symbol:Symbol):void
+            {
+                symbolEditor.symbol = symbol;
+            }
+
+            private function changeRenderer():void
+            {
+                var rendererType:String = rendererSelection.selectedItem as String;
+                //TODO: optimize
+                if (rendererType == resourceManager.getString('BuilderStrings', 'geoprocessing.uniqueValueRenderer'))
+                {
+                    currentState = "editingUniqueValueRenderer"
+                    uniqueValueRenderer.defaultSymbol = symbolEditor.symbol;
+                    renderer = uniqueValueRenderer;
+                    updateUniqueValueRendererAttributeAndInfos();
+                    setRendererSymbolProperties(uniqueValueRenderer.defaultSymbol);
+                }
+                else if (rendererType == resourceManager.getString('BuilderStrings', 'geoprocessing.classBreaksRenderer'))
+                {
+                    currentState = "editingClassBreaksRenderer"
+                    classBreaksRenderer.defaultSymbol = symbolEditor.symbol;
+                    renderer = classBreaksRenderer;
+                    updateClassBreaksRendererAttributeAndInfos();
+                    setRendererSymbolProperties(classBreaksRenderer.defaultSymbol);
+                }
+                else
+                {
+                    currentState = "editingSimpleRenderer"
+                    simpleRenderer.symbol = symbolEditor.symbol;
+                    renderer = simpleRenderer;
+                    setRendererSymbolProperties(simpleRenderer.symbol);
+                }
+
+                featureParam.renderer = renderer;
+            }
+
+            private function updateUniqueValueRendererAttributeAndInfos():void
+            {
+                uniqueValueRenderer.field = rendererAttribute;
+                uniqueValueRenderer.infos = uniqueValueInfosList.source;
+            }
+
+            private function updateClassBreaksRendererAttributeAndInfos():void
+            {
+                classBreaksRenderer.field = rendererAttribute;
+                classBreaksRenderer.infos = classBreakInfosList.source;
+            }
+
+            private function addInfoItem():void
+            {
+                var rendererSymbolClone:Symbol = symbolEditor.symbol.clone();
+
+                if (currentState == "editingUniqueValueRenderer")
+                {
+                    uniqueValueInfosList.addItem(new UniqueValueInfo(rendererSymbolClone));
+                }
+                else if (currentState == "editingClassBreaksRenderer")
+                {
+                    classBreakInfosList.addItem(new ClassBreakInfo(rendererSymbolClone));
+                }
+            }
+
+            private function updateRendererAttributeAndInfos():void
+            {
+                if (currentState == "editingUniqueValueRenderer")
+                {
+                    updateUniqueValueRendererAttributeAndInfos();
+                }
+                else if (currentState == "editingClassBreaksRenderer")
+                {
+                    updateClassBreaksRendererAttributeAndInfos();
+                }
+            }
+
+            private function titleFieldPicker_fieldSelectedHandler(event:FieldPickerEvent):void
+            {
+                const fieldName:String = event.template.substr(1, event.template.length - 2); //template -> "{FIELD_NAME}"
+                rendererAttributeInput.text = fieldName;
+                updateRendererAttributeAndInfos();
+            }
+
+            private function fieldToLabelFunction(field:Object):String
+            {
+                return field.fieldName;
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="editingSimpleRenderer"/>
+        <s:State name="editingUniqueValueRenderer"/>
+        <s:State name="editingClassBreaksRenderer"/>
+        <s:State name="cannotEditRenderer"/>
+    </s:states>
+
+    <s:layout>
+        <s:ConstraintLayout>
+            <s:constraintColumns>
+                <s:ConstraintColumn id="column1" width="10"/>
+                <s:ConstraintColumn id="column2"/>
+                <s:ConstraintColumn id="column3" width="10"/>
+                <s:ConstraintColumn id="column4"/>
+            </s:constraintColumns>
+
+            <s:constraintRows>
+                <s:ConstraintRow id="row1" height="10"/>
+                <s:ConstraintRow id="row2"/>
+                <s:ConstraintRow id="row3" height="10"/>
+                <s:ConstraintRow id="row4"/>
+                <s:ConstraintRow id="row5" height="10"/>
+                <s:ConstraintRow id="row6"/>
+                <s:ConstraintRow id="row7" height="10"/>
+                <s:ConstraintRow id="row8"/>
+            </s:constraintRows>
+        </s:ConstraintLayout>
+    </s:layout>
+
+    <s:Label left="column2:0" right="column2:0"
+             baseline="row2:0"
+             excludeFrom="cannotEditRenderer"
+             fontWeight="bold"
+             text="{resourceManager.getString('BuilderStrings', 'geoprocessing.type')}"/>
+
+    <s:Group left="column4:0" right="column4:0"
+             baseline="row2:0">
+        <s:DropDownList id="rendererSelection"
+                        width="150"
+                        change="changeRenderer()"
+                        excludeFrom="cannotEditRenderer"
+                        requireSelection="true">
+            <s:dataProvider>
+                <s:ArrayList>
+                    <fx:String>{resourceManager.getString('BuilderStrings', 'geoprocessing.simpleRenderer')}</fx:String>
+                    <fx:String>{resourceManager.getString('BuilderStrings', 'geoprocessing.uniqueValueRenderer')}</fx:String>
+                    <fx:String>{resourceManager.getString('BuilderStrings', 'geoprocessing.classBreaksRenderer')}</fx:String>
+                </s:ArrayList>
+            </s:dataProvider>
+        </s:DropDownList>
+    </s:Group>
+
+    <s:Label left="column4:0" right="column4:0"
+             baseline="row2:0"
+             fontWeight="bold"
+             includeIn="cannotEditRenderer"
+             text="{resourceManager.getString('BuilderStrings', 'geoprocessing.cannotEditRendererProperties')}"/>
+
+    <s:Label left="column2:0" right="column2:0"
+             baseline="row4:0"
+             fontWeight="bold"
+             includeIn="editingClassBreaksRenderer, editingUniqueValueRenderer"
+             text="{resourceManager.getString('BuilderStrings', 'chart.field')}"/>
+
+    <s:HGroup left="column4:0" right="column4:0"
+              baseline="row4:0"
+              includeIn="editingClassBreaksRenderer, editingUniqueValueRenderer"
+              verticalAlign="middle">
+        <s:TextInput id="rendererAttributeInput"
+                     change="updateRendererAttributeAndInfos()"
+                     text="@{rendererAttribute}"/>
+
+        <components:PopUpFieldPicker fieldLabelFunction="fieldToLabelFunction"
+                                     fieldSelected="titleFieldPicker_fieldSelectedHandler(event)"
+                                     fields="{popUpFieldInfos}"
+                                     includeInLayout="{popUpFieldInfos.length &gt; 0}"
+                                     visible="{popUpFieldInfos.length &gt; 0}"/>
+    </s:HGroup>
+
+    <s:Group left="10" right="10"
+             baseline="row5:5">
+        <s:Line width="100%" includeIn="editingClassBreaksRenderer, editingUniqueValueRenderer">
+            <s:stroke>
+                <s:SolidColorStroke alpha="0.25"/>
+            </s:stroke>
+        </s:Line>
+    </s:Group>
+
+    <s:Label left="column2:0" right="column2:0"
+             baseline="row6:0"
+             excludeFrom="cannotEditRenderer"
+             fontWeight="bold"
+             paddingTop="6"
+             text.editingClassBreaksRenderer="{resourceManager.getString('BuilderStrings', 'geoprocessing.defaultSymbol')}"
+             text.editingSimpleRenderer="{resourceManager.getString('BuilderStrings', 'georss.symbol')}"
+             text.editingUniqueValueRenderer="{resourceManager.getString('BuilderStrings', 'geoprocessing.defaultSymbol')}"/>
+
+    <supportClasses:SymbolEditor id="symbolEditor"
+                                 left="column4:0" right="column4:0"
+                                 baseline="row6:0"
+                                 excludeFrom="cannotEditRenderer"
+                                 symbolOwner="{renderer}"/>
+
+    <s:VGroup width="100%"
+              baseline="row8:0"
+              paddingBottom="5"
+              paddingLeft="10"
+              paddingRight="10">
+        <s:DataGroup id="uniqueValueRendererInfosDataGroup"
+                     width="100%"
+                     dataProvider="{uniqueValueInfosList}"
+                     includeIn="editingUniqueValueRenderer"
+                     itemCreationPolicy="immediate"
+                     itemRenderer="modules.Geoprocessing.renderers.UniqueValueInfoItemRenderer">
+            <s:layout>
+                <s:VerticalLayout/>
+            </s:layout>
+        </s:DataGroup>
+
+        <s:DataGroup id="classBreaksRendererInfosDataGroup"
+                     width="100%"
+                     dataProvider="{classBreakInfosList}"
+                     includeIn="editingClassBreaksRenderer"
+                     itemCreationPolicy="immediate"
+                     itemRenderer="modules.Geoprocessing.renderers.ClassBreaksInfoItemRenderer">
+            <s:layout>
+                <s:VerticalLayout/>
+            </s:layout>
+        </s:DataGroup>
+
+        <s:Line width="100%" excludeFrom="cannotEditRenderer, editingSimpleRenderer">
+            <s:stroke>
+                <s:SolidColorStroke alpha="0.25"/>
+            </s:stroke>
+        </s:Line>
+
+        <s:Button click="addInfoItem()"
+                  excludeFrom="editingSimpleRenderer,cannotEditRenderer"
+                  label="{resourceManager.getString('BuilderStrings', 'geoprocessing.addSymbol')}"
+                  skinClass="com.esri.builder.skins.GreenAddButtonSkin"/>
+    </s:VGroup>
+</s:Group>

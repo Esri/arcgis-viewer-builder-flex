@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:SkinnablePopUpContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                           xmlns:s="library://ns.adobe.com/flex/spark"
+                           xmlns:mx="library://ns.adobe.com/flex/mx"
+                           width="100%"
+                           creationComplete="this_creationCompleteHandler(event)"
+                           minHeight="85"
+                           minWidth="250"
+                           stateChangeComplete="updatePopUpPosition()">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.layers.supportClasses.Field;
+            import com.esri.ags.layers.supportClasses.LayerDetails;
+            import com.esri.builder.supportClasses.FieldUtil;
+
+            import mx.collections.ArrayList;
+            import mx.events.CollectionEvent;
+            import mx.events.CollectionEventKind;
+            import mx.events.FlexEvent;
+            import mx.managers.PopUpManager;
+
+            public var originalLayerSettings:LayerSettings;
+
+            private var _layerDetails:LayerDetails;
+
+            public function get layerDetails():LayerDetails
+            {
+                return _layerDetails;
+            }
+
+            public function set layerDetails(value:LayerDetails):void
+            {
+                if (value)
+                {
+                    _layerDetails = value;
+                    setOptions(value);
+                }
+            }
+
+            public var layerName:String;
+
+            [Bindable]
+            private var availableFieldItems:ArrayList = new ArrayList();
+
+            protected function this_creationCompleteHandler(event:FlexEvent):void
+            {
+                availableFieldItems.addEventListener(CollectionEvent.COLLECTION_CHANGE, availableItems_collectionChangeHandler);
+            }
+
+            protected function availableItems_collectionChangeHandler(event:CollectionEvent):void
+            {
+                if (event.kind == CollectionEventKind.UPDATE
+                    || event.kind == CollectionEventKind.REFRESH
+                    || event.kind == CollectionEventKind.RESET)
+                {
+                    dispatchEvent(new Event("itemInclusionChanged"));
+                }
+            }
+
+            [Bindable(event="itemInclusionChanged")]
+            private function get hasValidLayerSettingsOptions():Boolean
+            {
+                return hasAtLeastOneSelectedItem(availableFieldItems.source);
+            }
+
+            private function hasAtLeastOneSelectedItem(items:Array):Boolean
+            {
+                for each (var item:Object in items)
+                {
+                    if (item.selected === true)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            public function overrideLayerSettings(layerSettings:LayerSettings):void
+            {
+                originalLayerSettings = layerSettings;
+            }
+
+            private function setOptions(layerDetails:LayerDetails):void
+            {
+                if (!layerDetails)
+                {
+                    return;
+                }
+
+                var fields:Array = [];
+                var filteredFields:Array;
+                filteredFields = FieldUtil.getValidFields(layerDetails.fields);
+                for each (var field:Field in filteredFields)
+                {
+                    fields.push({ id: field.name, name: field.alias, tooltip: "", selected: true });
+                }
+
+                if (originalLayerSettings)
+                {
+                    var fieldItem:Object
+                    var atLeastOneFieldMatched:Boolean = false;
+                    var definedFieldNames:Dictionary = new Dictionary();
+                    for each (var fieldSettings:FieldSettings in originalLayerSettings.fields)
+                    {
+                        if (!definedFieldNames[fieldSettings.name])
+                        {
+                            definedFieldNames[fieldSettings.name] = true;
+                        }
+                        for each (fieldItem in fields)
+                        {
+                            if (fieldItem.id == fieldSettings.name)
+                            {
+                                fieldItem.name = fieldSettings.alias;
+                                fieldItem.tooltip = fieldSettings.tooltip;
+                                atLeastOneFieldMatched = true;
+                            }
+                        }
+                    }
+
+                    if (atLeastOneFieldMatched)
+                    {
+                        //deselect non-defined fields
+                        for each (fieldItem in fields)
+                        {
+                            if (!definedFieldNames[fieldItem.id])
+                            {
+                                fieldItem.selected = false;
+                            }
+                        }
+                    }
+                }
+
+                availableFieldItems.source = fields;
+
+                updatePopUpPosition();
+            }
+
+            private function resetOptions():void
+            {
+                availableFieldItems.removeAll();
+                updatePopUpPosition();
+            }
+
+            private function commitAndClose():void
+            {
+                var layerSettings:LayerSettings = new LayerSettings();
+                layerSettings.name = layerName;
+                layerSettings.fields = getIncludedFieldSettings();
+
+                close(true, { originalLayerSettings: originalLayerSettings, layerSettings: layerSettings });
+            }
+
+            override public function close(commit:Boolean = false, data:* = null):void
+            {
+                availableFieldItems.removeEventListener(CollectionEvent.COLLECTION_CHANGE, availableItems_collectionChangeHandler);
+                super.close(commit, data);
+            }
+
+            override public function updatePopUpPosition():void
+            {
+                PopUpManager.centerPopUp(this);
+            }
+
+            private function getIncludedFieldSettings():Array
+            {
+                var allFieldSettings:Array = [];
+
+                var fieldItems:Array = availableFieldItems.source;
+                var fieldSettings:FieldSettings;
+                for each (var inclusionItem:Object in fieldItems)
+                {
+                    if (inclusionItem.selected)
+                    {
+                        fieldSettings = new FieldSettings();
+                        fieldSettings.name = inclusionItem.id;
+                        fieldSettings.alias = inclusionItem.name;
+                        allFieldSettings.push(fieldSettings);
+                    }
+                }
+
+                return allFieldSettings;
+            }
+        ]]>
+    </fx:Script>
+
+    <!--background-->
+    <s:Rect left="0" right="0" top="0" bottom="0">
+        <s:fill>
+            <s:SolidColor color="#FFFFFF"/>
+        </s:fill>
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:Rect height="25"
+            left="2" right="2" top="2">
+        <s:fill>
+            <s:LinearGradient rotation="90">
+                <s:GradientEntry alpha="1"
+                                 color="#FFFFFF"
+                                 ratio="0"/>
+                <s:GradientEntry alpha="1.0"
+                                 color="#CCCCCC"
+                                 ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Rect>
+
+    <s:Line left="0" right="0" top="26">
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Line>
+
+    <!--content-->
+    <s:Label left="10" top="9"
+             color="#000000"
+             fontSize="14"
+             fontWeight="bold"
+             text="{resourceManager.getString('BuilderStrings', 'configureLayerFields')}"
+             textAlign="center"
+             verticalAlign="middle"/>
+
+    <s:Form width="100%" top="20">
+        <s:layout>
+            <s:FormLayout gap="-10"/>
+        </s:layout>
+
+        <s:FormItem width="100%" label="{resourceManager.getString('BuilderStrings', 'edit.fields')}">
+            <s:Label includeInLayout="{availableFieldItems.length == 0}"
+                     text="{resourceManager.getString('BuilderStrings', 'noFieldsAvailable')}"
+                     visible="{availableFieldItems.length == 0}"/>
+
+            <s:DataGrid width="100%" height="250"
+                        dataProvider="{availableFieldItems}"
+                        editable="true"
+                        includeInLayout="{availableFieldItems.length &gt; 0}"
+                        visible="{availableFieldItems.length &gt; 0}">
+                <s:columns>
+                    <s:ArrayList>
+                        <s:GridColumn width="60"
+                                      dataField="selected"
+                                      editable="false"
+                                      headerRenderer="com.esri.builder.renderers.CheckBoxGridHeaderRenderer"
+                                      headerText="{resourceManager.getString('BuilderStrings', 'include')}"
+                                      itemRenderer="com.esri.builder.renderers.CheckBoxGridItemRenderer"
+                                      maxWidth="60"/>
+
+                        <s:GridColumn width="100"
+                                      dataField="id"
+                                      headerText="{resourceManager.getString('BuilderStrings', 'displayFields.name')}"
+                                      maxWidth="200"/>
+
+                        <s:GridColumn width="100"
+                                      dataField="name"
+                                      editable="true"
+                                      headerText="{resourceManager.getString('BuilderStrings', 'displayFields.alias')}"
+                                      maxWidth="200"/>
+                    </s:ArrayList>
+                </s:columns>
+            </s:DataGrid>
+        </s:FormItem>
+
+        <s:FormItem>
+            <s:layout>
+                <s:HorizontalLayout horizontalAlign="center" verticalAlign="middle"/>
+            </s:layout>
+
+            <s:Button click="commitAndClose()"
+                      enabled="{hasValidLayerSettingsOptions}"
+                      label="{resourceManager.getString('BuilderStrings', 'ok')}"
+                      skinClass="com.esri.builder.skins.BlueButtonSkin"/>
+
+            <s:Button click="close(false)"
+                      label="{resourceManager.getString('BuilderStrings', 'cancel')}"
+                      skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+        </s:FormItem>
+    </s:Form>
+</s:SkinnablePopUpContainer>

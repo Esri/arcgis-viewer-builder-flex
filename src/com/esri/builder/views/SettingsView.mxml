@@ -1,0 +1,460 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:views="com.esri.builder.views.*"
+         xmlns:components="com.esri.builder.components.*"
+         width="100%" height="100%"
+         add="populateSettingsOptions()"
+         creationComplete="this_creationCompleteHandler(event)"
+         preinitialize="this_preinitializeHandler(event)">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.portal.Portal;
+            import com.esri.builder.controllers.supportClasses.Settings;
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.LocaleModel;
+            import com.esri.builder.model.LocaleOption;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.model.PortalModel;
+            import com.esri.builder.supportClasses.LabelUtil;
+            import com.esri.builder.views.popups.SaveChangesPopUp;
+
+            import mx.collections.ArrayList;
+            import mx.core.FlexGlobals;
+            import mx.events.FlexEvent;
+
+            import spark.events.IndexChangeEvent;
+            import spark.events.PopUpEvent;
+
+            private var pendingEvent:AppEvent;
+
+            [Bindable]
+            private var settings:Settings = new Settings();
+
+            private function submitButton_clickHandler(event:MouseEvent):void
+            {
+                validateSettings();
+            }
+
+            protected function this_preinitializeHandler(event:FlexEvent):void
+            {
+                populateSettingsOptions();
+            }
+
+            private function populateSettingsOptions():void
+            {
+                var currentSettings:Settings = Model.instance.exportSettings();
+
+                settings.webServerFolder = currentSettings.webServerFolder;
+                settings.webServerURL = currentSettings.webServerURL;
+                settings.geometryServiceURL = currentSettings.geometryServiceURL;
+                settings.bingKey = currentSettings.bingKey;
+                settings.proxyURL = currentSettings.proxyURL;
+                settings.portalURL = currentSettings.portalURL;
+                settings.isTutorialModeEnabled = currentSettings.isTutorialModeEnabled;
+                settings.locale = currentSettings.locale;
+            }
+
+            private function validateSettings():void
+            {
+                AppEvent.dispatch(AppEvent.SAVE_SETTINGS, settings);
+            }
+
+            private function browseButton_clickHandler(event:MouseEvent):void
+            {
+                const file:File = new File();
+                file.addEventListener(Event.SELECT, file_selectHandler);
+                file.browseForDirectory(resourceManager.getString('BuilderStrings', 'settings.browseForDirectory'));
+            }
+
+            private function file_selectHandler(event:Event):void
+            {
+                const file:File = event.target as File;
+                settings.webServerFolder = file.nativePath;
+            }
+
+            private function this_creationCompleteHandler(event:FlexEvent):void
+            {
+                AppEvent.addListener(AppEvent.BREADCRUMB_SELECTED, breadCrumbSelectedHandler, false, 1);
+            }
+
+            private function breadCrumbSelectedHandler(event:AppEvent):void
+            {
+                if (settingsWereChanged())
+                {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+
+                    var saveChangesPopUp:SaveChangesPopUp = new SaveChangesPopUp();
+                    saveChangesPopUp.addEventListener(PopUpEvent.CLOSE, saveChangesPopUp_closeHandler, false, 0, true);
+                    saveChangesPopUp.open(FlexGlobals.topLevelApplication as DisplayObjectContainer, true);
+                }
+            }
+
+            private function settingsWereChanged():Boolean
+            {
+                return settings.webServerFolder != Model.instance.webServerFolder
+                    || settings.webServerURL != Model.instance.webServerURL
+                    || settings.geometryServiceURL != Model.instance.geometryServiceURL
+                    || settings.bingKey != Model.instance.bingKey
+                    || settings.proxyURL != Model.instance.proxyURL
+                    || settings.portalURL != PortalModel.getInstance().portalURL
+                    || settings.isTutorialModeEnabled != Model.instance.isTutorialModeEnabled
+                    || settings.locale != Model.instance.locale;
+            }
+
+            private function saveChangesPopUp_closeHandler(event:PopUpEvent):void
+            {
+                if (event.commit)
+                {
+                    validateSettings();
+                }
+                else
+                {
+                    cancelSettingsChanges();
+                }
+            }
+
+            private function show_clickHandler(event:MouseEvent):void
+            {
+                currentState = 'advanced';
+            }
+
+            private function hide_clickHandler(event:MouseEvent):void
+            {
+                currentState = 'normal';
+            }
+
+            private function localeInput_creationCompleteHandler(event:FlexEvent):void
+            {
+                resourceManager.addEventListener(Event.CHANGE, resourceManager_changeHandler);
+                localeInput.dataProvider = new ArrayList(LocaleModel.getInstance().getAvailableLocaleOptions());
+                localeInput.typicalItem =
+                    LabelUtil.findLongestLabelItem(localeInput.dataProvider.toArray(), "label");
+                preselectLocale();
+            }
+
+            private function resourceManager_changeHandler(event:Event):void
+            {
+                //hack to address selected item not updating when locale option labels change.
+                var selectedLocaleOption:LocaleOption = localeInput.selectedItem;
+                localeInput.selectedIndex = -1;
+                localeInput.selectedItem = selectedLocaleOption;
+            }
+
+            private function preselectLocale():void
+            {
+                if (!localeInput)
+                {
+                    return;
+                }
+
+                var appLocale:String = settings.locale;
+                var availableLocaleOptions:Array = localeInput.dataProvider.toArray();
+                for each (var localeOption:LocaleOption in availableLocaleOptions)
+                {
+                    if (localeOption.id == appLocale)
+                    {
+                        localeInput.selectedItem = localeOption;
+                        break;
+                    }
+                }
+            }
+
+            private function showWidgetManager():void
+            {
+                var widgetManager:CustomWidgetManager = new CustomWidgetManager();
+                widgetManager.open(FlexGlobals.topLevelApplication as DisplayObjectContainer, true);
+            }
+
+            protected function cancelButton_clickHandler(event:MouseEvent):void
+            {
+                cancelSettingsChanges();
+            }
+
+            private function cancelSettingsChanges():void
+            {
+                populateSettingsOptions();
+                preselectLocale();
+                validateSettings();
+            }
+
+            protected function localeInput_changeHandler(event:IndexChangeEvent):void
+            {
+                settings.locale = localeInput.selectedItem.id;
+            }
+
+            private function processValidatedPortalFunction(portal:Portal):void
+            {
+                const defaultGeometryService:String = "http://tasks.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer";
+                const helperServices:Object = portal.info.helperServices || {};
+                const geocoderServices:Array = helperServices.geocode;
+
+                const geometryServiceURL:String = (helperServices.geometry && helperServices.geometry.url) || defaultGeometryService;
+                const directionsURL:String = (helperServices.route && helperServices.route.url) || "";
+                const printTaskURL:String = (helperServices.printTask && helperServices.printTask.url) || "";
+                const geocodeURL:String = (geocoderServices && geocoderServices.length > 0 && geocoderServices[0].url) || "";
+
+                settings.geometryServiceURL = geometryServiceURL;
+                settings.directionsURL = directionsURL;
+                settings.printTaskURL = printTaskURL;
+                settings.geocodeURL = geocodeURL;
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="advanced"/>
+    </s:states>
+
+    <s:transitions>
+        <s:Transition autoReverse="true"
+                      fromState="normal"
+                      toState="advanced">
+            <s:Sequence duration="250">
+                <s:Resize target="{form}"/>
+                <s:Fade targets="{[ formItemSeparationLine, formItemLocale,
+                                    formItemBing, formItemHttpProxy, 
+                                    formItemGeomService, formItemArcGISPortalURL,
+                                    formItemGettingStarted, formItemImportWidget ]}"/>
+            </s:Sequence>
+        </s:Transition>
+    </s:transitions>
+
+    <s:Label left="10" top="30"
+             alpha="0.4"
+             fontSize="25"
+             text="{resourceManager.getString('BuilderStrings', 'homeView.settings')}"
+             textAlign="right"/>
+
+    <s:Form id="form"
+            width="800"
+            left="10" top="80">
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'settings.baseLoc')}" required="true">
+            <s:helpContent>
+                <views:HelpButton helpText="{resourceManager.getString('BuilderStrings', 'settings.baseLocHelp')}" title="{resourceManager.getString('BuilderStrings', 'settings.baseLoc')}"/>
+            </s:helpContent>
+
+            <s:TextInput id="viewerLoc"
+                         width="400"
+                         direction="ltr"
+                         text="@{settings.webServerFolder}"/>
+
+            <s:Button id="browseButton"
+                      x="{viewerLoc.x + viewerLoc.width+ 20}" y="{viewerLoc.y}" width="100" height="{viewerLoc.height}"
+                      click="browseButton_clickHandler(event)"
+                      includeInLayout="false"
+                      label="{resourceManager.getString('BuilderStrings', 'settings.browseButton')}"
+                      skinClass="com.esri.builder.skins.GreenButtonSkin"/>
+
+            <s:Label x="{viewerLoc.x}" y="{viewerLoc.y + viewerLoc.height}" width="{viewerLoc.width}" height="{viewerLoc.height}"
+                     includeInLayout="false"
+                     styleName="emphasisText"
+                     text="{resourceManager.getString('BuilderStrings', 'settings.baseLocExample')}"/>
+        </s:FormItem>
+
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'settings.baseURL')}" required="true">
+            <s:helpContent>
+                <views:HelpButton helpText="{resourceManager.getString('BuilderStrings', 'settings.baseURLHelp')}" title="{resourceManager.getString('BuilderStrings', 'settings.baseURL')}"/>
+            </s:helpContent>
+
+            <s:TextInput id="viewerURL"
+                         width="400"
+                         direction="ltr"
+                         text="@{settings.webServerURL}"/>
+
+            <s:Label x="{viewerURL.x}" y="{viewerURL.y + viewerURL.height}" width="{viewerURL.width}" height="{viewerURL.height}"
+                     includeInLayout="false"
+                     styleName="emphasisText"
+                     text="{resourceManager.getString('BuilderStrings', 'settings.baseURLExample')}"/>
+        </s:FormItem>
+
+        <s:HGroup width="100%"
+                  paddingLeft="15"
+                  paddingRight="35"
+                  paddingTop="10"
+                  verticalAlign="middle">
+            <s:Label buttonMode="true"
+                     click.advanced="hide_clickHandler(event)"
+                     click.normal="show_clickHandler(event)"
+                     text.advanced="{resourceManager.getString('BuilderStrings', 'settings.hideAdvancedSettings')}"
+                     text.normal="{resourceManager.getString('BuilderStrings', 'settings.showAdvancedSettings')}"
+                     textDecoration="underline"
+                     verticalCenter="0"/>
+
+            <s:Spacer width="100%"/>
+
+            <s:Button id="submitButton"
+                      click="submitButton_clickHandler(event)"
+                      label="{resourceManager.getString('BuilderStrings', 'settings.submit')}"
+                      skinClass="com.esri.builder.skins.BlueButtonSkin"
+                      toolTip="{resourceManager.getString('BuilderStrings', 'settings.submitTooltip')}"/>
+
+            <s:Button id="cancelButton"
+                      click="cancelButton_clickHandler(event)"
+                      label="{resourceManager.getString('BuilderStrings', 'cancel')}"
+                      skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+        </s:HGroup>
+
+        <!--START ADVANCED CONTENT-->
+
+        <s:HGroup id="formItemSeparationLine"
+                  width="100%"
+                  alpha="0"
+                  alpha.advanced="1"
+                  gap="0"
+                  includeIn="advanced">
+            <s:Spacer width="16"/>
+            <s:Line width="100%">
+                <s:stroke>
+                    <s:SolidColorStroke caps="square"
+                                        color="{getStyle('focusColor')}"
+                                        weight="2"/>
+                </s:stroke>
+            </s:Line>
+        </s:HGroup>
+
+        <s:FormItem id="formItemLocale"
+                    alpha="0"
+                    alpha.advanced="1"
+                    includeIn="advanced"
+                    label="{resourceManager.getString('BuilderStrings', 'settings.locale')}">
+            <s:helpContent>
+                <views:HelpButton helpText="{resourceManager.getString('BuilderStrings', 'settings.localeHelpContent')}" title="{resourceManager.getString('BuilderStrings', 'settings.locale')}"/>
+            </s:helpContent>
+
+            <s:DropDownList id="localeInput"
+                            change="localeInput_changeHandler(event)"
+                            creationComplete="localeInput_creationCompleteHandler(event)"
+                            requireSelection="true"/>
+        </s:FormItem>
+
+        <s:FormItem id="formItemBing"
+                    alpha="0"
+                    alpha.advanced="1"
+                    includeIn="advanced"
+                    label="{resourceManager.getString('BuilderStrings', 'settings.bingKey')}">
+            <s:helpContent>
+                <views:HelpButton helpText="{resourceManager.getString('BuilderStrings', 'settings.bingKeyHelpContent')}" title="{resourceManager.getString('BuilderStrings', 'settings.bingKey')}"/>
+            </s:helpContent>
+
+            <s:TextInput id="bingKeyInput"
+                         width="400"
+                         text="@{settings.bingKey}"/>
+        </s:FormItem>
+
+        <s:FormItem id="formItemHttpProxy"
+                    alpha="0"
+                    alpha.advanced="1"
+                    includeIn="advanced"
+                    label="{resourceManager.getString('BuilderStrings', 'settings.httpProxy')}">
+            <s:helpContent>
+                <views:HelpButton helpText="{resourceManager.getString('BuilderStrings', 'settings.httpProxyHelpContent')}" title="{resourceManager.getString('BuilderStrings', 'settings.httpProxy')}"/>
+            </s:helpContent>
+
+            <s:TextInput id="httpProxy"
+                         width="400"
+                         direction="ltr"
+                         text="@{settings.proxyURL}"/>
+        </s:FormItem>
+
+        <s:FormItem id="formItemGeomService"
+                    alpha="0"
+                    alpha.advanced="1"
+                    includeIn="advanced"
+                    label="{resourceManager.getString('BuilderStrings', 'settings.geometryService')}">
+            <s:helpContent>
+                <views:HelpButton helpText="{resourceManager.getString('BuilderStrings', 'settings.geometryServiceHelpContent')}" title="{resourceManager.getString('BuilderStrings', 'settings.geometryService')}"/>
+            </s:helpContent>
+
+            <s:layout>
+                <s:HorizontalLayout verticalAlign="middle"/>
+            </s:layout>
+
+            <components:URLInputChecker id="geometryServiceURLInput"
+                                        width="400"
+                                        direction="ltr"
+                                        restrict="^ "
+                                        text="@{settings.geometryServiceURL}"/>
+
+            <s:Label x="{geometryServiceURLInput.x}" y="{geometryServiceURLInput.y + geometryServiceURLInput.height}" width="{formItemGeomService.width - 50}" height="{geometryServiceURLInput.height}"
+                     includeInLayout="false"
+                     styleName="emphasisText"
+                     text="{resourceManager.getString('BuilderStrings', 'settings.geometryServiceExample')}"/>
+        </s:FormItem>
+
+        <s:FormItem id="formItemArcGISPortalURL"
+                    alpha="0"
+                    alpha.advanced="1"
+                    includeIn="advanced"
+                    label="{resourceManager.getString('BuilderStrings', 'settings.portalForArcGISURL')}">
+            <s:helpContent>
+                <views:HelpButton id="arcGISPortalURLHelpBtn"
+                                  helpText="{resourceManager.getString('BuilderStrings', 'settings.portalForArcGISURLHelpContent')}"
+                                  title="{resourceManager.getString('BuilderStrings', 'settings.portalForArcGISURL')}"/>
+            </s:helpContent>
+
+            <components:PortalURLInputChecker id="portalURLInput"
+                                              width="400"
+                                              direction="ltr"
+                                              processValidPortalFunction="processValidatedPortalFunction"
+                                              restrict="^ "
+                                              text="@{settings.portalURL}"/>
+
+            <s:Label x="{portalURLInput.x}" y="{portalURLInput.y + portalURLInput.height}" width="{portalURLInput.width}" height="{portalURLInput.height}"
+                     includeInLayout="false"
+                     styleName="emphasisText"
+                     text="{resourceManager.getString('BuilderStrings', 'settings.portalForArcGISExample')}"/>
+        </s:FormItem>
+
+        <s:FormItem id="formItemGettingStarted"
+                    alpha="0"
+                    alpha.advanced="1"
+                    includeIn="advanced"
+                    label="{resourceManager.getString('BuilderStrings', 'settings.gettingStarted')}">
+            <s:helpContent>
+                <views:HelpButton helpText="{resourceManager.getString('BuilderStrings', 'settings.gettingStartedHelpContent')}" title="{resourceManager.getString('BuilderStrings', 'settings.gettingStarted')}"/>
+            </s:helpContent>
+
+            <s:CheckBox id="gettingStarted" selected="@{settings.isTutorialModeEnabled}"/>
+        </s:FormItem>
+
+        <s:FormItem id="formItemImportWidget"
+                    alpha="0"
+                    alpha.advanced="1"
+                    includeIn="advanced"
+                    label="{resourceManager.getString('BuilderStrings', 'settings.customWidgets')}">
+            <s:layout>
+                <s:HorizontalLayout verticalAlign="middle"/>
+            </s:layout>
+
+            <s:helpContent>
+                <views:HelpButton helpText="{resourceManager.getString('BuilderStrings', 'settings.customWidgetsHelpContent')}" title="{resourceManager.getString('BuilderStrings', 'settings.customWidgets')}"/>
+            </s:helpContent>
+
+            <s:Button click="showWidgetManager()"
+                      label="{resourceManager.getString('BuilderStrings', 'widgetManager.manageCustomWidgets')}"
+                      skinClass="com.esri.builder.skins.GreenButtonSkin"/>
+        </s:FormItem>
+        <!--END ADVANCED CONTENT-->
+    </s:Form>
+</s:Group>

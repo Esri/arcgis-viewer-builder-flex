@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx">
+
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.model.ImageCache;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.model.PortalModel;
+
+            import mx.utils.StringUtil;
+
+            protected function details_clickHandler(event:MouseEvent):void
+            {
+                var webMapDetailsURL:String = StringUtil.substitute('{0}/home/item.html?id={1}',
+                                                                    PortalModel.getInstance().portalURL,
+                                                                    Model.instance.webmap.id);
+                navigateToURL(new URLRequest(webMapDetailsURL));
+            }
+
+            protected function customizeMapExtentButton_clickHandler(event:MouseEvent):void
+            {
+                //FIXME: brittle code
+                WebMapView(this.parent.parent.parent).currentState = "configureMapExtent";
+            }
+        ]]>
+    </fx:Script>
+
+    <fx:Declarations>
+        <s:NumberFormatter id="groupedNumbers"
+                           fractionalDigits="0"
+                           useGrouping="true"/>
+    </fx:Declarations>
+    <!--background-->
+    <s:HGroup width="100%"
+              right="10" top="9"
+              verticalAlign="middle">
+        <s:Line width="15">
+            <s:stroke>
+                <s:SolidColorStroke color="0x000000"/>
+            </s:stroke>
+        </s:Line>
+        <s:Label fontSize="14"
+                 fontWeight="bold"
+                 text="{resourceManager.getString('BuilderStrings', 'mapsView.selectedWebMap')}"/>
+        <s:Line width="100%">
+            <s:stroke>
+                <s:SolidColorStroke color="0x000000"/>
+            </s:stroke>
+        </s:Line>
+    </s:HGroup>
+    <s:Line left="0"
+            yFrom="16"
+            yTo="380">
+        <s:stroke>
+            <s:SolidColorStroke color="0x000000"/>
+        </s:stroke>
+    </s:Line>
+    <s:Line left="0" right="10" top="380">
+        <s:stroke>
+            <s:SolidColorStroke color="0x000000"/>
+        </s:stroke>
+    </s:Line>
+    <s:Line right="10"
+            yFrom="16"
+            yTo="380">
+        <s:stroke>
+            <s:SolidColorStroke color="0x000000"/>
+        </s:stroke>
+    </s:Line>
+    <!--content-->
+    <s:RichEditableText width="100%"
+                        left="10" top="40"
+                        editable="false"
+                        fontSize="14"
+                        fontWeight="bold"
+                        includeInLayout="{Model.instance.webmap == null}"
+                        text="{resourceManager.getString('BuilderStrings', 'mapsView.noWebMapSelected')}"
+                        visible="{Model.instance.webmap == null}"/>
+    <s:Label id="displayTitle"
+             width="100%"
+             left="10" right="10" top="45"
+             fontSize="14"
+             fontWeight="bold"
+             maxDisplayedLines="1"
+             text="{Model.instance.webmap.title}"/>
+    <s:Image id="displayImage"
+             width="230" height="150"
+             left="10" top="65"
+             contentLoader="{ImageCache.getInstance()}"
+             enableLoadingState="true"
+             source="{Model.instance.webmap.thumbnailURL}"/>
+    <s:Label id="displaySnippet"
+             width="100%"
+             left="10" right="20" top="225"
+             fontSize="14"
+             maxDisplayedLines="6"
+             text="{Model.instance.webmap.snippet}"/>
+    <s:HGroup width="100%"
+              left="10" right="20" top="320"
+              gap="2"
+              verticalAlign="middle"
+              visible="{Model.instance.webmap != null}">
+        <s:Image source="@Embed(source='/assets/images/rating_full.gif')" visible="{Model.instance.webmap.avgRating > 0.5}"/>
+        <s:Image source="@Embed(source='/assets/images/rating_full.gif')" visible="{Model.instance.webmap.avgRating > 1.5}"/>
+        <s:Image source="@Embed(source='/assets/images/rating_full.gif')" visible="{Model.instance.webmap.avgRating > 2.5}"/>
+        <s:Image source="@Embed(source='/assets/images/rating_full.gif')" visible="{Model.instance.webmap.avgRating > 3.5}"/>
+        <s:Image source="@Embed(source='/assets/images/rating_full.gif')" visible="{Model.instance.webmap.avgRating > 4.5}"/>
+        <s:Label text=" ("/>
+        <s:Label text="{groupedNumbers.format(Model.instance.webmap.numRatings)}"/>
+        <s:Label text="{resourceManager.getString('BuilderStrings', 'mapsView.ratings')}"/>
+        <s:Label text=" - "/>
+        <s:Label text="{groupedNumbers.format(Model.instance.webmap.numViews)}"/>
+        <s:Label text="{resourceManager.getString('BuilderStrings', 'mapsView.views')}"/>
+        <s:Label text=")"/>
+    </s:HGroup>
+    <s:HGroup width="100%"
+              left="10" right="20" top="345"
+              includeInLayout="{Model.instance.webmap != null}"
+              verticalAlign="middle"
+              visible="{Model.instance.webmap != null}">
+        <s:Label buttonMode="true"
+                 click="details_clickHandler(event)"
+                 fontSize="14"
+                 text="{resourceManager.getString('BuilderStrings', 'mapsView.details')}"
+                 textDecoration="underline"/>
+        <s:Spacer width="100%"/>
+        <s:Button click="customizeMapExtentButton_clickHandler(event)"
+                  label="{resourceManager.getString('BuilderStrings', 'mapsView.customizeMapExtent')}"
+                  minWidth="180"
+                  skinClass="com.esri.builder.skins.BlueButtonSkin"/>
+    </s:HGroup>
+</s:Group>

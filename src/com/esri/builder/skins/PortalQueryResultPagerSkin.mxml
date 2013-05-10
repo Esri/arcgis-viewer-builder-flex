@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Skin xmlns:fx="http://ns.adobe.com/mxml/2009"
+        xmlns:s="library://ns.adobe.com/flex/spark"
+        xmlns:mx="library://ns.adobe.com/flex/mx"
+        height="30">
+
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="noResult"/>
+        <s:State name="ready"/>
+    </s:states>
+
+    <!-- host component -->
+    <fx:Metadata>
+        [HostComponent("com.esri.builder.components.PortalQueryResultPager")]
+    </fx:Metadata>
+
+    <!-- SkinParts
+    name=pageList, type=spark.components.DataGroup, required=false
+    name=nextButton, type=spark.components.Button, required=false
+    name=previousButton, type=spark.components.Button, required=false
+    -->
+
+    <s:layout>
+        <s:HorizontalLayout horizontalAlign="center" verticalAlign="middle"/>
+    </s:layout>
+
+    <s:Button id="previousButton"
+              height="100%"
+              buttonMode="true"
+              cornerRadius="3"
+              enabled.noResult="false"
+              enabled.normal="false"
+              enabled.ready="{hostComponent.hasPrevious}"
+              fontSize="12"
+              label="{hostComponent.previousLabel}"/>
+
+    <s:List id="pageList"
+            height="100%"
+            allowMultipleSelection="false"
+            borderVisible="false"
+            contentBackgroundAlpha="0"
+            dataProvider="{hostComponent.pages}"
+            minWidth="0"
+            selectedIndex="{hostComponent.selectedIndex}">
+        <s:layout>
+            <s:HorizontalLayout gap="0"/>
+        </s:layout>
+        <s:itemRenderer>
+            <fx:Component>
+                <s:ItemRenderer height="100%"
+                                autoDrawBackground="false"
+                                buttonMode="{data.enabled}"
+                                enabled="{data.enabled}"
+                                useHandCursor="{data.enabled}">
+
+                    <s:states>
+                        <s:State name="normal"/>
+                        <s:State name="selected"/>
+                        <s:State name="hovered"/>
+                    </s:states>
+
+                    <s:Rect left="1" right="1" top="1" bottom="1"
+                            includeIn="selected, hovered">
+                        <s:fill>
+                            <s:SolidColor color="#EFEFEF"/>
+                        </s:fill>
+                        <s:stroke>
+                            <s:SolidColorStroke color.hovered="#cccccc" color.selected="#777777"/>
+                        </s:stroke>
+                    </s:Rect>
+
+                    <s:Group top="1" bottom="1">
+                        <s:layout>
+                            <s:HorizontalLayout paddingLeft="6"
+                                                paddingRight="6"
+                                                verticalAlign="middle"/>
+                        </s:layout>
+                        <s:Label height="100%"
+                                 color="#21759B"
+                                 color.selected="#666666"
+                                 text="{data.label}"
+                                 verticalAlign="middle"/>
+                    </s:Group>
+
+                </s:ItemRenderer>
+            </fx:Component>
+        </s:itemRenderer>
+    </s:List>
+
+    <s:Button id="nextButton"
+              height="100%"
+              buttonMode="true"
+              cornerRadius="3"
+              enabled.noResult="false"
+              enabled.normal="false"
+              enabled.ready="{hostComponent.hasNext}"
+              fontSize="12"
+              label="{hostComponent.nextLabel}"/>
+
+</s:Skin>

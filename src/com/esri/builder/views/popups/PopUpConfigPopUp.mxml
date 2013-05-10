@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:SkinnablePopUpContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                           xmlns:s="library://ns.adobe.com/flex/spark"
+                           xmlns:components="com.esri.builder.components.*"
+                           xmlns:supportClasses="com.esri.builder.views.supportClasses.*"
+                           width="600"
+                           minHeight="600">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.components.FieldPickerEvent;
+            import com.esri.builder.model.PopUpConfig;
+            import com.esri.builder.views.supportClasses.FieldPickerSelectionUtil;
+
+            import mx.events.FlexEvent;
+            import mx.managers.PopUpManager;
+            import mx.utils.StringUtil;
+
+            private const KEY_VALUE_DISPLAY_INDEX:int = 0;
+            private const DESCRIPTION_DISPLAY_INDEX:int = 1;
+
+            [Bindable]
+            public var layerName:String;
+            [Bindable]
+            public var supportsAttachments:Boolean;
+            [Bindable]
+            public var supportsRelatedRecords:Boolean;
+            [Bindable]
+            private var fieldList:ArrayList = new ArrayList();
+
+            public var layerId:String;
+
+            private var _popUpConfig:PopUpConfig;
+
+            [Bindable]
+            public function get popUpConfig():PopUpConfig
+            {
+                return _popUpConfig;
+            }
+
+            public function set popUpConfig(value:PopUpConfig):void
+            {
+                if (value)
+                {
+                    _popUpConfig = value;
+                    currentState = _popUpConfig.description ? "descriptionDisplay" : "keyValueDisplay";
+                }
+            }
+
+            public function set fields(value:Array):void
+            {
+                if (value)
+                {
+                    fieldList.source = value;
+                }
+            }
+
+            protected function applyButton_clickHandler(event:MouseEvent):void
+            {
+                if (currentState == "keyValueDisplay")
+                {
+                    _popUpConfig.description = "";
+                }
+                close(true);
+            }
+
+            protected function cancelButton_clickHandler(event:MouseEvent):void
+            {
+                close();
+            }
+
+            private function titleFieldPicker_fieldSelectedHandler(event:FieldPickerEvent):void
+            {
+                addToTitle(event.template);
+            }
+
+            private function addToTitle(text:String):void
+            {
+                FieldPickerSelectionUtil.insertIntoTextSelectionAndFocus(text, popUpTitle);
+                popUpConfig.title = popUpTitle.text; //updating text manually since binding does not kick in
+            }
+
+            private function updateDisplayMode():void
+            {
+                currentState = (displayModeSelection.selectedIndex == KEY_VALUE_DISPLAY_INDEX) ? "keyValueDisplay" : "descriptionDisplay";
+            }
+
+            protected function displayModeSelection_creationCompleteHandler(event:FlexEvent):void
+            {
+                displayModeSelection.selectedIndex = (currentState == "keyValueDisplay") ? KEY_VALUE_DISPLAY_INDEX : DESCRIPTION_DISPLAY_INDEX;
+            }
+
+            override public function updatePopUpPosition():void
+            {
+                PopUpManager.centerPopUp(this);
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="keyValueDisplay"/>
+        <s:State name="descriptionDisplay"/>
+    </s:states>
+
+    <!--background-->
+    <s:Rect left="0" right="0" top="0" bottom="0">
+        <s:fill>
+            <s:SolidColor color="#FFFFFF"/>
+        </s:fill>
+
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:Rect height="25"
+            left="2" right="2" top="2">
+        <s:fill>
+            <s:LinearGradient rotation="90">
+                <s:GradientEntry alpha="1"
+                                 color="#FFFFFF"
+                                 ratio="0"/>
+
+                <s:GradientEntry alpha="1.0"
+                                 color="#CCCCCC"
+                                 ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Rect>
+
+    <s:Line left="0" right="0" top="26">
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Line>
+
+    <!--content-->
+    <s:Label left="10" top="9"
+             color="#000000"
+             fontSize="14"
+             fontWeight="bold"
+             text="{resourceManager.getString('BuilderStrings', 'configure')}"
+             textAlign="center"
+             verticalAlign="middle"/>
+
+    <s:Form width="100%"
+            top="20" bottom="0">
+        <s:layout>
+            <s:FormLayout gap="-10"/>
+        </s:layout>
+
+        <s:FormHeading label="{StringUtil.substitute(resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.contentTitle'), layerName)}"/>
+
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.popUpTitle')}">
+            <s:HGroup width="100%" verticalAlign="middle">
+                <s:TextInput id="popUpTitle"
+                             width="100%"
+                             text="@{popUpConfig.title}"/>
+
+                <components:PopUpFieldPicker fieldSelected="titleFieldPicker_fieldSelectedHandler(event)"
+                                             fields="{popUpConfig.fieldInfos}"
+                                             includeInLayout="{popUpConfig.fieldInfos.length &gt; 0}"
+                                             visible="{popUpConfig.fieldInfos.length &gt; 0}"/>
+            </s:HGroup>
+        </s:FormItem>
+
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.display')}">
+            <s:layout>
+                <s:BasicLayout/>
+            </s:layout>
+
+            <s:VGroup left="0" right="0" top="0" bottom="0"
+                      gap="-1"
+                      minHeight="290">
+                <s:ButtonBar id="displayModeSelection"
+                             change="updateDisplayMode()"
+                             creationComplete="displayModeSelection_creationCompleteHandler(event)"
+                             requireSelection="true">
+                    <s:dataProvider>
+                        <s:ArrayList>
+                            <fx:String>{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.display.keyValue')}</fx:String>
+                            <fx:String>{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.display.custom')}</fx:String>
+                        </s:ArrayList>
+                    </s:dataProvider>
+                </s:ButtonBar>
+
+                <supportClasses:KeyValueEditor width="100%" height="100%"
+                                               includeIn="keyValueDisplay"
+                                               maxHeight="260"
+                                               popUpFieldInfos="{popUpConfig.fieldInfos}"/>
+
+                <!--Need ID for binding since we're using states-->
+                <supportClasses:ContentEditor id="descriptionEditor"
+                                              width="100%" height="100%"
+                                              content="@{popUpConfig.description}"
+                                              includeIn="descriptionDisplay"
+                                              popUpFieldInfos="{popUpConfig.fieldInfos}"/>
+            </s:VGroup>
+        </s:FormItem>
+
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.popUpMedias')}">
+            <supportClasses:PopUpMediaInfoEditor width="100%" height="100%"
+                                                 fields="{fieldList}"
+                                                 popUpFieldInfos="{popUpConfig.fieldInfos}"
+                                                 popUpMediaInfos="{popUpConfig.mediaInfos}"/>
+        </s:FormItem>
+
+        <s:FormItem includeInLayout="{supportsAttachments}"
+                    label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.showAttachments')}"
+                    visible="{supportsAttachments}">
+            <components:SliderToggleButton deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                           selected="@{popUpConfig.showAttachments}"
+                                           selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
+        </s:FormItem>
+
+        <s:FormItem includeInLayout="{supportsRelatedRecords}"
+                    label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.showRelatedRecords')}"
+                    visible="{supportsRelatedRecords}">
+            <components:SliderToggleButton deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                           selected="@{popUpConfig.showRelatedRecords}"
+                                           selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
+        </s:FormItem>
+
+        <s:FormItem>
+            <s:RichEditableText editable="false"
+                                fontSize="14"
+                                selectable="true">
+                <s:textFlow>
+                    <s:TextFlow>
+                        <s:a href="http://resources.arcgis.com/en/help/flex-viewer/concepts/index.html#/Configuring_pop_ups_in_application_builder/01m30000004p000000/" target="_blank">{resourceManager.getString('BuilderStrings', 'layoutView.learnMore')}</s:a>
+                    </s:TextFlow>
+                </s:textFlow>
+            </s:RichEditableText>
+        </s:FormItem>
+
+        <s:HGroup width="100%"
+                  horizontalAlign="center"
+                  paddingTop="10"
+                  verticalAlign="middle">
+            <s:Button id="applyButton"
+                      width="150"
+                      click="applyButton_clickHandler(event)"
+                      label="{resourceManager.getString('BuilderStrings', 'ok')}"
+                      skinClass="com.esri.builder.skins.BlueButtonSkin"/>
+
+            <s:Button id="cancelButton"
+                      click="cancelButton_clickHandler(event)"
+                      label="{resourceManager.getString('BuilderStrings', 'cancel')}"
+                      skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+        </s:HGroup>
+    </s:Form>
+</s:SkinnablePopUpContainer>

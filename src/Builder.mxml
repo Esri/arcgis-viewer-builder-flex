@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
+                       xmlns:s="library://ns.adobe.com/flex/spark"
+                       xmlns:mx="library://ns.adobe.com/flex/mx"
+                       xmlns:views="com.esri.builder.views.*"
+                       xmlns:controllers="com.esri.builder.controllers.*"
+                       xmlns:supportClasses="com.esri.builder.controllers.supportClasses.*"
+                       xmlns:components="com.esri.builder.components.*"
+                       applicationComplete="AppEvent.dispatch(AppEvent.APPLICATION_COMPLETE,this)"
+                       creationComplete="this_creationCompleteHandler(event)"
+                       creationPolicy="all"
+                       currentState="{Model.instance.appState}"
+                       showStatusBar="false"
+                       skinClass="com.esri.builder.skins.BuilderSkin"
+                       status="{Model.instance.status}"
+                       title="{resourceManager.getString('BuilderStrings', 'applicationBuilderTitle')}"
+                       usePreloader="false">
+    <fx:Metadata>
+        [ResourceBundle("BuilderStrings")]
+    </fx:Metadata>
+
+    <fx:Style source="/stylesheet.css"/>
+
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.components.IdentityManager;
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.Model;
+
+            import mx.controls.DateField;
+            import mx.events.FlexEvent;
+            import mx.validators.DateValidator;
+            import mx.validators.NumberValidator;
+            import mx.validators.StringValidator;
+
+            import spark.components.ButtonBar;
+            import spark.components.CheckBox;
+            import spark.components.ComboBox;
+            import spark.components.DataGrid;
+            import spark.components.Form;
+            import spark.components.HSlider;
+            import spark.components.NumericStepper;
+            import spark.components.RadioButton;
+            import spark.components.TabBar;
+            import spark.components.VSlider;
+
+            Form;
+            DataGrid;
+            NumericStepper;
+            HSlider;
+            VSlider;
+            TabBar;
+            DateField;
+            CheckBox;
+            ButtonBar;
+            RadioButton;
+            NumericStepper;
+            StringValidator;
+            NumberValidator;
+            DateValidator;
+            ComboBox;
+
+            protected function this_creationCompleteHandler(event:FlexEvent):void
+            {
+                IdentityManager.instance.enabled = true;
+                AppEvent.dispatch(AppEvent.CREATION_COMPLETE, this);
+            }
+        ]]>
+    </fx:Script>
+
+    <fx:Declarations>
+        <components:LogFileTarget filters="{ [ 
+                                              'com.esri.builder.components.*',
+                                              'com.esri.builder.controllers.*',
+                                              'com.esri.builder.eventbus.*' ,
+                                              'com.esri.builder.model.*' ,
+                                              'com.esri.builder.renderers.*',
+                                              'com.esri.builder.supportClasses.*',
+                                              'com.esri.builder.views.*' ,
+                                              'modules.*' 
+                                            ] }"
+                                  includeCategory="true"
+                                  includeDate="true"
+                                  includeLevel="true"
+                                  includeTime="true"/>
+        <controllers:LoadWidgetConfigurations id="loadWidgetConfiguration"/>
+        <supportClasses:SettingsValidator id="settingsValidator"/>
+        <supportClasses:HTMLWrapperUpdater id="htmlWrapperUpdater"/>
+        <supportClasses:LocalConnectionDelegate id="localConnectionDelegate"/>
+        <controllers:ConfigureExtentController/>
+        <controllers:BuilderController/>
+        <controllers:CreationCompleteController/>
+        <controllers:ApplicationCompleteController/>
+        <controllers:ApplicationCloseController/>
+        <controllers:SaveSettingsController settingsValidator="{settingsValidator}"/>
+        <controllers:TutorialModeSettingsController/>
+        <controllers:CreateAppController loadWidgetConfigurations="{loadWidgetConfiguration}"/>
+        <controllers:ListAppsController/>
+        <controllers:LocaleController/>
+        <controllers:EditAppController loadWidgetConfigurations="{loadWidgetConfiguration}"/>
+        <controllers:LoadAppController/>
+        <controllers:DeleteAppController/>
+        <controllers:RenameAppController/>
+        <controllers:ExportAppController/>
+        <controllers:LogoController localConnectionDelegate="{localConnectionDelegate}"/>
+        <controllers:TitlesController localConnectionDelegate="{localConnectionDelegate}"/>
+        <controllers:StylesController localConnectionDelegate="{localConnectionDelegate}"/>
+        <controllers:SaveConfigController htmlWrapperUpdater="{htmlWrapperUpdater}"/>
+        <controllers:DuplicateAppController/>
+        <controllers:WebMapController/>
+        <controllers:PortalLayerController/>
+        <controllers:PortalController/>
+        <controllers:SetWebMapController/>
+        <controllers:AddConfigLayerController/>
+        <controllers:LayersController/>
+        <controllers:EditConfigLayerController/>
+        <controllers:BreadcrumbController/>
+        <controllers:AppTouchController/>
+        <controllers:SaveChangesController/>
+        <controllers:SwitchingMapsController/>
+        <controllers:RecentlyUsedURLsController/>
+        <controllers:AppUpgradeController/>
+        <controllers:ImportCustomWidgetController/>
+        <controllers:RemoveCustomWidgetController/>
+        <controllers:WidgetSyncController/>
+    </fx:Declarations>
+
+    <s:states>
+        <s:State name="intro"/>
+        <s:State name="settings"/>
+        <s:State name="home"/>
+        <s:State name="viewer"/>
+    </s:states>
+
+    <s:transitions>
+        <s:Transition fromState="intro" toState="home">
+            <s:Sequence duration="250" startDelay="2000">
+                <s:Fade target="{introView}"/>
+                <s:RemoveAction target="{introView}"/>
+                <s:AddAction targets="{[homeView,applicationHeader]}"/>
+                <s:Fade targets="{[homeView,applicationHeader]}"/>
+            </s:Sequence>
+        </s:Transition>
+
+        <s:Transition fromState="intro" toState="settings">
+            <s:Sequence duration="250" startDelay="2000">
+                <s:Fade target="{introView}"/>
+                <s:RemoveAction target="{introView}"/>
+                <s:AddAction targets="{[settingsView,applicationHeader]}"/>
+                <s:Fade targets="{[settingsView,applicationHeader]}"/>
+            </s:Sequence>
+        </s:Transition>
+
+        <s:Transition fromState="home" toState="settings">
+            <s:Sequence duration="250">
+                <s:Fade target="{homeView}"/>
+                <s:RemoveAction target="{homeView}"/>
+                <s:AddAction target="{settingsView}"/>
+                <s:Fade target="{settingsView}"/>
+            </s:Sequence>
+        </s:Transition>
+
+        <s:Transition fromState="settings" toState="home">
+            <s:Sequence duration="250">
+                <s:Fade target="{settingsView}"/>
+                <s:RemoveAction target="{settingsView}"/>
+                <s:AddAction target="{homeView}"/>
+                <s:Fade target="{homeView}"/>
+            </s:Sequence>
+        </s:Transition>
+
+        <s:Transition fromState="home" toState="viewer">
+            <s:Sequence duration="250">
+                <s:Fade target="{homeView}"/>
+                <s:RemoveAction target="{homeView}"/>
+                <s:AddAction target="{viewerView}"/>
+                <s:Fade target="{viewerView}"/>
+            </s:Sequence>
+        </s:Transition>
+
+        <s:Transition fromState="viewer" toState="home">
+            <s:Sequence duration="250">
+                <s:Fade target="{viewerView}"/>
+                <s:RemoveAction target="{viewerView}"/>
+                <s:AddAction target="{homeView}"/>
+                <s:Fade target="{homeView}"/>
+            </s:Sequence>
+        </s:Transition>
+
+        <s:Transition fromState="viewer" toState="settings">
+            <s:Sequence duration="250">
+                <s:Fade target="{viewerView}"/>
+                <s:RemoveAction target="{viewerView}"/>
+                <s:AddAction target="{settingsView}"/>
+                <s:Fade target="{settingsView}"/>
+            </s:Sequence>
+        </s:Transition>
+    </s:transitions>
+
+    <views:ApplicationHeader id="applicationHeader"
+                             width="100%"
+                             excludeFrom="intro"/>
+    <views:IntroView id="introView" includeIn="intro"/>
+    <views:HomeView id="homeView" includeIn="home"/>
+    <views:SettingsView id="settingsView" includeIn="settings"/>
+    <views:ViewerView id="viewerView" includeIn="viewer"/>
+</s:WindowedApplication>

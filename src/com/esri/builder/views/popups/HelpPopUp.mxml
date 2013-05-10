@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:fx="http://ns.adobe.com/mxml/2009"
+         width="220" height="100%">
+    <fx:Script>
+        <![CDATA[
+            [Bindable]
+            public var title:String;
+            [Bindable]
+            public var content:String;
+        ]]>
+    </fx:Script>
+
+    <!--border + background-->
+    <s:Rect left="12" right="0" top="0" bottom="0">
+        <s:fill>
+            <s:SolidColor color="#FFFFFF"/>
+        </s:fill>
+
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Rect>
+
+    <!--content-->
+    <s:VGroup left="12" right="0" top="0" bottom="0"
+              gap="0">
+        <s:Group width="100%" height="100%">
+            <!--header background-->
+            <s:Rect left="2" right="2" top="2" bottom="2">
+                <s:fill>
+                    <s:LinearGradient rotation="90">
+                        <s:GradientEntry alpha="1"
+                                         color="#FFFFFF"
+                                         ratio="0"/>
+                        <s:GradientEntry alpha="1.0"
+                                         color="#CCCCCC"
+                                         ratio="1"/>
+                    </s:LinearGradient>
+                </s:fill>
+            </s:Rect>
+
+            <s:RichText color="#000000"
+                        fontSize="14"
+                        maxWidth="200"
+                        paddingBottom="4"
+                        paddingLeft="6"
+                        paddingRight="6"
+                        paddingTop="6"
+                        text="{title}"
+                        textAlign="center"
+                        verticalAlign="middle"/>
+
+            <!--divider-->
+            <s:Line left="0" right="0" bottom="0">
+                <s:stroke>
+                    <s:SolidColorStroke caps="none"
+                                        color="#000000"
+                                        joints="miter"
+                                        miterLimit="4"
+                                        weight="2"/>
+                </s:stroke>
+            </s:Line>
+        </s:Group>
+
+        <s:RichText color="#000000"
+                    fontSize="12"
+                    maxWidth="200"
+                    paddingBottom="6"
+                    paddingLeft="6"
+                    paddingRight="6"
+                    paddingTop="6"
+                    tabStops="S0 S50 S100 S150"
+                    text="{content}"/>
+    </s:VGroup>
+
+    <!--arrow-->
+    <s:Path width="12.72"
+            left="0" top="7.24"
+            data="M 11.91 13.71 L 0.19 6.95 11.91 0.19 Z ">
+        <s:fill>
+            <s:LinearGradient rotation="0">
+                <s:GradientEntry alpha="1.0"
+                                 color="#999999"
+                                 ratio="0"/>
+                <s:GradientEntry alpha="1.0"
+                                 color="#000000"
+                                 ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Path>
+</s:Group>

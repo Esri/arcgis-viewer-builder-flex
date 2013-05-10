@@ -1,0 +1,451 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:mx="library://ns.adobe.com/flex/mx"
+          xmlns:components="com.esri.builder.components.*">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.renderers.ClassBreaksRenderer;
+            import com.esri.ags.renderers.SimpleRenderer;
+            import com.esri.ags.renderers.UniqueValueRenderer;
+            import com.esri.ags.renderers.supportClasses.ClassBreakInfo;
+            import com.esri.ags.renderers.supportClasses.UniqueValueInfo;
+            import com.esri.ags.symbols.PictureMarkerSymbol;
+            import com.esri.ags.symbols.SimpleFillSymbol;
+            import com.esri.ags.symbols.SimpleLineSymbol;
+            import com.esri.ags.symbols.SimpleMarkerSymbol;
+            import com.esri.ags.symbols.Symbol;
+            import com.esri.builder.supportClasses.AssetImporter;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.supportClasses.LabelUtil;
+
+            import mx.events.FlexEvent;
+
+            [Bindable]
+            private var symbolAlpha:Number;
+            [Bindable]
+            private var symbolSize:Number;
+            [Bindable]
+            private var symbolColor:uint;
+            [Bindable]
+            private var symbolOutlineColor:uint;
+            [Bindable]
+            private var symbolOutlineWidth:Number;
+            [Bindable]
+            private var symbolIconPath:String
+            [Bindable]
+            private var symbolIconWidth:Number;
+            [Bindable]
+            private var symbolIconHeight:Number;
+            [Bindable]
+            private var symbolAngle:Number;
+            [Bindable]
+            private var symbolXOffset:Number;
+            [Bindable]
+            private var symbolYOffset:Number;
+
+            private var _symbolOwner:Object;
+
+            //using object as symbol owners (simple renderer, unique value info & class breaks info) do not share a common base.
+            public function get symbolOwner():Object
+            {
+                return _symbolOwner;
+            }
+
+            public function set symbolOwner(value:Object):void
+            {
+                _symbolOwner = value;
+            }
+
+            private var _symbol:Symbol;
+
+            [Bindable]
+            public function get symbol():Symbol
+            {
+                return _symbol;
+            }
+
+            public function set symbol(value:Symbol):void
+            {
+                _symbol = value;
+                setSymbolProperties(_symbol);
+            }
+
+            private function setSymbolProperties(symbol:Symbol):void
+            {
+                if (_symbol is SimpleMarkerSymbol)
+                {
+                    setSimpleMarkerSymbolProperties(_symbol as SimpleMarkerSymbol);
+                    currentState = "editingSimpleMarker";
+                }
+                else if (_symbol is PictureMarkerSymbol)
+                {
+                    setPictureMarkerSymbolProperties(_symbol as PictureMarkerSymbol);
+                    currentState = "editingPictureMarker";
+                    showIconInImageBrowser();
+                }
+                else if (_symbol is SimpleFillSymbol)
+                {
+                    setSimpleFillSymbolProperties(_symbol as SimpleFillSymbol);
+                    currentState = "editingSimpleFill";
+                }
+                else if (_symbol is SimpleLineSymbol)
+                {
+                    setSimpleLineSymbolProperties(_symbol as SimpleLineSymbol);
+                    currentState = "editingSimpleLine";
+                }
+            }
+
+            private function showIconInImageBrowser():void
+            {
+                if (symbolIconPath)
+                {
+                    imageBrowser.loadImageFromDirectory(Model.instance.appDir, symbolIconPath);
+                }
+            }
+
+            private var _previousSimpleMarker:SimpleMarkerSymbol;
+
+            public function get previousSimpleMarker():SimpleMarkerSymbol
+            {
+                return _previousSimpleMarker ||= createDefaultSimpleMarkerSymbol();
+            }
+
+            private function createDefaultSimpleMarkerSymbol():SimpleMarkerSymbol
+            {
+                var simpleMarkerSymbol:SimpleMarkerSymbol = new SimpleMarkerSymbol();
+                simpleMarkerSymbol.outline = new SimpleLineSymbol();
+                return simpleMarkerSymbol;
+            }
+
+            public function set previousSimpleMarker(value:SimpleMarkerSymbol):void
+            {
+                _previousSimpleMarker = value;
+            }
+
+            private var _previousPictureMarker:PictureMarkerSymbol;
+
+            public function get previousPictureMarker():PictureMarkerSymbol
+            {
+                return _previousPictureMarker ||= createDefaultPictureMarker();
+            }
+
+            private function createDefaultPictureMarker():PictureMarkerSymbol
+            {
+                var pictureMarkerSymbol:PictureMarkerSymbol = new PictureMarkerSymbol();
+                pictureMarkerSymbol.height = 15;
+                pictureMarkerSymbol.width = 15;
+                return pictureMarkerSymbol;
+            }
+
+            public function set previousPictureMarker(value:PictureMarkerSymbol):void
+            {
+                _previousPictureMarker = value;
+            }
+
+            private function setSimpleMarkerSymbolProperties(simpleMarkerSymbol:SimpleMarkerSymbol):void
+            {
+                symbolColor = simpleMarkerSymbol.color;
+                symbolAlpha = simpleMarkerSymbol.alpha;
+                symbolSize = simpleMarkerSymbol.size;
+                symbolOutlineColor = simpleMarkerSymbol.outline.color;
+                symbolOutlineWidth = simpleMarkerSymbol.outline.width;
+            }
+
+            private function setSimpleFillSymbolProperties(simpleFillSymbol:SimpleFillSymbol):void
+            {
+                symbolColor = simpleFillSymbol.color;
+                symbolAlpha = simpleFillSymbol.alpha;
+                symbolOutlineColor = simpleFillSymbol.outline.color;
+                symbolOutlineWidth = simpleFillSymbol.outline.width;
+            }
+
+            private function setSimpleLineSymbolProperties(simpleLineSymbol:SimpleLineSymbol):void
+            {
+                symbolAlpha = simpleLineSymbol.alpha;
+                symbolOutlineColor = simpleLineSymbol.color;
+                symbolOutlineWidth = simpleLineSymbol.width;
+            }
+
+            private function setPictureMarkerSymbolProperties(pictureMarkerSymbol:PictureMarkerSymbol):void
+            {
+                symbolIconPath = pictureMarkerSymbol.source as String;
+                symbolIconWidth = pictureMarkerSymbol.width;
+                symbolIconHeight = pictureMarkerSymbol.height;
+                symbolAngle = pictureMarkerSymbol.angle;
+                symbolXOffset = pictureMarkerSymbol.xoffset;
+                symbolYOffset = pictureMarkerSymbol.yoffset;
+            }
+
+            private function applySymbolUpdates():void
+            {
+                if (currentState == "editingSimpleMarker")
+                {
+                    updateSimpleMarkerSymbol(_symbol as SimpleMarkerSymbol);
+                }
+                else if (currentState == "editingSimpleFill")
+                {
+                    updateSimpleFillSymbol(_symbol as SimpleFillSymbol);
+                }
+                else if (currentState == "editingSimpleLine")
+                {
+                    updateSimpleLineSymbol(_symbol as SimpleLineSymbol);
+                }
+                else if (currentState == "editingPictureMarker")
+                {
+                    updatePictureMarkerSymbol(_symbol as PictureMarkerSymbol);
+                }
+
+                updateRendererSymbol();
+            }
+
+            private function updateSimpleMarkerSymbol(simpleMarkerSymbol:SimpleMarkerSymbol):void
+            {
+                simpleMarkerSymbol.color = symbolColor;
+                simpleMarkerSymbol.alpha = symbolAlpha;
+                simpleMarkerSymbol.size = symbolSize;
+                simpleMarkerSymbol.outline.color = symbolOutlineColor;
+                simpleMarkerSymbol.outline.width = symbolOutlineWidth;
+            }
+
+            private function updateSimpleFillSymbol(simpleFillSymbol:SimpleFillSymbol):void
+            {
+                simpleFillSymbol.color = symbolColor;
+                simpleFillSymbol.alpha = symbolAlpha;
+                simpleFillSymbol.outline.color = symbolOutlineColor;
+                simpleFillSymbol.outline.width = symbolOutlineWidth;
+            }
+
+            private function updateSimpleLineSymbol(simpleLineSymbol:SimpleLineSymbol):void
+            {
+                simpleLineSymbol.alpha = symbolAlpha;
+                simpleLineSymbol.color = symbolOutlineColor;
+                simpleLineSymbol.width = symbolOutlineWidth;
+            }
+
+            private function updatePictureMarkerSymbol(pictureMarkerSymbol:PictureMarkerSymbol):void
+            {
+                pictureMarkerSymbol.source = symbolIconPath;
+                pictureMarkerSymbol.width = symbolIconWidth;
+                pictureMarkerSymbol.height = symbolIconHeight;
+                pictureMarkerSymbol.angle = symbolAngle;
+                pictureMarkerSymbol.xoffset = symbolXOffset;
+                pictureMarkerSymbol.yoffset = symbolYOffset;
+            }
+
+            private function updateMarkerState():void
+            {
+                var willStateChange:Boolean = (currentState != markerTypeSelection.selectedItem.value);
+
+                if (willStateChange)
+                {
+                    //TODO: refactor
+                    if (currentState == 'editingSimpleMarker')
+                    {
+                        previousSimpleMarker = symbol as SimpleMarkerSymbol;
+                        symbol = previousPictureMarker;
+                    }
+                    else
+                    {
+                        previousPictureMarker = symbol as PictureMarkerSymbol;
+                        symbol = previousSimpleMarker;
+                    }
+
+                    currentState = markerTypeSelection.selectedItem.value;
+                }
+
+                applySymbolUpdates();
+            }
+
+            private function updateRendererSymbol():void
+            {
+                if (symbolOwner is SimpleRenderer)
+                {
+                    (symbolOwner as SimpleRenderer).symbol = symbol;
+                }
+                else if (symbolOwner is UniqueValueRenderer)
+                {
+                    (symbolOwner as UniqueValueRenderer).defaultSymbol = symbol;
+                }
+                else if (symbolOwner is ClassBreaksRenderer)
+                {
+                    (symbolOwner as ClassBreaksRenderer).defaultSymbol = symbol;
+                }
+                else if (symbolOwner is UniqueValueInfo)
+                {
+                    (symbolOwner as UniqueValueInfo).symbol = symbol;
+                }
+                else if (symbolOwner is ClassBreakInfo)
+                {
+                    (symbolOwner as ClassBreakInfo).symbol = symbol;
+                }
+            }
+
+            private function updateImageURL():void
+            {
+                symbolIconPath = "assets/images/" + imageBrowser.selectedImage.name;
+                AssetImporter.importImage(imageBrowser.selectedImage);
+                applySymbolUpdates();
+            }
+
+            protected function markerTypeSelection_creationCompleteHandler(event:FlexEvent):void
+            {
+                markerTypeSelection.typicalItem =
+                    LabelUtil.findLongestLabelItem(markerTypeSelection.dataProvider.toArray(), "label");
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="editingSimpleMarker"/>
+        <s:State name="editingPictureMarker"/>
+        <s:State name="editingSimpleLine"/>
+        <s:State name="editingSimpleFill"/>
+    </s:states>
+
+    <s:HGroup includeIn="editingSimpleMarker,editingPictureMarker" verticalAlign="middle">
+        <s:Label text="{resourceManager.getString('BuilderStrings', 'geoprocessing.type')}"/>
+
+        <s:DropDownList id="markerTypeSelection"
+                        change="updateMarkerState()"
+                        creationComplete="markerTypeSelection_creationCompleteHandler(event)"
+                        selectedIndex.editingPictureMarker="1"
+                        selectedIndex.editingSimpleMarker="0">
+            <s:ArrayList>
+                <s:DataItem label="{resourceManager.getString('BuilderStrings', 'geoprocessing.simpleMarker')}" value="editingSimpleMarker"/>
+                <s:DataItem label="{resourceManager.getString('BuilderStrings', 'geoprocessing.pictureMarker')}" value="editingPictureMarker"/>
+            </s:ArrayList>
+        </s:DropDownList>
+    </s:HGroup>
+
+    <s:VGroup>
+        <s:HGroup includeIn="editingPictureMarker" verticalAlign="middle">
+            <s:Label text="{resourceManager.getString('BuilderStrings', 'geoprocessing.icon')}"/>
+
+            <components:ImageBrowser id="imageBrowser"
+                                     change="updateImageURL()"
+                                     skinClass="com.esri.builder.skins.IconImageBrowserSkin"/>
+        </s:HGroup>
+
+        <s:HGroup verticalAlign="middle">
+            <s:Label excludeFrom="editingSimpleLine,editingPictureMarker" text="{resourceManager.getString('BuilderStrings', 'geoprocessing.fillColor')}"/>
+
+            <mx:ColorPicker id="fillColorPicker"
+                            change="applySymbolUpdates()"
+                            excludeFrom="editingSimpleLine, editingPictureMarker"
+                            selectedColor="@{symbolColor}"/>
+            <s:Label excludeFrom="editingSimpleLine, editingPictureMarker" text="{resourceManager.getString('BuilderStrings', 'geoprocessing.outlineColor')}"/>
+
+            <s:Label includeIn="editingSimpleLine" text="{resourceManager.getString('BuilderStrings', 'geoprocessing.lineColor')}"/>
+
+            <mx:ColorPicker id="outlineColorPicker"
+                            change="applySymbolUpdates()"
+                            excludeFrom="editingPictureMarker"
+                            selectedColor="@{symbolOutlineColor}"/>
+            <s:Label excludeFrom="editingPictureMarker" text="{resourceManager.getString('BuilderStrings', 'geoprocessing.width')}"/>
+
+            <s:NumericStepper id="widthSelection"
+                              width="45"
+                              change="applySymbolUpdates()"
+                              excludeFrom="editingPictureMarker"
+                              maximum="50"
+                              minimum="1"
+                              stepSize="1"
+                              value="@{symbolOutlineWidth}"/>
+
+            <s:Label excludeFrom="editingPictureMarker" text="{resourceManager.getString('BuilderStrings', 'geoprocessing.alpha')}"/>
+
+            <s:NumericStepper id="alphaSelection"
+                              width="45"
+                              change="applySymbolUpdates()"
+                              excludeFrom="editingPictureMarker"
+                              maximum="1"
+                              minimum="0"
+                              stepSize=".1"
+                              value="@{symbolAlpha}"/>
+
+            <s:Label includeIn="editingSimpleMarker" text="{resourceManager.getString('BuilderStrings', 'geoprocessing.size')}"/>
+
+            <s:NumericStepper id="sizeSelection"
+                              width="45"
+                              change="applySymbolUpdates()"
+                              includeIn="editingSimpleMarker"
+                              maximum="50"
+                              minimum="1"
+                              stepSize="1"
+                              value="@{symbolSize}"/>
+
+            <s:Label includeIn="editingPictureMarker" text="{resourceManager.getString('BuilderStrings', 'geoprocessing.height')}"/>
+
+            <s:NumericStepper id="iconHeightSelection"
+                              width="45"
+                              change="applySymbolUpdates()"
+                              includeIn="editingPictureMarker"
+                              maximum="50"
+                              minimum="1"
+                              stepSize="1"
+                              value="@{symbolIconHeight}"/>
+
+            <s:Label includeIn="editingPictureMarker" text="{resourceManager.getString('BuilderStrings', 'geoprocessing.width')}"/>
+
+            <s:NumericStepper id="iconWidthSelection"
+                              width="45"
+                              change="applySymbolUpdates()"
+                              includeIn="editingPictureMarker"
+                              maximum="50"
+                              minimum="1"
+                              stepSize="1"
+                              value="@{symbolIconWidth}"/>
+
+            <s:Label includeIn="editingPictureMarker" text="{resourceManager.getString('BuilderStrings', 'geoprocessing.angle')}"/>
+
+            <s:NumericStepper id="angleSelection"
+                              width="45"
+                              change="applySymbolUpdates()"
+                              includeIn="editingPictureMarker"
+                              maximum="360"
+                              minimum="0"
+                              stepSize="1"
+                              value="@{symbolAngle}"/>
+
+            <s:Label includeIn="editingPictureMarker" text="{resourceManager.getString('BuilderStrings', 'geoprocessing.xOffset')}"/>
+
+            <s:NumericStepper id="iconXOffsetSelection"
+                              width="45"
+                              change="applySymbolUpdates()"
+                              includeIn="editingPictureMarker"
+                              maximum="50"
+                              minimum="0"
+                              stepSize="1"
+                              value="@{symbolXOffset}"/>
+
+            <s:Label includeIn="editingPictureMarker" text="{resourceManager.getString('BuilderStrings', 'geoprocessing.yOffset')}"/>
+
+            <s:NumericStepper id="iconYOffsetSelection"
+                              width="45"
+                              change="applySymbolUpdates()"
+                              includeIn="editingPictureMarker"
+                              maximum="50"
+                              minimum="0"
+                              stepSize="1"
+                              value="@{symbolYOffset}"/>
+        </s:HGroup>
+    </s:VGroup>
+</s:VGroup>

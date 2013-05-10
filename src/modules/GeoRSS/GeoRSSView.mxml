@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Form xmlns:fx="http://ns.adobe.com/mxml/2009"
+        xmlns:s="library://ns.adobe.com/flex/spark"
+        xmlns:mx="library://ns.adobe.com/flex/mx"
+        xmlns:components="com.esri.builder.components.*"
+        xmlns:graphics="assets.graphics.*"
+        implements="modules.IWidgetView">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.supportClasses.AssetImporter;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.views.BuilderAlert;
+
+            import modules.IWidgetModel;
+
+            import mx.controls.Alert;
+
+            [Bindable]
+            private var geoRSSModel:GeoRSSModel;
+
+            public function set widgetModel(value:IWidgetModel):void
+            {
+                if (value is GeoRSSModel)
+                {
+                    geoRSSModel = GeoRSSModel(value);
+                }
+                else
+                {
+                    throw new Error('argument is not an instance of GeoRSSModel');
+                }
+            }
+
+            public function get widgetModel():IWidgetModel
+            {
+                return geoRSSModel;
+            }
+
+            public function submit():Boolean
+            {
+                if (!geoRSSModel.source)
+                {
+                    BuilderAlert.show(resourceManager.getString('BuilderStrings', 'georss.missingSourceURL'),
+                                      resourceManager.getString('BuilderStrings', 'widgetsView.widgetConfigurationError'),
+                                      Alert.OK);
+                    return false;
+                }
+
+                if (imageBrowser.selectedImage)
+                {
+                    var importedIcon:File = AssetImporter.importImage(imageBrowser.selectedImage);
+                    geoRSSModel.pictureMarkerSymbolURL = 'assets/images/' + importedIcon.name;
+                }
+                return true;
+            }
+
+            public function cancel():void
+            {
+                // NOOP
+            }
+
+            private function loadIcon():void
+            {
+                imageBrowser.loadImageFromDirectory(Model.instance.appDir, geoRSSModel.pictureMarkerSymbolURL);
+            }
+        ]]>
+    </fx:Script>
+
+    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'georss.source')}">
+        <s:TextInput width="500"
+                     direction="ltr"
+                     text="@{geoRSSModel.source}"/>
+    </s:FormItem>
+
+    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'georss.fieldName')}">
+        <s:TextInput width="200" text="@{geoRSSModel.fieldName}"/>
+    </s:FormItem>
+
+    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'georss.fieldAlias')}">
+        <s:TextInput width="200" text="@{geoRSSModel.fieldAlias}"/>
+    </s:FormItem>
+
+    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'georss.symbol')}">
+        <components:ImageBrowser id="imageBrowser"
+                                 creationComplete="loadIcon()"
+                                 skinClass="com.esri.builder.skins.IconImageBrowserSkin"/>
+    </s:FormItem>
+
+    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'georss.titleField')}">
+        <s:TextInput width="200" text="@{geoRSSModel.titleField}"/>
+    </s:FormItem>
+
+    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'georss.linkField')}">
+        <s:TextInput width="200" text="@{geoRSSModel.linkField}"/>
+    </s:FormItem>
+
+    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'georss.refreshRate')}">
+        <s:layout>
+            <s:HorizontalLayout verticalAlign="middle"/>
+        </s:layout>
+
+        <s:TextInput width="100" text="@{geoRSSModel.refreshRate}"/>
+
+        <s:Label text="{resourceManager.getString('BuilderStrings', 'query.seconds')}"/>
+    </s:FormItem>
+
+    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'georss.zoomScale')}">
+        <s:TextInput width="200" text="@{geoRSSModel.zoomScale}"/>
+    </s:FormItem>
+
+    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'configLayerView.useProxy')}">
+        <s:layout>
+            <s:HorizontalLayout verticalAlign="middle"/>
+        </s:layout>
+
+        <s:CheckBox id="useProxy" selected="@{geoRSSModel.useProxy}"/>
+
+        <graphics:warning width="20" height="20"
+                          visible="{useProxy.selected 
+                              &amp;&amp; !Model.instance.proxyURL}"/>
+
+        <s:Label text="{resourceManager.getString('BuilderStrings', 'httpProxyMissing')}" visible="{useProxy.selected
+                                                                            &amp;&amp; !Model.instance.proxyURL}"/>
+    </s:FormItem>
+</s:Form>

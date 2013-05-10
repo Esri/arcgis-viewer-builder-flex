@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:views="com.esri.builder.views.*"
+         creationComplete="init()"
+         implements="com.esri.builder.views.supportClasses.IIncludeLayerDispatcher">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.portal.Portal;
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.PortalModel;
+            import com.esri.builder.supportClasses.LogUtil;
+            import com.esri.builder.views.supportClasses.IIncludeLayerSelection;
+            import com.esri.builder.views.supportClasses.LayerSelectionEvent;
+
+            import mx.events.FlexEvent;
+            import mx.logging.ILogger;
+            import mx.logging.Log;
+
+            private static const LOG:ILogger = LogUtil.createLogger(LayersSearch);
+
+            [Bindable]
+            public var isItemSelected:Boolean;
+
+            [Bindable]
+            private var portal:Portal = PortalModel.getInstance().portal;
+
+            private function init():void
+            {
+                AppEvent.addListener(AppEvent.PORTAL_STATUS_UPDATED, portalStatusUpdatedHandler);
+                updateSearchOptionsBasedOnPortal();
+            }
+
+            protected function portal_loadSuccessHandler(event:AppEvent):void
+            {
+                updateSearchOptionsBasedOnPortal();
+            }
+
+            protected function portalStatusUpdatedHandler(event:AppEvent):void
+            {
+                updateSearchOptionsBasedOnPortal();
+            }
+
+            private function updateSearchOptionsBasedOnPortal():void
+            {
+                if (Log.isInfo())
+                {
+                    LOG.info("Updating options based on Portal");
+                }
+
+                if (portal.loaded)
+                {
+                    buttonBar.dataProvider = portalLoadedOptions;
+                }
+                else
+                {
+                    buttonBar.dataProvider = portalNotLoadedOptions;
+                }
+
+                //reset layer search view
+                buttonBar.selectedIndex = -1;
+                buttonBar.selectedIndex = 0;
+            }
+
+            private function buttonBar_valueCommitHandler(event:FlexEvent):void
+            {
+                currentState = buttonBar.selectedItem.state;
+                updateLayerSelection();
+            }
+
+            public function dispatchIncludeLayer():void
+            {
+                dispatchEvent(new LayerSelectionEvent(LayerSelectionEvent.INCLUDE_LAYER));
+            }
+
+            public function updateLayerSelection():void
+            {
+                isItemSelected = hasValidSelection();
+            }
+
+            private function hasValidSelection():Boolean
+            {
+                var activeView:IIncludeLayerSelection;
+
+                if (currentState == "portal")
+                {
+                    activeView = portalLayersView;
+                }
+                else if (currentState == "mapserver")
+                {
+                    activeView = mapServerView;
+                }
+                else if (currentState == "web")
+                {
+                    activeView = layerFromWebView;
+                }
+
+                return activeView.hasValidSelection();
+            }
+        ]]>
+    </fx:Script>
+
+    <!--TODO: AVOID USING TWO SEPARATE ARRAYS-->
+    <fx:Declarations>
+        <s:ArrayList id="portalLoadedOptions">
+            <s:DataItem label="{portal.info.portalName}" state="portal"/>
+            <s:DataItem label="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsOperationalLayers.server')}" state="mapserver"/>
+            <s:DataItem label="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsOperationalLayers.web')}" state="web"/>
+        </s:ArrayList>
+
+        <s:ArrayList id="portalNotLoadedOptions">
+            <s:DataItem label="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsOperationalLayers.server')}" state="mapserver"/>
+            <s:DataItem label="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsOperationalLayers.web')}" state="web"/>
+        </s:ArrayList>
+    </fx:Declarations>
+
+    <s:layout>
+        <s:VerticalLayout gap="0"/>
+    </s:layout>
+
+    <s:states>
+        <s:State name="portal"/>
+        <s:State name="mapserver"/>
+        <s:State name="web"/>
+    </s:states>
+
+    <s:ButtonBar id="buttonBar"
+                 requireSelection="true"
+                 valueCommit="buttonBar_valueCommitHandler(event)"/>
+
+    <views:PortalLayersView id="portalLayersView" includeIn="portal"/>
+
+    <views:MapServerView id="mapServerView" includeIn="mapserver"/>
+
+    <views:LayerFromWebView id="layerFromWebView"
+                            includeIn="web"
+                            serviceURL="http://geocommons.com/overlays/119539.kml"/>
+</s:Group>

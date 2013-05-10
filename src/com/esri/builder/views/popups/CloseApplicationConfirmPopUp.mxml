@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:SkinnableContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                      xmlns:s="library://ns.adobe.com/flex/spark"
+                      xmlns:mx="library://ns.adobe.com/flex/mx"
+                      xmlns:graphics="assets.graphics.*"
+                      width="500" height="180">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.supportClasses.ApplicationCloseWarningEvent;
+
+            protected function close_clickHandler(event:MouseEvent):void
+            {
+                dispatchEvent(new ApplicationCloseWarningEvent(ApplicationCloseWarningEvent.CANCEL));
+            }
+
+            protected function cancel_clickHandler(event:MouseEvent):void
+            {
+                dispatchEvent(new ApplicationCloseWarningEvent(ApplicationCloseWarningEvent.CANCEL));
+            }
+
+            protected function saveButton_clickHandler(event:MouseEvent):void
+            {
+                dispatchEvent(new ApplicationCloseWarningEvent(ApplicationCloseWarningEvent.SAVE_AND_CLOSE));
+            }
+
+            protected function discardButton_clickHandler(event:MouseEvent):void
+            {
+                dispatchEvent(new ApplicationCloseWarningEvent(ApplicationCloseWarningEvent.DISCARD_AND_CLOSE));
+            }
+        ]]>
+    </fx:Script>
+
+    <!--background-->
+    <s:Rect left="0" right="0" top="0" bottom="0">
+        <s:fill>
+            <s:LinearGradient x="177" y="0"
+                              rotation="90"
+                              scaleX="148">
+                <s:GradientEntry color="0xFFFFFF" ratio="0.647059"/>
+                <s:GradientEntry color="0xB9E0F7" ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="0x666666"
+                                joints="miter"
+                                miterLimit="10"
+                                weight="2"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:Line width="100%" top="26.001">
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Line>
+
+    <!--content-->
+    <s:Label left="5" top="9"
+             color="#000000"
+             fontSize="14"
+             fontWeight="bold"
+             text="{resourceManager.getString('BuilderStrings', 'closeApplicationConfirmPopUp.title')}"
+             textAlign="center"
+             verticalAlign="middle"/>
+
+    <s:Button right="10" top="6"
+              click="cancel_clickHandler(event)"
+              label="{resourceManager.getString('BuilderStrings', 'close')}"
+              skinClass="com.esri.builder.skins.CloseButtonSkin"/>
+
+    <graphics:warning width="50" height="50"
+                      left="15" top="60"/>
+    <s:Label width="100%"
+             left="80" top="60"
+             color="#000000"
+             text="{resourceManager.getString('BuilderStrings', 'closeApplicationConfirmPopUp.content')}"/>
+
+    <s:HGroup left="80" bottom="20"
+              verticalAlign="middle">
+        <s:Button id="saveButton"
+                  width="150"
+                  click="saveButton_clickHandler(event)"
+                  label="{resourceManager.getString('BuilderStrings', 'closeApplicationConfirmPopUp.save')}"
+                  skinClass="com.esri.builder.skins.BlueButtonSkin"/>
+
+        <s:Button id="discardButton"
+                  width="150"
+                  click="discardButton_clickHandler(event)"
+                  label="{resourceManager.getString('BuilderStrings', 'closeApplicationConfirmPopUp.discard')}"
+                  skinClass="com.esri.builder.skins.BlueButtonSkin"/>
+
+        <s:Button id="cancelButton"
+                  click="cancel_clickHandler(event)"
+                  label="{resourceManager.getString('BuilderStrings', 'cancel')}"
+                  skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+    </s:HGroup>
+</s:SkinnableContainer>

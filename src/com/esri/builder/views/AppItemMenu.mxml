@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:List xmlns:fx="http://ns.adobe.com/mxml/2009"
+        xmlns:s="library://ns.adobe.com/flex/spark"
+        left="0" right="0" top="0" bottom="0"
+        change="dispatchAppItemMenuSelection()"
+        preinitialize="init()"
+        skinClass="com.esri.builder.skins.DropDownMenuOptionsSkin">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.supportClasses.LabelUtil;
+
+            import mx.managers.PopUpManager;
+
+            private function init():void
+            {
+                AppEvent.addListener(AppEvent.APP_STATE_CHANGED, appStateChangedHandler);
+                typicalItem = LabelUtil.findLongestLabelItem(dataProvider.toArray());
+            }
+
+            private function appStateChangedHandler(event:AppEvent):void
+            {
+                closeItemMenu();
+            }
+
+            private function closeItemMenu():void
+            {
+                PopUpManager.removePopUp(this);
+                resetSelection();
+            }
+
+            private function dispatchAppItemMenuSelection():void
+            {
+                var appEventType:String = mapSelectedIndexToAppEventType();
+                closeItemMenu(); //close first to prevent pop-up from stealing focus
+                AppEvent.dispatch(appEventType);
+            }
+
+            private function mapSelectedIndexToAppEventType():String
+            {
+                var selectionEventType:String;
+
+                switch (selectedIndex)
+                {
+                    case 0:
+                    {
+                        selectionEventType = AppEvent.DELETE_APP_SELECTED;
+                        break;
+                    }
+                    case 1:
+                    {
+                        selectionEventType = AppEvent.RENAME_APP_SELECTED;
+                        break;
+                    }
+                    case 2:
+                    {
+                        selectionEventType = AppEvent.DUPLICATE_APP_SELECTED;
+                        break;
+                    }
+                    case 3:
+                    {
+                        selectionEventType = AppEvent.PREVIEW_APP_IN_BROWSER_SELECTED;
+                        break;
+                    }
+                    case 4:
+                    {
+                        selectionEventType = AppEvent.EXPORT_APP_SELECTED;
+                        break;
+                    }
+                }
+
+                return selectionEventType;
+            }
+
+            private function resetSelection():void
+            {
+                selectedIndex = -1;
+            }
+        ]]>
+    </fx:Script>
+    <s:dataProvider>
+        <s:ArrayList>
+            <fx:String>{resourceManager.getString('BuilderStrings', 'appItemMenu.delete')}</fx:String>
+            <fx:String>{resourceManager.getString('BuilderStrings', 'appItemMenu.rename')}</fx:String>
+            <fx:String>{resourceManager.getString('BuilderStrings', 'appItemMenu.duplicate')}</fx:String>
+            <fx:String>{resourceManager.getString('BuilderStrings', 'appItemMenu.openInBrowser')}</fx:String>
+            <fx:String>{resourceManager.getString('BuilderStrings', 'appItemMenu.export')}</fx:String>
+        </s:ArrayList>
+    </s:dataProvider>
+</s:List>

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:SkinnablePopUpContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                           xmlns:s="library://ns.adobe.com/flex/spark"
+                           creationComplete="init()"
+                           minWidth="400">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.model.WidgetType;
+
+            import modules.IWidgetView;
+
+            import mx.events.FlexEvent;
+            import mx.managers.PopUpManager;
+
+            [Bindable]
+            public var title:String;
+            [Bindable]
+            public var widgetView:IWidgetView;
+            [Bindable]
+            public var widgetType:WidgetType;
+
+            private function init():void
+            {
+                if (widgetView)
+                {
+                    editorContainer.removeAllElements();
+                    widgetView.addEventListener(FlexEvent.CREATION_COMPLETE, widgetView_creationCompleteHandler);
+                    widgetView.addEventListener(FlexEvent.STATE_CHANGE_COMPLETE, widgetView_stateChangeCompleteHandler);
+                    editorContainer.addElement(widgetView);
+                }
+            }
+
+            private function widgetView_creationCompleteHandler(event:FlexEvent):void
+            {
+                widgetView.removeEventListener(FlexEvent.CREATION_COMPLETE, widgetView_creationCompleteHandler);
+                updatePopUpPosition();
+            }
+
+            private function widgetView_stateChangeCompleteHandler(event:FlexEvent):void
+            {
+                updatePopUpPosition();
+            }
+
+            private function okButton_clickHandler(event:MouseEvent):void
+            {
+                if (widgetView.submit())
+                {
+                    widgetView.removeEventListener(FlexEvent.STATE_CHANGE_COMPLETE, widgetView_stateChangeCompleteHandler);
+                    close(true);
+                }
+            }
+
+            private function cancelButton_clickHandler(event:MouseEvent):void
+            {
+                widgetView.removeEventListener(FlexEvent.STATE_CHANGE_COMPLETE, widgetView_stateChangeCompleteHandler);
+                widgetView.cancel();
+                close(false);
+            }
+
+            override public function updatePopUpPosition():void
+            {
+                PopUpManager.centerPopUp(this);
+            }
+        ]]>
+    </fx:Script>
+
+    <s:Rect left="0" right="0" top="0" bottom="0">
+        <s:fill>
+            <s:SolidColor color="#FFFFFF"/>
+        </s:fill>
+
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:Rect height="25"
+            left="2" right="2" top="2">
+        <s:fill>
+            <s:LinearGradient rotation="90">
+                <s:GradientEntry alpha="1"
+                                 color="#FFFFFF"
+                                 ratio="0"/>
+
+                <s:GradientEntry alpha="1.0"
+                                 color="#CCCCCC"
+                                 ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Rect>
+
+    <s:Line left="0" right="0" top="26">
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Line>
+
+    <s:Label left="10" top="10"
+             fontSize="14"
+             fontWeight="bold"
+             text="{title}"
+             textAlign="center"
+             verticalAlign="middle"/>
+
+    <s:VGroup height="100%"
+              left="10" right="10" top="20" bottom="10"
+              gap="0">
+        <s:Group id="editorContainer" width="100%"/>
+
+        <s:RichEditableText editable="false"
+                            paddingBottom="6"
+                            paddingLeft="28"
+                            selectable="true"
+                            visible="{(widgetType.helpURL != null)}">
+            <s:textFlow>
+                <s:TextFlow>
+                    <s:a href="{widgetType.helpURL}" target="_blank">{resourceManager.getString('BuilderStrings', 'layoutView.learnMore')}</s:a>
+                </s:TextFlow>
+            </s:textFlow>
+        </s:RichEditableText>
+
+        <s:Spacer height="100%"/>
+
+        <s:HGroup width="100%"
+                  horizontalAlign="center"
+                  verticalAlign="middle">
+            <s:Button id="okButton"
+                      click="okButton_clickHandler(event)"
+                      label="{resourceManager.getString('BuilderStrings', 'ok')}"
+                      skinClass="com.esri.builder.skins.BlueButtonSkin"/>
+
+            <s:Button id="cancelButton"
+                      click="cancelButton_clickHandler(event)"
+                      label="{resourceManager.getString('BuilderStrings', 'cancel')}"
+                      skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+        </s:HGroup>
+    </s:VGroup>
+</s:SkinnablePopUpContainer>

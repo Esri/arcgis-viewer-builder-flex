@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:views="com.esri.builder.views.*"
+         width="100%" height="100%"
+         add="this_addHandler(event)"
+         creationComplete="init()"
+         currentState="{Model.instance.layersState}">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.portal.Portal;
+            import com.esri.builder.components.ConfigureMapExtent;
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.model.PortalModel;
+
+            import mx.events.FlexEvent;
+
+            import spark.events.IndexChangeEvent;
+
+            private var isConfigXMLSaved:Boolean;
+
+            [Bindable]
+            private var portal:Portal;
+
+            private function init():void
+            {
+                AppEvent.addListener(AppEvent.BASEMAP_AND_OP_LAYERS_SELECTED, basemapAndOpLayersSelectedHandler, false, 0, true);
+            }
+
+            private function basemapAndOpLayersSelectedHandler(event:AppEvent):void
+            {
+                resetLayers();
+            }
+
+            protected function this_addHandler(event:FlexEvent):void
+            {
+                AppEvent.addListener(AppEvent.CONFIG_XML_SAVED, configXMLSaved);
+                if (Model.instance.webmap) // reset if web map was set
+                {
+                    Model.instance.webmap = null;
+                    Model.instance.webMapConfigBasemapList.removeAllLayers();
+                    Model.instance.webMapConfigOpLayerList.removeAllLayers();
+                    Model.instance.config.configMap.itemId = null;
+                    Model.instance.config.configMap.initExtent = null
+
+                    AppEvent.dispatch(AppEvent.SAVE_CONFIG_XML);
+                }
+                portal = PortalModel.getInstance().portal;
+                tabBar.selectedIndex = 0 // always start with basemaps
+                resetLayers();
+            }
+
+            private function configXMLSaved(event:AppEvent):void
+            {
+                if (event.data == 'layers')
+                {
+                    isConfigXMLSaved = true;
+                }
+            }
+
+            protected function tabbar1_changeHandler(event:IndexChangeEvent):void
+            {
+                resetLayers();
+            }
+
+            private function resetLayers():void
+            {
+                if (tabBar.selectedIndex == 0) // base map view
+                {
+                    if (portal.loaded && portal.user)
+                    {
+                        Model.instance.portalLayersState = 'mycontent';
+                    }
+                    if (Model.instance.portalLayersState != 'mycontent')
+                    {
+                        Model.instance.portalLayersState = 'featuredlayers';
+                    }
+                    Model.instance.portalLayerList = null;
+                }
+                else if (tabBar.selectedIndex == 1) // operational layer view
+                {
+                    Model.instance.portalLayerList = null;
+                    if (portal.loaded && portal.user)
+                    {
+                        Model.instance.portalLayersState = 'mycontent';
+                    }
+                    if (Model.instance.portalLayersState != 'mycontent')
+                    {
+                        Model.instance.portalLayersState = 'searchlayers';
+                    }
+                }
+                else if (tabBar.selectedIndex == 2) // map extent view
+                {
+                    if (mapContainer.numElements > 2)
+                    {
+                        mapContainer.removeElementAt(2);
+                    }
+                    var mapExtent:ConfigureMapExtent = new ConfigureMapExtent;
+                    mapExtent.percentHeight = 100;
+                    mapExtent.percentWidth = 100;
+                    mapExtent.isWebMap = false;
+
+                    mapContainer.addElementAt(mapExtent, 2);
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="editor"/>
+    </s:states>
+
+    <s:HGroup left="10" top="10"
+              gap="10"
+              verticalAlign="bottom">
+        <s:Label fontSize="18"
+                 fontWeight="bold"
+                 text="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsOperationalLayers')}"/>
+
+        <s:Group toolTip="{portal.loaded ? '' : resourceManager.getString('BuilderStrings', 'agsPortal.requiresPortal')}">
+            <s:Button buttonMode="true"
+                      click="{AppEvent.dispatch(AppEvent.SWITCH_MAPS, 'webmap')}"
+                      enabled="{portal.loaded}"
+                      fontSize="14"
+                      label="{resourceManager.getString('BuilderStrings', 'mapsView.switchToWebMaps')}"
+                      skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+        </s:Group>
+    </s:HGroup>
+
+    <s:Button right="10" top="10"
+              click="AppEvent.dispatch(AppEvent.SAVE_CONFIG_XML, 'layers')"
+              label="{resourceManager.getString('BuilderStrings', 'save')}"
+              skinClass="com.esri.builder.skins.BlueSaveButtonSkin"/>
+
+    <s:Line left="139" right="10" bottom="5">
+        <s:stroke>
+            <s:SolidColorStroke color="0x000000"/>
+        </s:stroke>
+    </s:Line>
+
+    <s:Line left="139" right="10" top="40">
+        <s:stroke>
+            <s:SolidColorStroke color="0x000000"/>
+        </s:stroke>
+    </s:Line>
+
+    <s:Line right="10" top="40" bottom="5">
+        <s:stroke>
+            <s:SolidColorStroke color="0x000000"/>
+        </s:stroke>
+    </s:Line>
+
+    <s:Line left="139"
+            yFrom="40"
+            yTo="60">
+        <s:stroke>
+            <s:SolidColorStroke color="0x000000"/>
+        </s:stroke>
+    </s:Line>
+
+    <s:Line left="139" top="136" bottom="5">
+        <s:stroke>
+            <s:SolidColorStroke color="0x000000"/>
+        </s:stroke>
+    </s:Line>
+
+    <s:VGroup left="10" top="40">
+        <s:Label fontSize="14"
+                 text="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsOperationalLayers.steps')}"
+                 textAlign="left"/>
+
+        <s:TabBar id="tabBar"
+                  change="tabbar1_changeHandler(event)"
+                  dataProvider="{viewstack}"
+                  skinClass="com.esri.builder.skins.VerticalTabBarSkin"/>
+    </s:VGroup>
+
+    <mx:ViewStack id="viewstack"
+                  width="100%" height="100%"
+                  left="139" right="10" top="40" bottom="5">
+        <s:NavigatorContent label="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsOperationalLayers.step1')}">
+            <views:BasemapsView id="basemapsView"/>
+        </s:NavigatorContent>
+
+        <s:NavigatorContent label="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsOperationalLayers.step2')}">
+            <views:OperationalLayersView id="operationalLayersView"/>
+        </s:NavigatorContent>
+
+        <s:NavigatorContent label="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsOperationalLayers.step3')}">
+            <s:VGroup id="mapContainer"
+                      width="100%" height="100%"
+                      paddingBottom="10"
+                      paddingLeft="10"
+                      paddingRight="10">
+                <s:Label fontSize="18"
+                         fontWeight="bold"
+                         paddingTop="10"
+                         text="{resourceManager.getString('BuilderStrings', 'mapsView.mapExtentView.title')}"/>
+
+                <s:Label alpha="0.5"
+                         fontSize="14"
+                         text="{resourceManager.getString('BuilderStrings', 'mapsView.setExtentText')}"/>
+            </s:VGroup>
+        </s:NavigatorContent>
+    </mx:ViewStack>
+</s:Group>

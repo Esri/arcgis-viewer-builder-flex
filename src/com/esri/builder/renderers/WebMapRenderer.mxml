@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                xmlns:mx="library://ns.adobe.com/flex/mx"
+                width="220" height="180"
+                autoDrawBackground="false">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.components.PortalQueryResultItemEvent;
+            import com.esri.ags.portal.supportClasses.PortalItem;
+            import com.esri.builder.model.ImageCache;
+
+            private var portalItem:PortalItem;
+
+            override public function set data(value:Object):void
+            {
+                super.data = value;
+
+                if (value)
+                {
+                    portalItem = value as PortalItem;
+                    displayImage.source = !portalItem.thumbnailURL ? "assets/images/portal_no_thumbnail.png" : portalItem.thumbnailURL;
+                    displayTitle.text = portalItem.title;
+                }
+            }
+
+            protected function selectButton_clickHandler(event:MouseEvent):void
+            {
+                owner.dispatchEvent(new PortalQueryResultItemEvent(PortalQueryResultItemEvent.ITEM_SELECTED, portalItem));
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="hovered"/>
+        <s:State name="selected"/>
+    </s:states>
+
+    <s:Group left="0" top="0">
+        <s:Image id="displayImage"
+                 width="212.5" height="145"
+                 left="0" top="0"
+                 contentLoader="{ImageCache.getInstance()}"
+                 enableLoadingState="true"
+                 mouseEnabled="false"
+                 smooth="true"/>
+
+        <s:Rect left="0" right="0" top="0" bottom="0">
+            <s:stroke>
+                <s:SolidColorStroke id="borderStroke"
+                                    weight="1"
+                                    weight.selected="2"/>
+            </s:stroke>
+        </s:Rect>
+    </s:Group>
+
+    <s:Button id="selectButton"
+              right="0" top="120"
+              buttonMode="true"
+              click="selectButton_clickHandler(event)"
+              label="{resourceManager.getString('BuilderStrings', 'mapsView.select')}"
+              skinClass="com.esri.builder.skins.GreenNextButtonSkin"
+              toolTip="{resourceManager.getString('BuilderStrings', 'mapsView.setWebMap')}"/>
+
+    <s:Label id="displayTitle"
+             left="0" right="5" top="150"
+             fontWeight="bold"
+             maxDisplayedLines="2"
+             textAlign="center"/>
+</s:ItemRenderer>

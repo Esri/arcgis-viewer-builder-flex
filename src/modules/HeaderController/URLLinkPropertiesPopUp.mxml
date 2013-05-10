@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<HeaderController:LinkPropertiesPopUp xmlns:fx="http://ns.adobe.com/mxml/2009"
+                                      xmlns:s="library://ns.adobe.com/flex/spark"
+                                      xmlns:mx="library://ns.adobe.com/flex/mx"
+                                      xmlns:HeaderController="modules.HeaderController.*"
+                                      minHeight="85"
+                                      minWidth="250"
+                                      open="init()">
+    <fx:Script>
+        <![CDATA[
+            private function init():void
+            {
+                labelInput.setFocus();
+                validateLinkInput();
+            }
+
+            override protected function validateLinkInput():void
+            {
+                isLinkValid = link.label && link.url;
+            }
+        ]]>
+    </fx:Script>
+
+    <!--background-->
+    <s:Rect left="0" right="0" top="0" bottom="0">
+        <s:fill>
+            <s:SolidColor color="#FFFFFF"/>
+        </s:fill>
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:Rect height="25"
+            left="2" right="2" top="2">
+        <s:fill>
+            <s:LinearGradient rotation="90">
+                <s:GradientEntry alpha="1"
+                                 color="#FFFFFF"
+                                 ratio="0"/>
+                <s:GradientEntry alpha="1.0"
+                                 color="#CCCCCC"
+                                 ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Rect>
+
+    <s:Line left="0" right="0" top="26">
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Line>
+
+    <!--content-->
+    <s:Label left="10" top="9"
+             color="#000000"
+             fontSize="14"
+             fontWeight="bold"
+             text="{resourceManager.getString('BuilderStrings', 'headerController.configureURLLink')}"
+             textAlign="center"
+             verticalAlign="middle"/>
+
+    <s:Form left="10" top="25" bottom="-15">
+        <s:layout>
+            <s:FormLayout gap="-10"/>
+        </s:layout>
+
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'headerController.label')}" required="true">
+            <s:layout>
+                <s:HorizontalLayout verticalAlign="middle"/>
+            </s:layout>
+
+            <s:TextInput id="labelInput"
+                         width="250"
+                         change="validateLinkInput()"
+                         direction="ltr"
+                         maxChars="30"
+                         text="@{link.label}"/>
+        </s:FormItem>
+
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'headerController.url')}" required="true">
+            <s:layout>
+                <s:HorizontalLayout verticalAlign="middle"/>
+            </s:layout>
+
+            <s:TextInput width="250"
+                         change="validateLinkInput()"
+                         text="@{link.url}"/>
+        </s:FormItem>
+
+        <s:FormItem>
+            <s:layout>
+                <s:HorizontalLayout horizontalAlign="center" verticalAlign="middle"/>
+            </s:layout>
+
+            <s:Button click="commitAndClose()"
+                      enabled="{isLinkValid}"
+                      label="{resourceManager.getString('BuilderStrings', 'ok')}"
+                      skinClass="com.esri.builder.skins.BlueButtonSkin"/>
+
+            <s:Button click="close(false)"
+                      label="{resourceManager.getString('BuilderStrings', 'cancel')}"
+                      skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+        </s:FormItem>
+    </s:Form>
+</HeaderController:LinkPropertiesPopUp>

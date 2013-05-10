@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:supportClasses="modules.supportClasses.*"
+          xmlns:components="com.esri.builder.components.*"
+          width="100%" height="100%"
+          gap="4"
+          implements="modules.IWidgetView"
+          paddingBottom="10"
+          paddingTop="15">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.events.LayerEvent;
+            import com.esri.ags.layers.FeatureLayer;
+            import com.esri.ags.layers.supportClasses.AllDetails;
+            import com.esri.ags.layers.supportClasses.LayerDetails;
+            import com.esri.ags.tasks.DetailsTask;
+            import com.esri.builder.components.ModifyItemEvent;
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.ConfigLayer;
+            import com.esri.builder.model.Model;
+
+            import modules.IWidgetModel;
+            import modules.supportClasses.ExcludeLayerListEvent;
+            import modules.supportClasses.ExcludeLayerListItem;
+            import modules.supportClasses.LayerSettingsPopUp;
+
+            import mx.collections.ArrayList;
+            import mx.core.FlexGlobals;
+            import mx.events.CollectionEvent;
+            import mx.events.FlexEvent;
+            import mx.rpc.AsyncResponder;
+            import mx.rpc.Fault;
+            import mx.utils.StringUtil;
+
+            import spark.events.PopUpEvent;
+
+            [Bindable]
+            private var isLoadingFeatureLayers:Boolean;
+            [Bindable]
+            private var featureLayers:ArrayList = new ArrayList();
+            private var possibleFeatureLayerListItemsCount:int;
+
+            private var orderedFeatureLayerListItemCandidates:Array = [];
+
+            private var layerListItemToConfigLayerMap:Dictionary = new Dictionary(true);
+
+            private var layerSettingsPopUp:LayerSettingsPopUp;
+
+            [Bindable]
+            private var attributeTableModel:AttributeTableModel;
+
+            public function get widgetModel():IWidgetModel
+            {
+                return attributeTableModel;
+            }
+
+            public function set widgetModel(value:IWidgetModel):void
+            {
+                if (value is AttributeTableModel)
+                {
+                    attributeTableModel = value as AttributeTableModel;
+                    populateFeatureLayerListItems();
+                }
+                else
+                {
+                    throw new Error('argument is not an instance of AttributeTableModel');
+                }
+            }
+
+            private function populateFeatureLayerListItems():void
+            {
+                var configOperationalLayers:Array = Model.instance.getOpLayers();
+                isLoadingFeatureLayers = true;
+
+                for each (var configLayer:ConfigLayer in configOperationalLayers)
+                {
+                    checkIfConfigLayerIsFeatureLayerCandidate(configLayer);
+                }
+
+                hideLoadingLayersAnimationIfNoPossibleFeatureLayersLeft();
+            }
+
+            private function checkIfConfigLayerIsFeatureLayerCandidate(configLayer:ConfigLayer):void
+            {
+                var layerListItem:ExcludeLayerListItem;
+                if (configLayer.type == ConfigLayer.FEATURE)
+                {
+                    layerListItem = ExcludeLayerList.configLayerToLayerListItem(configLayer);
+                    layerListItemToConfigLayerMap[layerListItem] = configLayer;
+                    orderedFeatureLayerListItemCandidates.push(layerListItem);
+                }
+                else if (configLayer.type == ConfigLayer.DYNAMIC)
+                {
+                    possibleFeatureLayerListItemsCount++;
+                    layerListItem = ExcludeLayerList.configLayerToLayerListItem(configLayer);
+                    orderedFeatureLayerListItemCandidates.push(layerListItem);
+                    checkSubLayers(configLayer, layerListItem);
+                }
+            }
+
+            private function removeFromOrderedLayerListItems(layerListItem:ExcludeLayerListItem):void
+            {
+                const deletionIndex:int = orderedFeatureLayerListItemCandidates.indexOf(layerListItem);
+                orderedFeatureLayerListItemCandidates.splice(deletionIndex, 1);
+            }
+
+            private function hideLoadingLayersAnimationIfNoPossibleFeatureLayersLeft():void
+            {
+                if (possibleFeatureLayerListItemsCount == 0)
+                {
+                    featureLayers.source = orderedFeatureLayerListItemCandidates;
+                    isLoadingFeatureLayers = false;
+                }
+            }
+
+            private function checkSubLayers(configLayer:ConfigLayer, layerListItem:ExcludeLayerListItem):void
+            {
+                var detailsTask:DetailsTask = new DetailsTask(configLayer.url);
+                detailsTask.getAllDetails(
+                    new AsyncResponder(serviceInspector_resultHandler,
+                                       serviceInspector_faultHandler,
+                                       { configLayer: configLayer, layerListItem: layerListItem }));
+            }
+
+            private function serviceInspector_resultHandler(allDetails:AllDetails, items:Object):void
+            {
+                var serviceURL:String = items.configLayer.url;
+                var layerDetails:Array = allDetails.layersDetails;
+
+                var featureLayerURL:String;
+                var featureLayer:FeatureLayer;
+                var featureLayerLabel:String;
+                var layerListItem:ExcludeLayerListItem;
+                var configLayer:ConfigLayer;
+                var orderedSubConfigLayersAndLayerListItems:Array = [];
+                var isGroupLayer:Boolean;
+                var hasFields:Boolean;
+                for each (var layerDetail:LayerDetails in layerDetails)
+                {
+                    isGroupLayer = layerDetail.subLayers && layerDetail.subLayers.length > 0;
+                    hasFields = layerDetail.fields && layerDetail.fields.length > 0;
+                    if (isGroupLayer || !hasFields)
+                    {
+                        continue;
+                    }
+
+                    featureLayerURL = serviceURL + "/" + layerDetail.id;
+                    featureLayer = new FeatureLayer(featureLayerURL);
+                    featureLayerLabel = items.configLayer.label + "/" + layerDetail.id;
+
+                    configLayer = ConfigLayer.operationalConfigLayerFromLayer(featureLayer, featureLayerLabel);
+                    layerListItem = ExcludeLayerList.configLayerToLayerListItem(configLayer);
+                    layerListItemToConfigLayerMap[layerListItem] = configLayer;
+                    layerListItem.alias = StringUtil.substitute("{0} ({1})",
+                                                                layerDetail.name, featureLayerLabel);
+                    orderedSubConfigLayersAndLayerListItems.push({ configLayer: configLayer,
+                                                                     layerListItem: layerListItem });
+                }
+
+                insertChildrenAfterLayerListItem(items.layerListItem, orderedSubConfigLayersAndLayerListItems);
+
+                removeFromOrderedLayerListItems(items.layerListItem);
+                possibleFeatureLayerListItemsCount--;
+                hideLoadingLayersAnimationIfNoPossibleFeatureLayersLeft();
+            }
+
+            private function insertChildrenAfterLayerListItem(layerListItem:ExcludeLayerListItem, subConfigLayersItems:Array):void
+            {
+                var insertionIndex:int = orderedFeatureLayerListItemCandidates.indexOf(layerListItem);
+                for each (var subConfigLayerListItem:Object in subConfigLayersItems)
+                {
+                    orderedFeatureLayerListItemCandidates.splice(++insertionIndex, 0, subConfigLayerListItem.layerListItem);
+                }
+            }
+
+            private function serviceInspector_faultHandler(fault:Fault, items:Object):void
+            {
+                removeFromOrderedLayerListItems(items.layerListItem);
+                possibleFeatureLayerListItemsCount--;
+                hideLoadingLayersAnimationIfNoPossibleFeatureLayersLeft();
+            }
+
+            private function layerList_layerIncludedHandler(event:ExcludeLayerListEvent):void
+            {
+                attributeTableModel.excludedLayers.removeItem(event.layerName);
+            }
+
+            private function layerList_layerExcludedHandler(event:ExcludeLayerListEvent):void
+            {
+                attributeTableModel.excludedLayers.addItem(event.layerName);
+            }
+
+            public function submit():Boolean
+            {
+                featureLayers.removeEventListener(CollectionEvent.COLLECTION_CHANGE, configOperationalLayers_collectionChangeHandler);
+                return true;
+            }
+
+            public function cancel():void
+            {
+                featureLayers.removeEventListener(CollectionEvent.COLLECTION_CHANGE, configOperationalLayers_collectionChangeHandler);
+            }
+
+            protected function layerList_creationCompleteHandler(event:FlexEvent):void
+            {
+                layerList.addEventListener(ModifyItemEvent.EDIT_ITEM, layerList_editItemHandler);
+                featureLayers.addEventListener(CollectionEvent.COLLECTION_CHANGE, configOperationalLayers_collectionChangeHandler);
+                updateLayerListItems();
+            }
+
+            private function layerList_editItemHandler(event:ModifyItemEvent):void
+            {
+                var featureConfigLayer:ConfigLayer = layerListItemToConfigLayerMap[event.item];
+                if (featureConfigLayer)
+                {
+                    layerSettingsPopUp = new LayerSettingsPopUp();
+                    layerSettingsPopUp.layerName = featureConfigLayer.label;
+                    layerSettingsPopUp.overrideLayerSettings(attributeTableModel.findLayerSettings(featureConfigLayer.label));
+                    var featureLayer:FeatureLayer = featureConfigLayer.createLayer() as FeatureLayer;
+                    featureLayer.addEventListener(LayerEvent.LOAD, featureLayer_loadHandler);
+                    featureLayer.addEventListener(LayerEvent.LOAD_ERROR, featureLayer_loadErrorHandler);
+                }
+            }
+
+            private function featureLayer_loadHandler(event:LayerEvent):void
+            {
+                var featureLayer:FeatureLayer = event.layer as FeatureLayer;
+                featureLayer.removeEventListener(LayerEvent.LOAD, featureLayer_loadHandler);
+                featureLayer.removeEventListener(LayerEvent.LOAD_ERROR, featureLayer_loadErrorHandler);
+
+                layerSettingsPopUp.layerDetails = featureLayer.layerDetails;
+                layerSettingsPopUp.addEventListener(PopUpEvent.CLOSE, layerSettingsPopUp_closeHandler);
+                layerSettingsPopUp.open(FlexGlobals.topLevelApplication as DisplayObjectContainer, true);
+            }
+
+            private function featureLayer_loadErrorHandler(event:LayerEvent):void
+            {
+                event.currentTarget.removeEventListener(LayerEvent.LOAD, featureLayer_loadHandler);
+                event.currentTarget.removeEventListener(LayerEvent.LOAD_ERROR, featureLayer_loadErrorHandler);
+                AppEvent.dispatch(AppEvent.SHOW_ERROR, resourceManager.getString('BuilderStrings', 'headerController.couldNotLoadMapServiceInfo'));
+            }
+
+            private function updateLayerListItems():void
+            {
+                layerList.layerListItems = featureLayers.toArray();
+            }
+
+            protected function configOperationalLayers_collectionChangeHandler(event:CollectionEvent):void
+            {
+                updateLayerListItems();
+            }
+
+            protected function layerSettingsPopUp_closeHandler(event:PopUpEvent):void
+            {
+                layerSettingsPopUp.removeEventListener(PopUpEvent.CLOSE, layerSettingsPopUp_closeHandler);
+                if (event.commit)
+                {
+                    if (layerSettingsPopUp.originalLayerSettings)
+                    {
+                        var deletionIndex:int = attributeTableModel.layerSettings.indexOf(layerSettingsPopUp.originalLayerSettings);
+                        if (deletionIndex > -1)
+                        {
+                            attributeTableModel.layerSettings.splice(deletionIndex, 1);
+                        }
+                    }
+
+                    attributeTableModel.layerSettings.push(event.data.layerSettings);
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <s:HGroup paddingBottom="10" verticalAlign="middle">
+        <s:Label text="{resourceManager.getString('BuilderStrings', 'layoutView.panelInitialState')}"/>
+
+        <components:SliderToggleButton id="initialStateInput"
+                                       width="100%" height="100%"
+                                       deselectedLabel="{resourceManager.getString('BuilderStrings', 'layoutView.panelCollapsed')}"
+                                       selected="@{attributeTableModel.isOpenOnStartUp}"
+                                       selectedLabel="{resourceManager.getString('BuilderStrings', 'layoutView.panelOpen')}"/>
+    </s:HGroup>
+
+    <s:Label text="{resourceManager.getString('BuilderStrings', 'attributeTable.selectLayersToInclude')}"/>
+
+    <s:Group width="100%" height="200">
+        <s:SWFLoader width="30" height="30"
+                     autoLoad="true"
+                     horizontalCenter="0"
+                     includeInLayout="{isLoadingFeatureLayers}"
+                     source="@Embed(source='/assets/images/ico_loading.swf')"
+                     verticalCenter="0"
+                     visible="{isLoadingFeatureLayers}"/>
+
+        <s:Label left="0" right="0" top="0" bottom="0"
+                 includeInLayout="{!isLoadingFeatureLayers 
+                        &amp;&amp; layerList.dataProvider.length == 0}"
+                 text="{resourceManager.getString('BuilderStrings', 'attributeTable.noLayersAvailable')}"
+                 visible="{!isLoadingFeatureLayers 
+                        &amp;&amp; layerList.dataProvider.length == 0}"/>
+
+        <supportClasses:ExcludeLayerList id="layerList"
+                                         width="100%"
+                                         left="0" right="0" top="0" bottom="0"
+                                         borderVisible="false"
+                                         creationComplete="layerList_creationCompleteHandler(event)"
+                                         excludedLayerNames="{attributeTableModel.excludedLayers}"
+                                         includeInLayout="{!isLoadingFeatureLayers 
+                                                &amp;&amp; layerList.dataProvider.length > 0}"
+                                         itemRenderer="modules.supportClasses.EditableExcludeLayerListItemRenderer"
+                                         layerExcluded="layerList_layerExcludedHandler(event)"
+                                         layerIncluded="layerList_layerIncludedHandler(event)"
+                                         visible="{!isLoadingFeatureLayers 
+                                                &amp;&amp; layerList.dataProvider.length > 0}"/>
+    </s:Group>
+</s:VGroup>

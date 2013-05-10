@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Form xmlns:fx="http://ns.adobe.com/mxml/2009"
+        xmlns:s="library://ns.adobe.com/flex/spark"
+        xmlns:mx="library://ns.adobe.com/flex/mx"
+        width="100%"
+        creationComplete="init()">
+    <fx:Script>
+        <![CDATA[
+            import modules.Geoprocessing.parameters.BaseParameter;
+            import modules.Geoprocessing.parameters.MultiValueItem;
+
+            import mx.collections.ArrayList;
+
+            [Bindable]
+            private var multiValueItemsList:ArrayList;
+
+            private function init():void
+            {
+                multiValueList.addEventListener(MultiValueEvent.VALUE_CHANGE, item_valueChangeHandler, false, 0, true);
+            }
+
+            private function item_valueChangeHandler(event:MultiValueEvent):void
+            {
+                param.defaultValue = getSelectedChoices();
+            }
+
+            private var _param:BaseParameter;
+
+            [Bindable]
+            public function get param():BaseParameter
+            {
+                return _param;
+            }
+
+            public function set param(value:BaseParameter):void
+            {
+                _param = value;
+
+                if (value)
+                {
+                    var multiValueItems:Array = createMultiValueItems(param.choiceList, param.defaultValue as Array);
+                    multiValueItemsList = new ArrayList(multiValueItems);
+                }
+            }
+
+            private function createMultiValueItems(choiceList:Array, defaultValues:Array):Array
+            {
+                var multiValueItems:Array = [];
+                var multiValueItem:MultiValueItem;
+                var selectedDefaultValueMap:Dictionary = createSelectedDefaultValuesMap(defaultValues);
+
+                for each (var choice:String in choiceList)
+                {
+                    multiValueItem = new MultiValueItem(choice, selectedDefaultValueMap[choice]);
+                    multiValueItems.push(multiValueItem);
+                }
+
+                return multiValueItems;
+            }
+
+            private function createSelectedDefaultValuesMap(defaultValues:Array):Dictionary
+            {
+                var selectedDefaultValueMap:Dictionary = new Dictionary(true);
+                for each (var defaultValue:String in defaultValues)
+                {
+                    selectedDefaultValueMap[defaultValue] = true;
+                }
+
+                return selectedDefaultValueMap;
+            }
+
+            private function getSelectedChoices():Array
+            {
+                var selectedChoices:Array = [];
+                var multiValueItems:Array = multiValueItemsList.source;
+
+                for each (var multiValueItem:MultiValueItem in multiValueItems)
+                {
+                    if (multiValueItem.selected)
+                    {
+                        selectedChoices.push(multiValueItem.item);
+                    }
+                }
+
+                return selectedChoices;
+            }
+        ]]>
+    </fx:Script>
+
+    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'geoprocessing.defaultValue')}">
+        <s:List id="multiValueList"
+                dataProvider="{multiValueItemsList}"
+                itemRenderer="modules.Geoprocessing.paramEditor.input.multivalue.MultiValueItemRenderer"/>
+    </s:FormItem>
+</s:Form>

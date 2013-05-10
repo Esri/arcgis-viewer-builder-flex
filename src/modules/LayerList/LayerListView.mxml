@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:supportClasses="modules.supportClasses.*"
+         xmlns:components="com.esri.builder.components.*"
+         implements="modules.IWidgetView">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.model.Model;
+
+            import modules.IWidgetModel;
+            import modules.supportClasses.ExcludeLayerListEvent;
+
+            import mx.collections.ArrayList;
+            import mx.events.FlexEvent;
+
+            [Bindable]
+            private var layerListModel:LayerListModel;
+
+            [Bindable]
+            private var layerListItems:ArrayList;
+
+            public function get widgetModel():IWidgetModel
+            {
+                return layerListModel;
+            }
+
+            public function set widgetModel(value:IWidgetModel):void
+            {
+                if (value is LayerListModel)
+                {
+                    layerListModel = LayerListModel(value);
+                }
+                else
+                {
+                    throw new Error('argument is not an instance of LayerListModel');
+                }
+            }
+
+            private function layerList_layerIncludedHandler(event:ExcludeLayerListEvent):void
+            {
+                layerListModel.excludedLayers.removeItem(event.layerName);
+            }
+
+            private function layerList_layerExcludedHandler(event:ExcludeLayerListEvent):void
+            {
+                layerListModel.excludedLayers.addItem(event.layerName);
+            }
+
+            public function submit():Boolean
+            {
+                return true;
+            }
+
+            public function cancel():void
+            {
+                // NOOP
+            }
+
+            protected function layerList_creationCompleteHandler(event:FlexEvent):void
+            {
+                layerList.layerListItems =
+                    ExcludeLayerList.configLayersToLayerListItems(Model.instance.getOpLayers());
+            }
+        ]]>
+    </fx:Script>
+
+    <s:layout>
+        <s:ConstraintLayout>
+            <s:constraintColumns>
+                <s:ConstraintColumn id="col1"/>
+                <s:ConstraintColumn id="col2"/>
+            </s:constraintColumns>
+
+            <s:constraintRows>
+                <s:ConstraintRow id="row1" height="25"/>
+                <s:ConstraintRow id="row2" height="25"/>
+                <s:ConstraintRow id="row3"/>
+            </s:constraintRows>
+        </s:ConstraintLayout>
+    </s:layout>
+
+    <s:Label left="col1:0" top="row1:3"
+             text="{resourceManager.getString('BuilderStrings', 'mapSwitcher.expandLayerItems')}"/>
+
+    <components:SliderToggleButton left="col2:15" top="row1:0"
+                                   deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                   selected="@{layerListModel.expandLayerItems}"
+                                   selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
+
+    <s:Label left="col1:0" top="row2:3"
+             text="{resourceManager.getString('BuilderStrings', 'includeLegendItems')}"/>
+
+    <components:SliderToggleButton left="col2:15" top="row2:0"
+                                   deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                   selected="@{layerListModel.includeLegendItems}"
+                                   selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
+
+    <s:Group left="col1:0" top="row3:0">
+        <s:Label text="{resourceManager.getString('BuilderStrings', 'layerList.selectLayersToInclude')}"/>
+
+        <s:Label top="15"
+                 includeInLayout="{layerList.dataProvider.length == 0}"
+                 text="{resourceManager.getString('BuilderStrings', 'layerList.noLayersAvailable')}"
+                 visible="{layerList.dataProvider.length == 0}"/>
+
+        <supportClasses:ExcludeLayerList id="layerList"
+                                         left="0" right="0" top="15" bottom="0"
+                                         borderVisible="false"
+                                         creationComplete="layerList_creationCompleteHandler(event)"
+                                         excludedLayerNames="{layerListModel.excludedLayers}"
+                                         includeInLayout="{layerList.dataProvider.length > 0}"
+                                         itemRenderer="modules.supportClasses.ExcludeLayerListItemRenderer"
+                                         layerExcluded="layerList_layerExcludedHandler(event)"
+                                         layerIncluded="layerList_layerIncludedHandler(event)"
+                                         visible="{layerList.dataProvider.length > 0}"/>
+    </s:Group>
+</s:Group>

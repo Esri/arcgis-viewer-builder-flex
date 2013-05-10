@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<application xmlns="http://ns.adobe.com/air/application/3.5">
+    <id>@APPID@</id>
+    <filename>@PROGRAMNAME@</filename>
+    <versionNumber>@APPVER@</versionNumber>
+    <versionLabel>@APPVER@ @APPVERSIONLABEL@</versionLabel>
+    <description>
+        <!-- first text used if no match found -->
+        <text xml:lang="en">@APPDESC_en_US@</text>
+        <text xml:lang="ar">@APPDESC_ar@</text>
+        <text xml:lang="da">@APPDESC_da_DK@</text>
+        <text xml:lang="de">@APPDESC_de_DE@</text>
+        <text xml:lang="es">@APPDESC_es_ES@</text>
+        <text xml:lang="et">@APPDESC_et_EE@</text>
+        <text xml:lang="fr">@APPDESC_fr_FR@</text>
+        <text xml:lang="he">@APPDESC_he_IL@</text>
+        <text xml:lang="it">@APPDESC_it_IT@</text>
+        <text xml:lang="ja">@APPDESC_ja_JP@</text>
+        <text xml:lang="ko">@APPDESC_ko_KR@</text>
+        <text xml:lang="lt">@APPDESC_lt_LT@</text>
+        <text xml:lang="lv">@APPDESC_lv_LV@</text>
+        <text xml:lang="nb">@APPDESC_nb_NO@</text>
+        <text xml:lang="nl">@APPDESC_nl_NL@</text>
+        <text xml:lang="pl">@APPDESC_pl_PL@</text>
+        <text xml:lang="pt">@APPDESC_pt_BR@</text>
+        <text xml:lang="ro">@APPDESC_ro_RO@</text>
+        <text xml:lang="ru">@APPDESC_ru_RU@</text>
+        <text xml:lang="sv">@APPDESC_sv_SE@</text>
+        <text xml:lang="zh">@APPDESC_zh_CN@</text>
+    </description>
+    <copyright>Copyright (c) 2013 Esri</copyright>
+    <initialWindow>
+        <content>@APPNAME@.swf</content>
+        <width>1024</width>
+        <height>730</height>
+        <minSize>800 400</minSize>
+    </initialWindow>
+    <supportedProfiles>desktop</supportedProfiles>
+    <icon>
+        <image16x16>assets/images/Builder16.png</image16x16>
+        <image32x32>assets/images/Builder32.png</image32x32>
+        <image48x48>assets/images/Builder48.png</image48x48>
+        <image128x128>assets/images/Builder128.png</image128x128>
+    </icon>
+    <allowBrowserInvocation>true</allowBrowserInvocation>
+</application>

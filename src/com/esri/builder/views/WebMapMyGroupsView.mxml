@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:views="com.esri.builder.views.*"
+         width="100%" height="100%"
+         add="this_addHandler(event)">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.portal.Portal;
+            import com.esri.ags.portal.supportClasses.PortalGroup;
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.PortalModel;
+
+            import mx.collections.ArrayList;
+            import mx.events.FlexEvent;
+            import mx.utils.StringUtil;
+
+            import spark.events.IndexChangeEvent;
+
+            [Bindable]
+            private var portal:Portal;
+
+            protected function this_addHandler(event:FlexEvent):void
+            {
+                portal = PortalModel.getInstance().portal;
+                currentState = "normal";
+                AppEvent.addListener(AppEvent.PORTAL_OPEN_GROUP, function portalOpenGroupHanlder(event:AppEvent):void {
+                    currentState = "group";
+                });
+                if (groupsList && groupsList.selectedIndex != -1)
+                {
+                    groupsList.selectedIndex = -1
+                }
+            }
+
+            private function getNumGroups():int
+            {
+                return portal.user.groups.length;
+            }
+        ]]>
+    </fx:Script>
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="group"/>
+    </s:states>
+    <s:Line width="100%"
+            top="26"
+            includeIn="normal">
+        <s:stroke>
+            <s:SolidColorStroke color="0x000000"/>
+        </s:stroke>
+    </s:Line>
+    <s:VGroup width="100%" height="100%"
+              includeIn="normal"
+              paddingLeft="5"
+              paddingRight="5">
+        <s:Label color="0x217598"
+                 fontSize="14"
+                 fontWeight="bold"
+                 paddingTop="4"
+                 text="{resourceManager.getString('BuilderStrings', 'agsPortal.myGroups')}"/>
+        <s:Label id="numGroupsLabel"
+                 color="0x217598"
+                 fontWeight="bold"
+                 paddingBottom="5"
+                 paddingTop="10"
+                 text="{StringUtil.substitute(resourceManager.getString('BuilderStrings', 'agsPortal.numGroupsLabel'), getNumGroups())}"/>
+        <s:List id="groupsList"
+                width="100%" height="100%"
+                borderVisible="false"
+                change="currentState == 'group'"
+                contentBackgroundAlpha="0"
+                dataProvider="{new ArrayList(portal.user.groups)}"
+                itemRenderer="com.esri.builder.renderers.WebMapMyGroupRenderer">
+            <s:layout>
+                <s:TileLayout horizontalGap="10" verticalGap="10"/>
+            </s:layout>
+        </s:List>
+    </s:VGroup>
+    <views:WebMapGroupView id="webmapGroupView"
+                           width="100%" height="100%"
+                           includeIn="group"
+                           portalGroup="{groupsList.selectedItem as PortalGroup}"/>
+</s:Group>

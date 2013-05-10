@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:SkinnableContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                      xmlns:s="library://ns.adobe.com/flex/spark"
+                      xmlns:mx="library://ns.adobe.com/flex/mx"
+                      xmlns:graphics="assets.graphics.*"
+                      minHeight="160"
+                      minWidth="460">
+    <fx:Script>
+        <![CDATA[
+            import mx.events.CloseEvent;
+
+            [Bindable]
+            public var content:String;
+            public var newView:String;
+            public var changeView:Boolean;
+            public var showBusyCursor:Boolean;
+
+            private var _isWaiting:Boolean;
+
+            [Bindable(event="isWaitingChanged")]
+            public function get isWaiting():Boolean
+            {
+                return _isWaiting;
+            }
+
+            public function set isWaiting(value:Boolean):void
+            {
+                _isWaiting = value;
+                dispatchEvent(new Event("isWaitingChanged"));
+                if (!_isWaiting && changeView)
+                {
+                    dispatchEvent(new CloseEvent(CloseEvent.CLOSE));
+                }
+            }
+
+            protected function continueButton_clickHandler(event:MouseEvent):void
+            {
+                if (showBusyCursor)
+                {
+                    changeView = true;
+                    isWaiting = true;
+                }
+                else
+                {
+                    changeView = true;
+                    dispatchEvent(new CloseEvent(CloseEvent.CLOSE));
+                }
+            }
+
+            protected function close_clickHandler(event:MouseEvent):void
+            {
+                changeView = false;
+                isWaiting = false;
+                dispatchEvent(new CloseEvent(CloseEvent.CLOSE));
+            }
+        ]]>
+    </fx:Script>
+
+    <!--background-->
+    <s:Rect left="0" right="0" top="0" bottom="0">
+        <s:fill>
+            <s:LinearGradient x="177" y="0"
+                              rotation="90"
+                              scaleX="148">
+                <s:GradientEntry color="0xFFFFFF" ratio="0.647059"/>
+                <s:GradientEntry color="0xB9E0F7" ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="0x666666"
+                                joints="miter"
+                                miterLimit="10"
+                                weight="2"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:Line width="100%" top="26.001">
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Line>
+
+    <!--content-->
+    <s:Label left="5" top="9"
+             color="#000000"
+             fontSize="14"
+             fontWeight="bold"
+             text="{resourceManager.getString('BuilderStrings', 'noticePopUp.title')}"
+             textAlign="center"
+             verticalAlign="middle"/>
+
+    <graphics:warning width="50" height="50"
+                      left="15" top="60"/>
+
+    <s:Button right="10" top="6"
+              click="close_clickHandler(event)"
+              label="{resourceManager.getString('BuilderStrings', 'close')}"
+              skinClass="com.esri.builder.skins.CloseButtonSkin"/>
+
+    <s:VGroup left="80" right="10" top="40" bottom="10">
+        <s:RichEditableText editable="false"
+                            fontSize="14"
+                            maxWidth="380"
+                            text="{content}"/>
+
+        <s:HGroup verticalAlign="middle">
+            <s:SWFLoader width="20" height="20"
+                         autoLoad="true"
+                         includeInLayout="{isWaiting}"
+                         source="@Embed(source='/assets/images/ico_loading.swf')"
+                         visible="{isWaiting}"/>
+
+            <s:Button id="continueButton"
+                      click="continueButton_clickHandler(event)"
+                      includeInLayout="{!isWaiting}"
+                      label="{resourceManager.getString('BuilderStrings', 'continue')}"
+                      skinClass="com.esri.builder.skins.BlueButtonSkin"
+                      visible="{!isWaiting}"/>
+
+            <s:Button id="cancelButton"
+                      click="close_clickHandler(event)"
+                      label="{resourceManager.getString('BuilderStrings', 'cancel')}"
+                      skinClass="com.esri.builder.skins.BlueButtonSkin"/>
+        </s:HGroup>
+    </s:VGroup>
+</s:SkinnableContainer>

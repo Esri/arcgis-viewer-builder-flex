@@ -1,0 +1,553 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:mx="library://ns.adobe.com/flex/mx"
+          xmlns:views="com.esri.builder.views.*"
+          xmlns:graphics="assets.graphics.*"
+          width="100%" height="100%"
+          creationComplete="this_creationCompleteHandler(event)"
+          gap="0">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.portal.Portal;
+            import com.esri.builder.supportClasses.URLUtil;
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.model.PortalModel;
+            import com.esri.builder.supportClasses.LogUtil;
+            import com.esri.builder.views.supportClasses.TutorialPopUpHandler;
+
+            import mx.events.FlexEvent;
+            import mx.logging.ILogger;
+            import mx.logging.Log;
+            import mx.utils.StringUtil;
+
+            import spark.events.IndexChangeEvent;
+
+            private const OPAQUE_WMODE:String = "wmode=opaque";
+
+            private const LOG:ILogger = LogUtil.createLogger(ViewerView);
+
+            private var currentSelectedTabIndex:int = -1;
+            private var nextTabIndex:int = -1;
+
+            private var tutorialModePopUpHandler:TutorialPopUpHandler = new TutorialPopUpHandler();
+
+            private var hasToReloadViewerDueToConfigChange:Boolean = true;
+
+            [Bindable]
+            private var portal:Portal = PortalModel.getInstance().portal;
+
+            protected function this_creationCompleteHandler(event:FlexEvent):void
+            {
+                AppEvent.addListener(AppEvent.APP_STATE_CHANGED, appStateChangedHandler, false, 0, true);
+                AppEvent.addListener(AppEvent.CONFIG_XML_SAVED, configXMLSavedHandler);
+                AppEvent.addListener(AppEvent.CHANGES_SAVED, changesSavedHandler);
+                AppEvent.addListener(AppEvent.MAPS_SWITCHED, mapsSwitchedHandler);
+                tutorialModePopUpHandler.yOffset = 50;
+            }
+
+            private function appStateChangedHandler(event:AppEvent):void
+            {
+                var appState:String = event.data as String;
+                if (appState == 'viewer')
+                {
+                    if (Log.isInfo())
+                    {
+                        LOG.info("Reset main view");
+                    }
+                    resetView();
+                }
+            }
+
+            private function resetView():void
+            {
+                hasToReloadViewerDueToConfigChange = true;
+                html.location = "";
+                //hack to force value commit event when selected index is already 0
+                topMenuBar.selectedIndex = -1;
+                topMenuBar.selectedIndex = 0; // maps tab
+                selectCurrentMapState();
+                designOptions.selectedIndex = 0;
+            }
+
+            protected function topMenuBar_changingHandler(event:IndexChangeEvent):void
+            {
+                if (Model.instance.config.isDirty)
+                {
+                    if (Log.isDebug())
+                    {
+                        LOG.debug("Prevent tab change: config has been modified");
+                    }
+
+                    AppEvent.dispatch(AppEvent.SAVE_CHANGES, "viewerview");
+                    nextTabIndex = event.newIndex;
+
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                }
+            }
+
+            protected function topMenuBar_valueCommitHandler(event:FlexEvent):void
+            {
+                currentSelectedTabIndex = event.currentTarget.selectedIndex;
+
+                if (Log.isInfo())
+                {
+                    LOG.info("Change Viewer tab");
+                }
+
+                if (currentSelectedTabIndex == 0)
+                {
+                    selectCurrentMapState();
+                }
+                else if (currentSelectedTabIndex == 1 || currentSelectedTabIndex == 2)
+                {
+                    currentState = "widgetslayout";
+                }
+                else if (currentSelectedTabIndex == 3)
+                {
+                    // design tab, check if there is a secure web map
+                    if (Model.instance.webmap && Model.instance.webmap.access != "public")
+                    {
+                        currentState = "privatewebmap";
+                    }
+                    else
+                    {
+                        currentState = "normal";
+                    }
+
+                    loadViewerIfNeeded();
+                }
+                else if (currentSelectedTabIndex == 4)
+                {
+                    currentState = "preview";
+                    loadViewerIfNeeded();
+                }
+
+                if (currentSelectedTabIndex == 0 || currentSelectedTabIndex == 1 || currentSelectedTabIndex == 2 || currentSelectedTabIndex == 3)
+                {
+                    if (Log.isInfo())
+                    {
+                        LOG.info("Show tutorial pop-up");
+                    }
+                    tutorialModePopUpHandler.showTutorialPopUp(mapTabIndexToTutorialName());
+                }
+            }
+
+            private function loadViewerIfNeeded():void
+            {
+                if (!html)
+                {
+                    if (Log.isDebug())
+                    {
+                        LOG.debug("Cannot load viewer: HTML component not initialized");
+                    }
+                    return;
+                }
+
+                const designTabSelected:Boolean = (currentSelectedTabIndex == 3);
+                const previewTabSelected:Boolean = (currentSelectedTabIndex == 4);
+                const wasViewerLoadedWithOpaqueWMode:Boolean = (html.location && html.location.indexOf(OPAQUE_WMODE) > -1);
+                //prevent loading Viewer only if using private web map
+                const isDesignReloadApplicable:Boolean = !Model.instance.webmap
+                    || (Model.instance.webmap && Model.instance.webmap.access == "public");
+
+                if (designTabSelected
+                    && isDesignReloadApplicable
+                    && (hasToReloadViewerDueToConfigChange || !wasViewerLoadedWithOpaqueWMode))
+                {
+                    if (Log.isDebug())
+                    {
+                        LOG.debug("Reload Design Viewer");
+                    }
+                    hasToReloadViewerDueToConfigChange = false;
+                    loadViewer(OPAQUE_WMODE);
+                }
+                else if (previewTabSelected
+                    && (hasToReloadViewerDueToConfigChange || wasViewerLoadedWithOpaqueWMode))
+                {
+                    if (Log.isDebug())
+                    {
+                        LOG.debug("Reload Preview Viewer");
+                    }
+                    hasToReloadViewerDueToConfigChange = false;
+                    loadViewer();
+                }
+            }
+
+            private function mapTabIndexToTutorialName():String
+            {
+                var tutorialName:String;
+
+                switch (currentSelectedTabIndex)
+                {
+                    case 0:
+                    {
+                        tutorialName = TutorialPopUpHandler.MAPS;
+                        break;
+                    }
+                    case 1:
+                    {
+                        tutorialName = TutorialPopUpHandler.WIDGETS;
+                        break;
+                    }
+                    case 2:
+                    {
+                        tutorialName = TutorialPopUpHandler.LAYOUT;
+                        break;
+                    }
+                    case 3:
+                    {
+                        tutorialName = TutorialPopUpHandler.DESIGN;
+                        break;
+                    }
+                }
+
+                return tutorialName;
+            }
+
+            private function mapsSwitchedHandler(event:AppEvent):void
+            {
+                if (Log.isInfo())
+                {
+                    LOG.info("ViewerView maps switched");
+                }
+
+                currentState = String(event.data);
+            }
+
+            private function configXMLSavedHandler(event:AppEvent):void
+            {
+                configSavedBox.visible = true;
+                configSavedBox.visible = false;
+                hasToReloadViewerDueToConfigChange = true;
+
+                if (Log.isDebug())
+                {
+                    LOG.debug("ViewerView process config file saved");
+                }
+            }
+
+            private function changesSavedHandler(event:AppEvent):void
+            {
+                if (event.data == "viewerview")
+                {
+                    hasToReloadViewerDueToConfigChange = true;
+                    topMenuBar.selectedIndex = nextTabIndex;
+
+                    if (Log.isDebug())
+                    {
+                        LOG.debug("ViewerView process changes saved");
+                    }
+                }
+            }
+
+            private function selectCurrentMapState():void
+            {
+                if (Model.instance.config.configMap && Model.instance.config.configMap.itemId)
+                {
+                    currentState = "webmap";
+                }
+                else if (Model.instance.config.configMap.basemaps.hasLayers ||
+                    Model.instance.config.configMap.operationalLayers.hasLayers)
+                {
+                    currentState = "layers";
+                }
+                else
+                {
+                    currentState = "maps";
+                }
+            }
+
+            override public function get currentState():String
+            {
+                return super.currentState;
+            }
+
+            override public function set currentState(value:String):void
+            {
+                super.currentState = value;
+                if (value == 'layers')
+                {
+                    AppEvent.dispatch(AppEvent.BASEMAP_AND_OP_LAYERS_SELECTED);
+                }
+                else if (value == 'webmap')
+                {
+                    AppEvent.dispatch(AppEvent.WEB_MAP_SELECTED);
+                }
+
+                if (Log.isInfo())
+                {
+                    LOG.info("ViewerView state change: {0}", value);
+                }
+            }
+
+            private function loadViewer(... additionalURLParams):void
+            {
+                html.cancelLoad();
+
+                additionalURLParams.push('builder=true');
+
+                const viewerIndexLocation:String =
+                    StringUtil.substitute('{0}/{1}/{2}?{3}',
+                                          Model.instance.webServerURL,
+                                          URLUtil.encode(Model.instance.appDir.name),
+                                          'index.html',
+                                          additionalURLParams.join('&'));
+
+                Model.instance.htmlLocation = viewerIndexLocation;
+                html.location = Model.instance.htmlLocation;
+
+                if (Log.isDebug())
+                {
+                    LOG.debug("Load Viewer: {0}", viewerIndexLocation);
+                }
+            }
+
+            protected function html_initializeHandler(event:FlexEvent):void
+            {
+                if (Log.isDebug())
+                {
+                    LOG.debug("HTML component initialized");
+                }
+                html.htmlLoader.navigateInSystemBrowser = true;
+            }
+
+            protected function selectWebmap_clickHandler(event:MouseEvent):void
+            {
+                if (portal.loaded)
+                {
+                    currentState = 'webmap';
+                }
+            }
+        ]]>
+    </fx:Script>
+    <fx:Declarations>
+        <s:Fade id="fade"
+                alphaFrom="1"
+                alphaTo="0"
+                duration="2000"/>
+    </fx:Declarations>
+
+    <s:states>
+        <s:State name="normal" stateGroups="viewerVisible"/>
+        <s:State name="maps" stateGroups="viewerNotVisible"/>
+        <s:State name="webmap" stateGroups="viewerNotVisible"/>
+        <s:State name="privatewebmap" stateGroups="viewerNotVisible"/>
+        <s:State name="layers" stateGroups="viewerNotVisible"/>
+        <s:State name="widgetslayout" stateGroups="viewerNotVisible"/>
+        <s:State name="preview" stateGroups="viewerVisible"/>
+    </s:states>
+
+    <s:Spacer width="100%" height="30"/>
+
+    <s:VGroup id="tabGroup"
+              width="100%" height="150" height.viewerNotVisible="100%"
+              gap="0">
+        <s:HGroup width="100%"
+                  paddingLeft="10"
+                  paddingRight="10">
+            <s:TabBar id="topMenuBar"
+                      changing="topMenuBar_changingHandler(event)"
+                      cornerRadius="2"
+                      dataProvider="{viewstack1}"
+                      skinClass="com.esri.builder.skins.HorizontalTabBarSkin"
+                      valueCommit="topMenuBar_valueCommitHandler(event)">
+            </s:TabBar>
+
+            <s:Spacer width="100%"/>
+
+            <s:Group id="configSavedBox"
+                     height="30"
+                     hideEffect="{fade}"
+                     minWidth="70"
+                     visible="false">
+                <s:Rect width="100%" height="100%"
+                        left="0" right="0" top="0">
+                    <s:fill>
+                        <s:SolidColor color="#488214"/>
+                    </s:fill>
+
+                    <s:stroke>
+                        <s:SolidColorStroke color="0x000000" weight="2"/>
+                    </s:stroke>
+                </s:Rect>
+
+                <s:Label left="5" right="5" top="2" bottom="2"
+                         color="0xFFFFFF"
+                         fontWeight="bold"
+                         horizontalCenter="0"
+                         maxDisplayedLines="1"
+                         text="{resourceManager.getString('BuilderStrings', 'viewerView.saved')}"
+                         textAlign="center"
+                         verticalAlign="middle"
+                         verticalCenter="1"/>
+            </s:Group>
+        </s:HGroup>
+
+        <s:Line width="100%">
+            <s:stroke>
+                <s:SolidColorStroke color="0x000000" weight="1"/>
+            </s:stroke>
+        </s:Line>
+
+        <mx:ViewStack id="viewstack1"
+                      width="100%" height="100%">
+            <s:NavigatorContent label="{resourceManager.getString('BuilderStrings', 'viewerView.mapsTabLabel')}">
+                <s:HGroup width="100%" height="100%"
+                          gap="20"
+                          horizontalAlign="center"
+                          paddingTop="40">
+                    <s:VGroup id="selectWebmap"
+                              alpha="{portal.loaded ? 1 : 0.5}"
+                              click="selectWebmap_clickHandler(event)"
+                              horizontalAlign="center"
+                              includeIn="maps"
+                              toolTip="{portal.loaded ? resourceManager.getString('BuilderStrings', 'viewer.webmapTooltip')
+                                                        : resourceManager.getString('BuilderStrings', 'agsPortal.requiresPortal')}">
+                        <graphics:cloud width="80" height="80"
+                                        layoutDirection="ltr"/>
+
+                        <s:Label width="120"
+                                 fontSize="14"
+                                 fontWeight="bold"
+                                 text="{resourceManager.getString('BuilderStrings', 'viewer.webmap')}"
+                                 textAlign="center"/>
+                    </s:VGroup>
+
+                    <s:Label fontSize="14"
+                             includeIn="maps"
+                             paddingTop="30"
+                             text="{resourceManager.getString('BuilderStrings', 'or')}"/>
+
+                    <s:VGroup id="selectLayers"
+                              click="currentState = 'layers'"
+                              horizontalAlign="center"
+                              includeIn="maps"
+                              toolTip="{resourceManager.getString('BuilderStrings', 'viewer.layersTooltip')}">
+                        <graphics:layers width="80" height="80"
+                                         layoutDirection="ltr"/>
+
+                        <s:Label width="120"
+                                 fontSize="14"
+                                 fontWeight="bold"
+                                 text="{resourceManager.getString('BuilderStrings', 'viewer.layers')}"
+                                 textAlign="center"/>
+                    </s:VGroup>
+                </s:HGroup>
+
+                <views:WebMapView id="webmapView" includeIn="webmap"/>
+
+                <views:LayersView id="layersView" includeIn="layers"/>
+            </s:NavigatorContent>
+
+            <views:WidgetsView label="{resourceManager.getString('BuilderStrings', 'viewerView.widgetsTabLabel')}"/>
+
+            <views:LayoutView label="{resourceManager.getString('BuilderStrings', 'viewerView.layoutTabLabel')}"/>
+
+            <s:NavigatorContent width="100%" height="119"
+                                label="{resourceManager.getString('BuilderStrings', 'viewerView.designTabLabel')}">
+                <s:HGroup width="100%" height="100%"
+                          top="0" bottom="0"
+                          gap="0"
+                          paddingLeft="10"
+                          verticalAlign="middle">
+                    <s:TabBar cornerRadius="0"
+                              dataProvider="{designOptions}"
+                              skinClass="com.esri.builder.skins.VerticalTabBarSkin"/>
+
+                    <s:Line height="100%">
+                        <s:stroke>
+                            <s:SolidColorStroke color="0x000000"/>
+                        </s:stroke>
+                    </s:Line>
+
+                    <mx:ViewStack id="designOptions"
+                                  width="100%" height="119"
+                                  paddingTop.privatewebmap="10">
+                        <views:LogoEditorView label="{resourceManager.getString('BuilderStrings', 'viewerView.logoTabLabel')}"/>
+
+                        <views:TitlesEditorView label="{resourceManager.getString('BuilderStrings', 'viewerView.titlesTabLabel')}"/>
+
+                        <views:StylesEditorView label="{resourceManager.getString('BuilderStrings', 'viewerView.stylesTabLabel')}"/>
+                    </mx:ViewStack>
+                </s:HGroup>
+
+                <s:Line width="100%"
+                        bottom="0"
+                        includeIn="privatewebmap">
+                    <s:stroke>
+                        <s:SolidColorStroke color="0x000000"/>
+                    </s:stroke>
+                </s:Line>
+            </s:NavigatorContent>
+
+            <views:PreviewView label="{resourceManager.getString('BuilderStrings', 'viewerView.previewTabLabel')}"/>
+        </mx:ViewStack>
+
+        <s:Line width="100%"
+                includeInLayout="false"
+                includeInLayout.viewerVisible="true"
+                visible="false"
+                visible.viewerVisible="true">
+            <s:stroke>
+                <s:SolidColorStroke color="0x000000" weight="1"/>
+            </s:stroke>
+        </s:Line>
+    </s:VGroup>
+
+    <s:HGroup width="100%" height="100%"
+              horizontalAlign="center"
+              includeIn="privatewebmap"
+              paddingTop="50"
+              verticalAlign="top">
+        <s:Label fontSize="16"
+                 fontWeight="bold"
+                 text="{resourceManager.getString('BuilderStrings', 'desginView.noSupportedForSecureWebmaps')}"
+                 textAlign="center"/>
+    </s:HGroup>
+
+    <s:HGroup id="mapContainer"
+              width="100%" height="100%"
+              includeInLayout="false"
+              includeInLayout.viewerVisible="true"
+              paddingLeft="10"
+              paddingRight="10"
+              visible="false"
+              visible.viewerVisible="true">
+        <s:BorderContainer width="100%" height="100%"
+                           cornerRadius="0">
+            <mx:HTML id="html"
+                     width="100%" height="100%"
+                     initialize="html_initializeHandler(event)"
+                     mouseChildren="false"
+                     mouseChildren.preview="true"
+                     mouseEnabled="false"
+                     mouseEnabled.preview="true"/>
+
+            <s:Image width="100%" height="100%"
+                     horizontalCenter="0"
+                     source="@Embed(source='/assets/images/watermark_esri.png')"
+                     verticalCenter="0"
+                     visible.preview="false"/>
+        </s:BorderContainer>
+    </s:HGroup>
+</s:VGroup>

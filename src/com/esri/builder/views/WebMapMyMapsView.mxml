@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:components="com.esri.builder.components.*"
+         xmlns:esri="http://www.esri.com/2008/ags"
+         width="100%" height="100%"
+         add="addHandler(event)">
+
+    <fx:Declarations>
+        <esri:CallResponder id="responder"/>
+    </fx:Declarations>
+
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.portal.Portal;
+            import com.esri.ags.portal.supportClasses.PortalItem;
+            import com.esri.ags.portal.supportClasses.PortalQueryParameters;
+            import com.esri.ags.portal.supportClasses.PortalQueryResult;
+            import com.esri.builder.components.PortalQueryResultEvent;
+            import com.esri.builder.components.PortalQueryResultItemEvent;
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.model.PortalModel;
+
+            import mx.events.FlexEvent;
+            import mx.rpc.AsyncResponder;
+            import mx.rpc.AsyncToken;
+            import mx.utils.StringUtil;
+
+            private var portal:Portal = PortalModel.getInstance().portal;
+
+            protected function addHandler(event:FlexEvent):void
+            {
+                currentState = "loading";
+                var queryParams:PortalQueryParameters = new PortalQueryParameters();
+                queryParams.ofUser(portal.user.username).ofType(PortalItem.TYPE_WEB_MAP).withSortField("name").withLimit(20);
+                responder.token = portal.queryItems(queryParams, new AsyncResponder(items_resultHandler, items_faultHandler));
+            }
+
+            protected function newQueryHandler(event:PortalQueryResultEvent):void
+            {
+                // Prevent from displaying the next page until the request is done.
+                event.preventDefault();
+                currentState = "loading";
+                responder.token = portal.queryItems(event.queryParameters, new AsyncResponder(items_resultHandler, items_faultHandler));
+            }
+
+            protected function itemSelectedHandler(event:PortalQueryResultItemEvent):void
+            {
+                AppEvent.dispatch(AppEvent.SET_WEB_MAP, event.portalItem);
+            }
+
+            private function items_resultHandler(queryResult:PortalQueryResult, asyncToken:AsyncToken):void
+            {
+                if (queryResult.results.length)
+                {
+                    currentState = "loaded";
+                    numMapsLabel.text = StringUtil.substitute(resourceManager.getString('BuilderStrings', 'agsPortal.numMapsLabel'), queryResult.totalResults);
+                }
+                else
+                {
+                    currentState = "nomaps";
+                }
+            }
+
+            private function items_faultHandler(queryResult:PortalQueryResult, asyncToken:AsyncToken):void
+            {
+                responder.lastResult = null;
+                currentState = "nomaps";
+            }
+        ]]>
+    </fx:Script>
+    <s:states>
+        <s:State name="loading"/>
+        <s:State name="loaded"/>
+        <s:State name="nomaps"/>
+    </s:states>
+    <s:SWFLoader width="40" height="40"
+                 autoLoad="true"
+                 horizontalCenter="25"
+                 includeIn="loading"
+                 source="@Embed(source='/assets/images/ico_loading.swf')"
+                 verticalCenter="25"/>
+    <s:Line width="100%" top="26">
+        <s:stroke>
+            <s:SolidColorStroke color="0x000000"/>
+        </s:stroke>
+    </s:Line>
+    <s:VGroup width="100%" height="100%"
+              paddingLeft="5"
+              paddingRight="5">
+        <s:Label color="0x217598"
+                 fontSize="14"
+                 fontWeight="bold"
+                 paddingTop="4"
+                 text="{resourceManager.getString('BuilderStrings', 'agsPortal.myMaps')}"/>
+        <s:Label id="numMapsLabel"
+                 color="0x217598"
+                 fontWeight="bold"
+                 paddingBottom="5"
+                 paddingTop="10"/>
+        <components:PortalQueryResultViewer id="portalQueryViewer"
+                                            width="100%" height="100%"
+                                            includeIn="loaded"
+                                            itemSelected="itemSelectedHandler(event)"
+                                            newQuery="newQueryHandler(event)"
+                                            nextLabel="{resourceManager.getString('BuilderStrings', 'next')}"
+                                            previousLabel="{resourceManager.getString('BuilderStrings', 'previous')}"
+                                            queryResult="{responder.lastResult}"
+                                            selectedItem="{Model.instance.webmap}">
+            <components:resultsListLayout>
+                <s:TileLayout horizontalGap="20" verticalGap="20"/>
+            </components:resultsListLayout>
+        </components:PortalQueryResultViewer>
+        <s:Label width="100%" height="100%"
+                 fontSize="16"
+                 fontWeight="bold"
+                 includeIn="nomaps"
+                 text="{resourceManager.getString('BuilderStrings', 'agsPortal.noWebmapsFound')}"
+                 textAlign="center"
+                 verticalAlign="middle"/>
+    </s:VGroup>
+</s:Group>

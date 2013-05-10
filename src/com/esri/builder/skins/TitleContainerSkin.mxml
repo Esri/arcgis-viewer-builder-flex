@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<!---
+    Skin class for TitleContainer component.
+-->
+<s:SparkSkin xmlns:fx="http://ns.adobe.com/mxml/2009"
+             xmlns:s="library://ns.adobe.com/flex/spark"
+             alpha.disabled="0.5"
+             blendMode="normal"
+             minWidth="112">
+    <fx:Metadata>[HostComponent("com.esri.builder.components.TitleContainer")]</fx:Metadata>
+
+    <fx:Script>
+        <![CDATA[
+            import mx.core.FlexVersion;
+
+            /* Define the skin elements that should not be colorized.
+            For list, the skin itself is colorized but the individual parts are not. */
+            static private const exclusions:Array = [ "scroller", "background", "border" ];
+
+            /* exclusions before Flex 4.5 for backwards-compatibility purposes */
+            static private const exclusions_4_0:Array = [ "scroller", "background" ];
+
+            /**
+             * @private
+             */
+            override public function get colorizeExclusions():Array
+            {
+                // Since border is styleable via borderColor, no need to allow chromeColor to affect
+                // the border.  This is wrapped in a compatibility flag since this change was added  
+                // in Flex 4.5
+                if (FlexVersion.compatibilityVersion < FlexVersion.VERSION_4_5)
+                {
+                    return exclusions_4_0;
+                }
+
+                return exclusions;
+            }
+
+            /**
+             * @private
+             */
+            override protected function initializationComplete():void
+            {
+                useChromeColor = true;
+                super.initializationComplete();
+            }
+
+            /**
+             * @private
+             */
+            override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void
+            {
+                if (getStyle("borderVisible") == true)
+                {
+                    border.visible = true;
+                }
+                else
+                {
+                    border.visible = false;
+                }
+
+                topLeftBorderStroke.color = getStyle("borderColor");
+                topLeftBorderStroke.alpha = getStyle("borderAlpha");
+                topRightBorderStroke.color = getStyle("borderColor");
+                topRightBorderStroke.alpha = getStyle("borderAlpha");
+                leftBorderStroke.color = getStyle("borderColor");
+                leftBorderStroke.alpha = getStyle("borderAlpha");
+                rightBorderStroke.color = getStyle("borderColor");
+                rightBorderStroke.alpha = getStyle("borderAlpha");
+                bottomBorderStroke.color = getStyle("borderColor");
+                bottomBorderStroke.alpha = getStyle("borderAlpha");
+
+                super.updateDisplayList(unscaledWidth, unscaledHeight);
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="disabled"/>
+    </s:states>
+
+    <fx:Declarations>
+        <!---
+        Defines the appearance of the the List's drop indicator.
+        To customize the drop indicator appearance, create a custom ListSkin class.
+        The List's layout takes care to size and position the dropIndicator.
+        The size of the <code>dropIndicator</code> is typically set to the size of the gaps between the items.
+        The minimum and maximum settings are typically respected only in the direction
+        along the major axis (the gap axis).  For example a VerticalLayout ignores the
+        <code>minWidth</code> and <code>maxWidth</code> settings,
+        but respect <code>minHeight</code> and <code>maxHeight</code>.
+
+        @copy spark.components.List#dropIndicator
+        -->
+        <fx:Component id="dropIndicator">
+            <s:Group maxHeight="3"
+                     maxWidth="3"
+                     minHeight="3"
+                     minWidth="3">
+                <s:Rect left="0" right="0" top="0" bottom="0">
+                    <s:fill>
+                        <!--- Defines the color of the background. -->
+                        <s:SolidColor color="0xBBBBBB"/>
+                    </s:fill>
+                    <s:stroke>
+                        <s:SolidColorStroke color="0x868686" weight="1"/>
+                    </s:stroke>
+                </s:Rect>
+            </s:Group>
+        </fx:Component>
+    </fx:Declarations>
+
+    <s:Group id="border"
+             left="0" right="0" top="0" bottom="0">
+        <!--left border line-->
+        <s:Line left="0" top="10" bottom="0">
+            <s:stroke>
+                <s:SolidColorStroke id="leftBorderStroke"/>
+            </s:stroke>
+        </s:Line>
+
+        <!--right border line-->
+        <s:Line right="0" top="10" bottom="0">
+            <s:stroke>
+                <s:SolidColorStroke id="rightBorderStroke"/>
+            </s:stroke>
+        </s:Line>
+
+        <!--bottom border line-->
+        <s:Line left="0" right="0" bottom="0">
+            <s:stroke>
+                <s:SolidColorStroke id="bottomBorderStroke"/>
+            </s:stroke>
+        </s:Line>
+
+        <!--top left border line-->
+        <s:Line left="0" right="{width - titleLabel.x}" top="10">
+            <s:stroke>
+                <s:SolidColorStroke id="topLeftBorderStroke"/>
+            </s:stroke>
+        </s:Line>
+
+        <!--top right border line-->
+        <s:Line left="{titleLabel.x + titleLabel.width}" right="0" top="10">
+            <s:stroke>
+                <s:SolidColorStroke id="topRightBorderStroke"/>
+            </s:stroke>
+        </s:Line>
+    </s:Group>
+
+    <s:Label id="titleLabel"
+             left="15" top="5"
+             fontSize="14"
+             fontWeight="bold"
+             maxWidth="{width - 24}"
+             paddingLeft="3"
+             paddingRight="3"
+             text="{hostComponent.title}"/>
+
+    <s:Group id="contentGroup"
+             left="1" right="1" top="20" bottom="20"/>
+</s:SparkSkin>

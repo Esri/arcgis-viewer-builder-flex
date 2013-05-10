@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<Graphic version="2.0" viewHeight="32" viewWidth="32" ai:appVersion="15.1.0.39" ATE:version="1.0.0" flm:version="1.0.0" d:using="" xmlns="http://ns.adobe.com/fxg/2008" xmlns:ATE="http://ns.adobe.com/ate/2009" xmlns:ai="http://ns.adobe.com/ai/2009" xmlns:d="http://ns.adobe.com/fxg/2008/dt" xmlns:flm="http://ns.adobe.com/flame/2008">
+  <Library/>
+  <Group ai:seqID="1" d:layerType="page" d:pageHeight="32" d:pageWidth="32" d:type="layer" d:userLabel="Artboard 1">
+    <Group ai:seqID="2" d:type="layer" d:userLabel="Layer 17">
+      <Path x="3.67627" y="5.7251" winding="nonZero" ai:seqID="3" data="M6.10449 21.1489 0 10.5747 6.10449 0 18.3149 0 24.4194 10.5747 18.3149 21.1489 6.10449 21.1489Z">
+        <fill>
+          <LinearGradient x="3.97998" y="2.05225" scaleX="23.6953" rotation="46">
+            <GradientEntry ratio="0" color="#F36F20"/>
+            <GradientEntry ratio="1" color="#DA4D1E"/>
+          </LinearGradient>
+        </fill>
+        <stroke>
+          <SolidColorStroke weight="1.17786" caps="none" joints="miter" miterLimit="10"/>
+        </stroke>
+      </Path>
+      <Group x="14.396" y="10.2266" ai:seqID="4" flm:knockout="false">
+        <Path winding="nonZero" ai:seqID="5" data="M0 10.6553C0 9.79004 0.662109 9.12793 1.49023 9.12793 2.37354 9.12793 2.98193 9.86328 2.98193 10.6553 2.98193 11.502 2.37354 12.1455 1.49023 12.1455 0.753906 12.1455 0 11.5566 0 10.6553ZM2.96338 0.791016C2.96338 1.08545 2.85303 1.65625 2.66846
+ 2.94434L1.896 8.11523C1.67432 8.2627 1.30664 8.2627 1.08594 8.11523L0.3125 2.94434C0.128906 1.65625 0.0185547 1.08545 0.0185547 0.791016 0.0185547 0.165527 0.533203 0 1.49023 0 2.44775 0 2.96338 0.165527 2.96338 0.791016Z">
+          <fill>
+            <SolidColor/>
+          </fill>
+        </Path>
+      </Group>
+    </Group>
+  </Group>
+  <Private/>
+</Graphic>

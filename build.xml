@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Builder" default="build" basedir=".">
+    <!-- Load environment overrides -->
+    <property file="env.properties"/>
+    <!-- Load environment variables as properties -->
+    <property environment="env"/>
+    <!-- Load the local specific properties -->
+    <property file="local.properties"/>
+    <!-- Load the common properties -->
+    <property file="build.properties"/>
+    <!-- This property is needed by the mxmlc task -->
+    <property name="FLEX_HOME" value="${env.FLEX_HOME}"/>
+    <!-- define mxmlc ant task -->
+    <taskdef name="mxmlc"
+             classname="flex.ant.MxmlcTask"
+             classpath="${FLEX_HOME}/ant/lib/flexTasks.jar"/>
+    <!-- Default target -->
+    <target name="build">
+        <antcall target="deleteFolders"/>
+        <antcall target="makeFolders"/>
+        <antcall target="copyLocale"/>
+        <antcall target="copyAssets"/>
+        <antcall target="copyResources"/>
+        <antcall target="compile"/>
+        <antcall target="compileModules"/>
+        <antcall target="package"/>
+        <antcall target="badge"/>
+        <antcall target="cleanup"/>
+    </target>
+    <target name="deleteFolders">
+        <delete dir="${TEMP_DIR}"
+                failOnError="false"
+                includeEmptyDirs="true"/>
+        <delete dir="${BUILD_DIR}"
+                failOnError="false"
+                includeEmptyDirs="true"/>
+        <delete dir="${RELEASE_DIR}"
+                failOnError="false"
+                includeEmptyDirs="true"/>
+    </target>
+    <target name="makeFolders">
+        <mkdir dir="${TEMP_DIR}"/>
+        <mkdir dir="${BUILD_DIR}/${ASSETS_DIR}"/>
+        <mkdir dir="${BUILD_DIR}/${MODULES_DIR}"/>
+        <mkdir dir="${BUILD_DIR}/${CONFIGS_DIR}"/>
+        <mkdir dir="${RELEASE_DIR}"/>
+    </target>
+    <target name="badge">
+        <copy file="${BADGE_DIR}/badge.html"
+              overwrite="true"
+              todir="${RELEASE_DIR}">
+            <filterset>
+                <filter token="AIRNAME" value="${AIR_NAME}"/>
+                <filter token="PROGRAMNAME" value="${PROGRAM_NAME}"/>
+                <filter token="APPVER" value="${APP_VERSION}"/>
+            </filterset>
+        </copy>
+        <copy overwrite="true" todir="${RELEASE_DIR}">
+            <fileset dir="${BADGE_DIR}" excludes="**/*.html"/>
+        </copy>
+    </target>
+    <target name="copyLocale">
+        <tstamp>
+            <format pattern="yyyy-MM-dd" property="today"/>
+        </tstamp>
+        <filter token="BUILD_DATE" value="${today}"/>
+        <filter token="APPVER" value="${APP_VERSION}"/>
+        <filter token="PRODUCT_NAME" value="${PRODUCT_NAME}"/>
+        <copy encoding="UTF8"
+              filtering="true"
+              overwrite="true"
+              todir="${TEMP_DIR}/${LOCALE_DIR}">
+            <fileset dir="${LOCALE_DIR}"/>
+        </copy>
+    </target>
+    <!-- runs if FLEX_VIEWER_ZIP is set -->
+    <target name="unzipViewer" if="FLEX_VIEWER_ZIP">
+        <unzip dest="${BUILD_DIR}" src="${FLEX_VIEWER_ZIP}"/>
+    </target>
+    <!-- runs if FLEX_VIEWER_HOME is set -->
+    <target name="copyViewer" if="FLEX_VIEWER_HOME">
+        <copy overwrite="true" todir="${BUILD_DIR}/flexviewer">
+            <fileset dir="${FLEX_VIEWER_HOME}"/>
+        </copy>
+    </target>
+    <target name="copyAssets" depends="unzipViewer,copyViewer">
+        <copy file="${SOURCE_DIR}/configs/en_US/config.xml"
+              overwrite="true"
+              todir="${BUILD_DIR}/flexviewer"/>
+        <copy overwrite="true" todir="${BUILD_DIR}/${ASSETS_DIR}">
+            <fileset dir="${SOURCE_DIR}/${ASSETS_DIR}">
+                <include name="**/*.png"/>
+            </fileset>
+        </copy>
+        <copy overwrite="true" todir="${BUILD_DIR}/${CONFIGS_DIR}">
+            <fileset dir="${SOURCE_DIR}/${CONFIGS_DIR}"/>
+        </copy>
+        <delete failonerror="false" includeemptydirs="true">
+            <fileset dir="${BUILD_DIR}/flexviewer">
+                <include name="config-all.xml"/>
+                <include name="popups/**"/>
+                <include name="widgets/Samples/**"/>
+                <include name="widgets/InfoTemplates/**"/>
+            </fileset>
+        </delete>
+    </target>
+    <target name="copyResources">
+        <filter token="APPNAME" value="${APP_NAME}"/>
+        <filter token="PROGRAMNAME" value="${PROGRAM_NAME}"/>
+        <filter token="APPVER" value="${APP_VERSION}"/>
+        <filter token="APPVERSIONLABEL" value="${APP_VERSION_LABEL}"/>
+        <filter token="APPID" value="${APP_ID}"/>
+        <script language="javascript">
+            <![CDATA[
+                var locales = LOCALE.split(",");
+                for each (var locale in locales)
+                {
+                    var antCall = project.createTask("antcall");
+                    antCall.setTarget("create-APPDESCS.props");
+                    var param = antCall.createParam();
+                    param.setName("LOCALE");
+                    param.setValue(locale);
+                    antCall.perform();
+                }
+            ]]>
+        </script>
+        <copy encoding="UTF8"
+              file="${SOURCE_DIR}/${APP_NAME}-ant.xml"
+              filtering="true"
+              overwrite="true"
+              tofile="${TEMP_DIR}/${APP_NAME}-app.xml">
+            <filterset>
+                <filtersfile file="${TEMP_DIR}/APPDESCS.properties"/>
+            </filterset>
+        </copy>
+    </target>
+    <target name="create-APPDESCS.props">
+        <!-- read applicationBuilderDescription property -->
+        <loadproperties encoding="UTF8" srcFile="${LOCALE_DIR}/${LOCALE}/BuilderStrings.properties">
+            <filterchain>
+                <escapeunicode/>
+                <linecontains>
+                    <contains value="applicationBuilderDescription"/>
+                </linecontains>
+                <replacetokens>
+                    <token key="PRODUCT_NAME" value="${PRODUCT_NAME}"/>
+                </replacetokens>
+            </filterchain>
+        </loadproperties>
+        <!-- write APPDESC_${LOCALE} property -->
+        <propertyfile file="${TEMP_DIR}/APPDESCS.properties" jdkproperties="true">
+            <entry key="APPDESC_${LOCALE}" value="${applicationBuilderDescription}"/>
+        </propertyfile>
+    </target>
+    <target name="compile">
+        <mxmlc configname="air"
+               debug="${DEBUG}"
+               failonerror="true"
+               file="${SOURCE_DIR}/${APP_NAME}.mxml"
+               fork="true"
+               link-report="${TEMP_DIR}/linkreport.xml"
+               locale="${LOCALE}"
+               maxmemory="1024m"
+               optimize="${OPTIMIZE}"
+               output="${BUILD_DIR}/${APP_NAME}.swf"
+               swf-version="18">
+            <use-network>true</use-network>
+            <source-path path-element="${SOURCE_DIR}"/>
+            <source-path path-element="${TEMP_DIR}/${LOCALE_DIR}/{locale}"/>
+            <library-path append="true"
+                          dir="${LIBRARY_DIR}"
+                          includes="*.swc"/>
+            <include-libraries append="true"
+                               dir="additional-libs"
+                               includes="*.swc"
+                               erroronmissingdir="false"/>
+        </mxmlc>
+    </target>
+    <target name="compileModules">
+        <script language="javascript">
+            <![CDATA[
+                var modules = MODULES.split(",");
+                for each (var module in modules)
+                {
+                    var antCall = project.createTask("antcall");
+                    antCall.setTarget("compile-module");
+                    var param = antCall.createParam();
+                    param.setName("MODULE_NAME");
+                    param.setValue(module);
+                    antCall.perform();
+                }
+            ]]>
+        </script>
+    </target>
+    <target name="compile-module">
+        <mxmlc configname="air"
+               debug="${DEBUG}"
+               file="${basedir}/${SOURCE_DIR}/modules/${MODULE_NAME}/${MODULE_NAME}Module.as"
+               fork="true"
+               load-externs="${basedir}/${TEMP_DIR}/linkreport.xml"
+               locale="${LOCALE}"
+               maxmemory="1024m"
+               optimize="${OPTIMIZE}"
+               output="${BUILD_DIR}/modules/${MODULE_NAME}Module.swf">
+            <source-path path-element="${basedir}/${SOURCE_DIR}"/>
+            <source-path path-element="${basedir}/${TEMP_DIR}/${LOCALE_DIR}/{locale}"/>
+            <library-path append="true"
+                          dir="${LIBRARY_DIR}"
+                          includes="*.swc"/>
+        </mxmlc>
+    </target>
+    <target name="package">
+        <java failonerror="true"
+              fork="true"
+              jar="${ADT}"
+              maxmemory="1024m">
+            <arg value="-package"/>
+            <arg line="-storetype ${STORETYPE}"/>
+            <arg line="-keystore ${KEYSTORE}"/>
+            <arg line="-storepass ${STOREPASS}"/>
+            <arg value="${RELEASE_DIR}/${AIR_NAME}-${APP_VERSION}.air"/>
+            <arg value="${TEMP_DIR}/${APP_NAME}-app.xml"/>
+            <arg line="-C ${BUILD_DIR} ${APP_NAME}.swf flexviewer ${ASSETS_DIR} ${MODULES_DIR} ${CONFIGS_DIR}"/>
+        </java>
+    </target>
+    <target name="cleanup">
+        <delete dir="${TEMP_DIR}"
+                failOnError="false"
+                includeEmptyDirs="true"/>
+        <delete dir="${BUILD_DIR}"
+                failOnError="false"
+                includeEmptyDirs="true"/>
+    </target>
+</project>

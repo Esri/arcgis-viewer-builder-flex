@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                xmlns:mx="library://ns.adobe.com/flex/mx"
+                xmlns:graphics="assets.graphics.*"
+                width="100%" height="30"
+                autoDrawBackground="false"
+                doubleClick="this_doubleClickHandler(event)"
+                doubleClickEnabled="true"
+                rollOut="this_rollOutHandler(event)"
+                rollOver="this_rollOverHandler(event)">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.layers.ArcGISDynamicMapServiceLayer;
+            import com.esri.ags.layers.ArcGISTiledMapServiceLayer;
+            import com.esri.ags.layers.Layer;
+            import com.esri.ags.layers.supportClasses.LayerDetails;
+            import com.esri.ags.layers.supportClasses.LayerInfo;
+            import com.esri.builder.supportClasses.FileUtil;
+            import com.esri.builder.model.ConfigSubLayer;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.supportClasses.FieldUtil;
+            import com.esri.builder.supportClasses.XMLUtil;
+            import com.esri.builder.views.BuilderAlert;
+            import com.esri.builder.model.PopUpConfig;
+            import com.esri.builder.views.popups.PopUpConfigPopUp;
+            import com.esri.builder.views.SubLayerList;
+
+            import mx.core.FlexGlobals;
+            import mx.logging.ILogger;
+            import mx.logging.Log;
+            import mx.rpc.AsyncResponder;
+            import mx.rpc.Fault;
+
+            import spark.events.PopUpEvent;
+
+            private const LOG:ILogger = Log.getLogger('com.esri.builder.renderers.SubLayerRenderer');
+
+            private var layerInfo:LayerInfo;
+
+            private var popUpConfigPopUp:PopUpConfigPopUp;
+
+            override public function set data(value:Object):void
+            {
+                super.data = value;
+
+                layerInfo = value as LayerInfo;
+                layerName.text = layerInfo.name;
+
+                invalidateRendererState();
+            }
+
+            private function doesSubLayerHavePopUpConfig(layerId:Number):Boolean
+            {
+                var subLayerPopUpConfigFound:Boolean;
+
+                var configSubLayers:Array = Model.instance.configLayer.subLayers;
+                for each (var configSubLayer:ConfigSubLayer in configSubLayers)
+                {
+                    if ((layerId.toString() == configSubLayer.id)
+                        && configSubLayer.popupConfig)
+                    {
+                        subLayerPopUpConfigFound = true;
+                        break;
+                    }
+                }
+
+                return subLayerPopUpConfigFound;
+            }
+
+            protected function configurePopUpButton_clickHandler(event:MouseEvent):void
+            {
+                editPopUp();
+            }
+
+            private function editPopUp():void
+            {
+                var layer:Layer = (owner as SubLayerList).layer;
+
+                if (layer is ArcGISTiledMapServiceLayer)
+                {
+                    (layer as ArcGISTiledMapServiceLayer).getDetails(layerInfo.layerId,
+                                                                     new AsyncResponder(getDetailsSuccess, getDetailsFault));
+                }
+                else if (layer is ArcGISDynamicMapServiceLayer)
+                {
+                    (layer as ArcGISDynamicMapServiceLayer).getDetails(layerInfo.layerId,
+                                                                       new AsyncResponder(getDetailsSuccess, getDetailsFault));
+                }
+            }
+
+
+            private function getDetailsSuccess(layerDetails:LayerDetails, token:Object = null):void
+            {
+                showPopUp(layerDetails.fields,
+                          layerDetails.hasAttachments,
+                          layerDetails.relationships
+                          && layerDetails.relationships.length > 0);
+            }
+
+            private function showPopUp(fields:Array = null, supportsAttachments:Boolean = false, supportsRelatedRecords:Boolean = false):void
+            {
+                if (fields)
+                {
+                    fields = FieldUtil.getValidFields(fields);
+                }
+
+                popUpConfigPopUp = new PopUpConfigPopUp();
+                popUpConfigPopUp.layerId = layerInfo.layerId.toString();
+                popUpConfigPopUp.layerName = layerInfo.name;
+                popUpConfigPopUp.popUpConfig = getSubLayerPopUpConfig(fields);
+                popUpConfigPopUp.fields = fields;
+                popUpConfigPopUp.supportsAttachments = supportsAttachments;
+                popUpConfigPopUp.supportsRelatedRecords = supportsRelatedRecords;
+                popUpConfigPopUp.addEventListener(PopUpEvent.CLOSE, popUpConfigPopUp_closeHandler, false, 0, true);
+                popUpConfigPopUp.open(FlexGlobals.topLevelApplication as DisplayObjectContainer, true);
+            }
+
+            private function getSubLayerPopUpConfig(fields:Array):PopUpConfig
+            {
+                const popUpConfig:PopUpConfig = new PopUpConfig();
+                const configSubLayer:ConfigSubLayer = findConfigSubLayerById(layerInfo.layerId.toString());
+                if (configSubLayer && configSubLayer.popupConfig)
+                {
+                    const popUpConfigFile:File = Model.instance.appDir.resolvePath(configSubLayer.popupConfig);
+                    popUpConfig.importXML(XMLUtil.readXMLFile(popUpConfigFile),
+                                          fields);
+                }
+                else
+                {
+                    popUpConfig.importFields(fields);
+                }
+
+                return popUpConfig;
+            }
+
+            private function findConfigSubLayerById(id:String):ConfigSubLayer
+            {
+                for each (var configSubLayer:ConfigSubLayer in Model.instance.configLayer.subLayers)
+                {
+                    if (id == configSubLayer.id)
+                    {
+                        return configSubLayer;
+                    }
+                }
+
+                return null;
+            }
+
+            private function getDetailsFault(fault:Fault, token:Object = null):void
+            {
+                showPopUp();
+            }
+
+            private function popUpConfigPopUp_closeHandler(event:PopUpEvent):void
+            {
+                if (event.commit)
+                {
+                    const configSubLayer:ConfigSubLayer = findConfigSubLayerById(layerInfo.layerId.toString());
+
+                    const popUpConfigPath:String =
+                        (configSubLayer && configSubLayer.popupConfig) ? configSubLayer.popupConfig : FileUtil.generateUniqueRelativePath(Model.instance.appDir,
+                                                                                                                                          "popups/PopUp.xml");
+
+                    if (writeConfigXML(popUpConfigPopUp.popUpConfig, popUpConfigPath))
+                    {
+                        if (configSubLayer)
+                        {
+                            configSubLayer.popupConfig = popUpConfigPath;
+                        }
+                        else
+                        {
+                            addSubLayer(popUpConfigPath);
+                        }
+                    }
+                }
+
+                invalidateRendererState();
+                popUpConfigPopUp.removeEventListener(PopUpEvent.CLOSE, popUpConfigPopUp_closeHandler);
+                popUpConfigPopUp = null;
+            }
+
+            private function writeConfigXML(popUpConfig:PopUpConfig, popUpConfigFilePath:String):Boolean
+            {
+                var success:Boolean = false;
+
+                const configText:String = "<?xml version=\"1.0\" ?>\n" + popUpConfig.exportXML().toXMLString() + "\n";
+                const file:File = Model.instance.appDir.resolvePath(popUpConfigFilePath);
+                const fileStream:FileStream = new FileStream();
+                try
+                {
+                    fileStream.open(file, FileMode.WRITE);
+                    try
+                    {
+                        fileStream.writeUTFBytes(configText);
+                        success = true;
+                    }
+                    finally
+                    {
+                        fileStream.close();
+                    }
+                }
+                catch (e:Error)
+                {
+                    //TODO: MOVE ELSEWHERE
+                    if (Log.isError())
+                    {
+                        LOG.error('Problem writing config: {0}', e.message);
+                    }
+                    BuilderAlert.show(e.message.toString(), resourceManager.getString('BuilderStrings', 'error'));
+                }
+
+                return success;
+            }
+
+            private function addSubLayer(popUpConfigFilePath:String):void
+            {
+                var configSubLayer:ConfigSubLayer = new ConfigSubLayer();
+                configSubLayer.id = layerInfo.layerId.toString();
+                configSubLayer.popupConfig = popUpConfigFilePath;
+
+                Model.instance.configLayer.subLayers.push(configSubLayer);
+            }
+
+            protected function this_rollOverHandler(event:MouseEvent):void
+            {
+                layerName.setStyle("color", 0x007AC2);
+            }
+
+            protected function this_rollOutHandler(event:MouseEvent):void
+            {
+                layerName.setStyle("color", 0x000000);
+            }
+
+            protected function removePopUpButton_clickHandler(event:MouseEvent):void
+            {
+                removeConfigSubLayer();
+                invalidateRendererState();
+            }
+
+            private function removeConfigSubLayer():void
+            {
+                const configSubLayers:Array = Model.instance.configLayer.subLayers;
+                const configSubLayerID:String = layerInfo.layerId.toString();
+                for each (var configSubLayer:ConfigSubLayer in configSubLayers)
+                {
+                    if (configSubLayerID == configSubLayer.id)
+                    {
+                        deleteSubLayerPopUpConfigFile(configSubLayer);
+                        const configSubLayerIndex:int = configSubLayers.indexOf(configSubLayer);
+                        configSubLayers.splice(configSubLayerIndex, 1);
+                    }
+                }
+            }
+
+            private function deleteSubLayerPopUpConfigFile(configSubLayer:ConfigSubLayer):void
+            {
+                const popUpConfigFile:File = Model.instance.appDir.resolvePath(configSubLayer.popupConfig);
+                if (popUpConfigFile.exists)
+                {
+                    try
+                    {
+                        popUpConfigFile.deleteFile();
+                    }
+                    catch (error:Error)
+                    {
+                        //ignore error
+                    }
+                }
+            }
+
+            override protected function getCurrentRendererState():String
+            {
+                return doesSubLayerHavePopUpConfig(layerInfo.layerId) ? "popUpConfigured" : "popUpNotConfigured";
+            }
+
+            protected function this_doubleClickHandler(event:MouseEvent):void
+            {
+                if (event.currentTarget == configurePopUpButton
+                    || event.currentTarget == removePopUpButton)
+                {
+                    return;
+                }
+
+                editPopUp();
+            }
+        ]]>
+    </fx:Script>
+
+    <fx:Declarations>
+        <s:GlowFilter id="glowFilter"
+                      blurX="5"
+                      blurY="5"
+                      color="0x000000"/>
+    </fx:Declarations>
+
+    <s:states>
+        <s:State name="popUpConfigured"/>
+        <s:State name="popUpNotConfigured"/>
+    </s:states>
+
+    <s:layout>
+        <s:HorizontalLayout paddingBottom="5"
+                            paddingLeft="5"
+                            paddingRight="5"
+                            paddingTop="5"
+                            verticalAlign="middle"/>
+    </s:layout>
+
+    <s:Label id="layerName"
+             width="100%"
+             maxDisplayedLines="2"
+             verticalAlign="middle"/>
+
+    <s:Group id="configurePopUpButton"
+             buttonMode="true"
+             click="configurePopUpButton_clickHandler(event)"
+             rollOut="{configurePopUpButton.filters = []}"
+             rollOver="{configurePopUpButton.filters = [glowFilter]}"
+             toolTip="{resourceManager.getString('BuilderStrings', 'layerConfigPopUp.configPopUp')}">
+        <graphics:pencil width="20" height="20"/>
+    </s:Group>
+
+    <s:Group id="removePopUpButton"
+             alpha.popUpNotConfigured="0.5"
+             buttonMode.popUpConfigured="true"
+             click.popUpConfigured="removePopUpButton_clickHandler(event)"
+             rollOut="{removePopUpButton.filters = []}"
+             rollOver="{removePopUpButton.filters = [glowFilter]}"
+             toolTip="{resourceManager.getString('BuilderStrings', 'layerConfigPopUp.removePopUp')}">
+        <graphics:red_x width="20" height="20"/>
+    </s:Group>
+</s:ItemRenderer>

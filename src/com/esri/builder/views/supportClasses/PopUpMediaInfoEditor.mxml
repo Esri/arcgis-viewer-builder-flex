@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:components="com.esri.builder.components.*">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.portal.supportClasses.PopUpFieldInfo;
+            import com.esri.ags.portal.supportClasses.PopUpMediaInfo;
+            import com.esri.builder.components.ModifyItemEvent;
+            import com.esri.builder.views.popups.PopUpMediaInfoConfigurationPopUp;
+
+            import mx.collections.IList;
+            import mx.core.FlexGlobals;
+            import mx.events.CollectionEvent;
+
+            import spark.events.PopUpEvent;
+
+            private var editedMedia:PopUpMediaInfo;
+
+            [Bindable]
+            public var popUpMediaInfos:IList;
+            [Bindable]
+            public var popUpFieldInfos:IList;
+            [Bindable]
+            public var fields:IList;
+
+            private function startPopUpMediaInfoCreationSession():void
+            {
+                var createMediaInfoConfigurationPopUp:PopUpMediaInfoConfigurationPopUp = new PopUpMediaInfoConfigurationPopUp();
+                createMediaInfoConfigurationPopUp.popUpFieldInfos = popUpFieldInfos;
+                createMediaInfoConfigurationPopUp.fields = fields;
+                createMediaInfoConfigurationPopUp.addEventListener(PopUpEvent.CLOSE, createMediaInfoConfigurationPopUp_closeHandler);
+                createMediaInfoConfigurationPopUp.open(FlexGlobals.topLevelApplication as DisplayObjectContainer, true);
+            }
+
+            protected function createMediaInfoConfigurationPopUp_closeHandler(event:PopUpEvent):void
+            {
+                var mediaConfigPopUp:PopUpMediaInfoConfigurationPopUp = event.currentTarget as PopUpMediaInfoConfigurationPopUp;
+                mediaConfigPopUp.removeEventListener(PopUpEvent.CLOSE, createMediaInfoConfigurationPopUp_closeHandler);
+
+                if (event.commit)
+                {
+                    popUpMediaInfos.addItem(event.data);
+                    updatePopUpFieldInfoAliases(popUpFieldInfos, mediaConfigPopUp.popUpFieldInfos);
+                }
+
+                mediaConfigPopUp.popUpFieldInfos = null;
+                mediaConfigPopUp = null;
+            }
+
+            //TODO: extract elsewhere?
+            private function updatePopUpFieldInfoAliases(originalFieldInfos:IList, updatedFieldInfos:IList):void
+            {
+                var originalFieldInfosSource:Array = originalFieldInfos.toArray();
+                var updatedFieldInfosSource:Array = updatedFieldInfos.toArray();
+
+                //TODO: optimize
+                for each (var updatedFieldInfo:PopUpFieldInfo in updatedFieldInfosSource)
+                {
+                    for each (var fieldInfo:PopUpFieldInfo in originalFieldInfosSource)
+                    {
+                        if (fieldInfo.fieldName == updatedFieldInfo.fieldName)
+                        {
+                            fieldInfo.label = updatedFieldInfo.label
+                            break;
+                        }
+                    }
+                }
+
+                originalFieldInfos.dispatchEvent(new CollectionEvent(CollectionEvent.COLLECTION_CHANGE));
+            }
+
+            protected function popUpMediaInfoList_editItemHandler(event:ModifyItemEvent):void
+            {
+                startPopUpMediaInfoEditSession(event.item as PopUpMediaInfo);
+            }
+
+            private function startPopUpMediaInfoEditSession(popUpMediaInfoToEdit:PopUpMediaInfo):void
+            {
+                editedMedia = popUpMediaInfoToEdit;
+                var editMediaInfoConfigurationPopUp:PopUpMediaInfoConfigurationPopUp = new PopUpMediaInfoConfigurationPopUp();
+                editMediaInfoConfigurationPopUp.popUpFieldInfos = popUpFieldInfos;
+                editMediaInfoConfigurationPopUp.fields = fields;
+                editMediaInfoConfigurationPopUp.importPopUpMediaInfo(popUpMediaInfoToEdit);
+                editMediaInfoConfigurationPopUp.addEventListener(PopUpEvent.CLOSE, editMediaInfoConfigurationPopUp_closeHandler);
+                editMediaInfoConfigurationPopUp.open(FlexGlobals.topLevelApplication as DisplayObjectContainer, true);
+            }
+
+            protected function editMediaInfoConfigurationPopUp_closeHandler(event:PopUpEvent):void
+            {
+                var mediaConfigPopUp:PopUpMediaInfoConfigurationPopUp = event.currentTarget as PopUpMediaInfoConfigurationPopUp;
+                mediaConfigPopUp.removeEventListener(PopUpEvent.CLOSE, editMediaInfoConfigurationPopUp_closeHandler);
+
+                if (event.commit)
+                {
+                    var editedMediaIndex:int = popUpMediaInfos.getItemIndex(editedMedia);
+                    popUpMediaInfos.removeItemAt(editedMediaIndex);
+                    popUpMediaInfos.addItemAt(event.data, editedMediaIndex);
+                    updatePopUpFieldInfoAliases(popUpFieldInfos, mediaConfigPopUp.popUpFieldInfos);
+                }
+
+                editedMedia = null;
+                mediaConfigPopUp.popUpFieldInfos = null;
+                mediaConfigPopUp = null;
+            }
+
+            protected function popUpMediaInfoList_moveItemDownHandler(event:ModifyItemEvent):void
+            {
+                var itemIndex:int = popUpMediaInfos.getItemIndex(event.item);
+
+                var isItemAtBottom:Boolean = (itemIndex == (popUpMediaInfos.length - 1));
+                if (isItemAtBottom)
+                {
+                    return;
+                }
+
+                var removedItem:Object = popUpMediaInfos.removeItemAt(itemIndex);
+                popUpMediaInfos.addItemAt(removedItem, ++itemIndex);
+            }
+
+            protected function popUpMediaInfoList_moveItemUpHandler(event:ModifyItemEvent):void
+            {
+                var itemIndex:int = popUpMediaInfos.getItemIndex(event.item);
+
+                var isItemAtTop:Boolean = (itemIndex == 0);
+                if (isItemAtTop)
+                {
+                    return;
+                }
+
+                var removedItem:Object = popUpMediaInfos.removeItemAt(itemIndex);
+                popUpMediaInfos.addItemAt(removedItem, --itemIndex);
+            }
+
+            protected function popUpMediaInfoList_removeItemHandler(event:ModifyItemEvent):void
+            {
+                var itemIndex:int = popUpMediaInfos.getItemIndex(event.item);
+                if (itemIndex > -1)
+                {
+                    popUpMediaInfos.removeItemAt(itemIndex);
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <s:Button right="0"
+              click="startPopUpMediaInfoCreationSession()"
+              label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.media.add')}"
+              skinClass="com.esri.builder.skins.GreenAddButtonSkin"/>
+
+    <components:ItemModifierList id="popUpMediaInfoList"
+                                 height="125"
+                                 left="0" right="0" top="25" bottom="0"
+                                 dataProvider="{popUpMediaInfos}"
+                                 editItem="popUpMediaInfoList_editItemHandler(event)"
+                                 itemRenderer="com.esri.builder.renderers.ModifiableItemRenderer"
+                                 labelField="title"
+                                 moveItemDown="popUpMediaInfoList_moveItemDownHandler(event)"
+                                 moveItemUp="popUpMediaInfoList_moveItemUpHandler(event)"
+                                 removeItem="popUpMediaInfoList_removeItemHandler(event)"/>
+</s:Group>

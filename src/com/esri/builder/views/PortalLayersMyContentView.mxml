@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         add="this_addHandler(event)"
+         implements="com.esri.builder.views.supportClasses.IIncludeLayerSelection">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.portal.Portal;
+            import com.esri.ags.portal.supportClasses.PortalItem;
+            import com.esri.ags.portal.supportClasses.PortalQueryParameters;
+            import com.esri.ags.portal.supportClasses.PortalQueryResult;
+            import com.esri.builder.model.PortalLayer;
+            import com.esri.builder.model.PortalModel;
+            import com.esri.builder.views.supportClasses.IIncludeLayerDispatcher;
+
+            import mx.collections.ArrayList;
+            import mx.events.FlexEvent;
+            import mx.rpc.AsyncResponder;
+            import mx.rpc.AsyncToken;
+
+            private var portal:Portal;
+            private var layers:Array = [];
+
+            protected function this_addHandler(event:FlexEvent):void
+            {
+                portal = PortalModel.getInstance().portal;
+
+                var queryParams:PortalQueryParameters = new PortalQueryParameters();
+                queryParams.ofUser(portal.user.username);
+                queryParams.addQueryCondition("(" + "type:" + '"' + PortalItem.TYPE_MAP_SERVICE + '"' + " OR " + "type:" + '"' + PortalItem.TYPE_FEATURE_SERVICE + '"' + " OR " +
+                                              "type:" + '"' + PortalItem.TYPE_IMAGE_SERVICE + '"' + " OR " + "type:" + '"' + PortalItem.TYPE_KML_SERVICE + '"' + ")", "AND");
+                portal.queryItems(queryParams, new AsyncResponder(items_resultHandler, items_faultHandler));
+            }
+
+            private function items_resultHandler(queryResult:PortalQueryResult, asyncToken:AsyncToken):void
+            {
+                layers = [];
+                if (queryResult.results.length)
+                {
+                    currentState = "loaded";
+                    var portalItem:PortalItem;
+                    for (var i:uint = 0; i < queryResult.results.length; i++)
+                    {
+                        portalItem = queryResult.results[i] as PortalItem;
+                        var portalLayer:PortalLayer = new PortalLayer(portalItem);
+                        portalLayer.serviceURL = portalItem.url;
+                        layers.push(portalLayer);
+                    }
+                    list.dataProvider = new ArrayList(layers);
+                }
+                else
+                {
+                    currentState = "nolayers";
+                }
+            }
+
+            private function items_faultHandler(queryResult:PortalQueryResult, asyncToken:AsyncToken):void
+            {
+                layers = [];
+            }
+
+            private function list_valueCommitHandler(event:FlexEvent):void
+            {
+                if (this.parent is PortalLayersView)
+                {
+                    if (this.parent.parent is IIncludeLayerDispatcher)
+                    {
+                        (this.parent.parent as IIncludeLayerDispatcher).updateLayerSelection();
+                    }
+                }
+            }
+
+            public function hasValidSelection():Boolean
+            {
+                return list && list.selectedIndex > -1;
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="loading"/>
+        <s:State name="loaded"/>
+        <s:State name="nolayers"/>
+    </s:states>
+
+    <s:List id="list"
+            width="99%" height="99%"
+            borderVisible="false"
+            itemRenderer="com.esri.builder.renderers.PortalLayerRenderer"
+            valueCommit="list_valueCommitHandler(event)">
+        <s:layout>
+            <s:TileLayout clipAndEnableScrolling="true"
+                          horizontalGap="3"
+                          paddingBottom="8"
+                          paddingLeft="8"
+                          paddingRight="0"
+                          paddingTop="8"
+                          requestedColumnCount="3"/>
+        </s:layout>
+    </s:List>
+</s:Group>

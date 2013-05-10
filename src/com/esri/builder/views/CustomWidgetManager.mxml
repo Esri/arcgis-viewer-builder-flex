@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:SkinnablePopUpContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                           xmlns:s="library://ns.adobe.com/flex/spark"
+                           xmlns:mx="library://ns.adobe.com/flex/mx"
+                           xmlns:components="com.esri.builder.components.*"
+                           xmlns:supportclasses="com.esri.builder.views.supportClasses.*"
+                           width="400" height="400"
+                           open="init()">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.WidgetType;
+            import com.esri.builder.model.WidgetTypeRegistryModel;
+            import com.esri.builder.views.supportClasses.CustomWidgetCatalogEvent;
+
+            import mx.collections.ArrayList;
+            import mx.controls.Alert;
+            import mx.events.CloseEvent;
+            import mx.managers.PopUpManager;
+
+            private var widgetTypeToDelete:WidgetType;
+
+            [Bindable]
+            private var customWidgetsList:ArrayList;
+
+            private function init():void
+            {
+                loadCustomWidgets();
+            }
+
+            private function loadCustomWidgets():void
+            {
+                var availableWidgets:Array = WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.widgetTypes.toArray();
+                var customWidgets:Array = [];
+
+                for each (var widgeType:WidgetType in availableWidgets)
+                {
+                    if (widgeType.isCustom)
+                    {
+                        customWidgets.push(widgeType);
+                    }
+                }
+
+                customWidgetsList = new ArrayList(customWidgets);
+            }
+
+            override public function updatePopUpPosition():void
+            {
+                PopUpManager.centerPopUp(this);
+            }
+
+            private function startCustomWidgetZipBrowse():void
+            {
+                var file:File = new File();
+                var zipFileFilter:FileFilter = new FileFilter("Zip", "*.zip");
+                file.addEventListener(Event.SELECT, file_selectHandler, false, 0, true);
+                file.browseForOpen(resourceManager.getString('BuilderStrings', 'importWidgetPopUp.title'), [ zipFileFilter ]);
+            }
+
+            protected function file_selectHandler(event:Event):void
+            {
+                var selectedFile:File = event.currentTarget as File;
+
+                AppEvent.addListener(AppEvent.IMPORT_WIDGET_SUCCESS, importWidgetSuccessHandler);
+                AppEvent.dispatch(AppEvent.IMPORT_CUSTOM_WIDGET, selectedFile);
+            }
+
+            private function importWidgetSuccessHandler(event:AppEvent):void
+            {
+                loadCustomWidgets();
+            }
+
+            private function customWidgetCatalog_removeWidgetTypeHandler(event:CustomWidgetCatalogEvent):void
+            {
+                widgetTypeToDelete = event.widgetType;
+
+                var removeCustomWidgetWarning:String = resourceManager.getString('BuilderStrings',
+                                                                                 'widgetManager.confirmRemoval',
+                                                                                 [ widgetTypeToDelete.name ]);
+                var removeCustomWidgetWarningTitle:String = resourceManager.getString('BuilderStrings',
+                                                                                      'widgetManager.removeCustomWidget');
+                BuilderAlert.show(removeCustomWidgetWarning, removeCustomWidgetWarningTitle, Alert.YES | Alert.NO, null, removeCustomWidgetAlert_closeHandler, null, Alert.NO);
+            }
+
+            private function removeCustomWidgetAlert_closeHandler(event:CloseEvent):void
+            {
+                if (event.detail == Alert.YES)
+                {
+                    AppEvent.addListener(AppEvent.REMOVE_CUSTOM_WIDGET_SUCCESS, removeCustomWidgetFinishedHandler);
+                    AppEvent.addListener(AppEvent.REMOVE_CUSTOM_WIDGET_FAILURE, removeCustomWidgetFinishedHandler);
+                    AppEvent.dispatch(AppEvent.REMOVE_CUSTOM_WIDGET, widgetTypeToDelete);
+                }
+            }
+
+            private function removeCustomWidgetFinishedHandler(event:AppEvent):void
+            {
+                AppEvent.removeListener(AppEvent.REMOVE_CUSTOM_WIDGET_SUCCESS, removeCustomWidgetFinishedHandler);
+                AppEvent.removeListener(AppEvent.REMOVE_CUSTOM_WIDGET_FAILURE, removeCustomWidgetFinishedHandler);
+                loadCustomWidgets();
+            }
+        ]]>
+    </fx:Script>
+
+    <!--background-->
+    <s:Rect left="0" right="0" top="0" bottom="0">
+        <s:fill>
+            <s:SolidColor color="#FFFFFF"/>
+        </s:fill>
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:Rect height="25"
+            left="2" right="2" top="2">
+        <s:fill>
+            <s:LinearGradient rotation="90">
+                <s:GradientEntry alpha="1"
+                                 color="#FFFFFF"
+                                 ratio="0"/>
+                <s:GradientEntry alpha="1.0"
+                                 color="#CCCCCC"
+                                 ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Rect>
+
+    <s:Line left="0" right="0" top="26">
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Line>
+
+    <!--content-->
+    <s:Label left="10" top="5"
+             fontSize="14"
+             fontWeight="bold"
+             text="{resourceManager.getString('BuilderStrings', 'widgetManager.manageCustomWidgets')}"
+             textAlign="center"
+             verticalAlign="middle"/>
+
+    <s:Button right="10" top="32"
+              click="startCustomWidgetZipBrowse()"
+              label="{resourceManager.getString('BuilderStrings', 'add')}"
+              skinClass="com.esri.builder.skins.GreenAddButtonSkin"/>
+
+    <components:TitleContainer width="100%" height="100%"
+                               left="10" right="10" top="55" bottom="50"
+                               title="{resourceManager.getString('BuilderStrings', 'widgetsView.catalog')}">
+        <s:Label horizontalCenter="0"
+                 includeInLayout="{customWidgetsList.length == 0}"
+                 text="{resourceManager.getString('BuilderStrings', 'widgetManager.noWidgetsAvailable')}"
+                 verticalCenter="0"
+                 visible="{customWidgetsList.length == 0}"/>
+
+        <supportclasses:CustomWidgetCatalog id="customWidgetCatalog"
+                                            width="100%" height="100%"
+                                            left="0" right="0" top="0" bottom="0"
+                                            borderVisible="false"
+                                            dataProvider="{customWidgetsList}"
+                                            includeInLayout="{customWidgetsList.length &gt; 0}"
+                                            itemRenderer="com.esri.builder.renderers.CustomWidgetTypeRenderer"
+                                            removeWidgetType="customWidgetCatalog_removeWidgetTypeHandler(event)"
+                                            visible="{customWidgetsList.length &gt; 0}"/>
+    </components:TitleContainer>
+
+    <s:RichEditableText left="10" bottom="30"
+                        editable="false"
+                        selectable="true">
+        <s:textFlow>
+            <s:TextFlow>
+                <s:a href="http://links.esri.com/flexviewer/customwidgets" target="_blank">
+                    {resourceManager.getString('BuilderStrings', 'layoutView.learnMore')}
+                </s:a>
+            </s:TextFlow>
+        </s:textFlow>
+    </s:RichEditableText>
+
+    <s:Button bottom="5"
+              click="close()"
+              horizontalCenter="0"
+              label="{resourceManager.getString('BuilderStrings', 'close')}"
+              skinClass="com.esri.builder.skins.BlueButtonSkin"/>
+</s:SkinnablePopUpContainer>

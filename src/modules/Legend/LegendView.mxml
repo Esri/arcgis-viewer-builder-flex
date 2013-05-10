@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:mx="library://ns.adobe.com/flex/mx"
+          xmlns:components="com.esri.builder.components.*"
+          xmlns:supportClasses="modules.supportClasses.*"
+          implements="modules.IWidgetView">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.model.Model;
+
+            import modules.IWidgetModel;
+            import modules.supportClasses.ExcludeLayerListEvent;
+
+            import mx.collections.ArrayList;
+            import mx.events.FlexEvent;
+
+            [Bindable]
+            private var layerListItems:ArrayList;
+
+            [Bindable]
+            private var legendModel:LegendModel;
+
+            public function set widgetModel(value:IWidgetModel):void
+            {
+                if (value is LegendModel)
+                {
+                    legendModel = value as LegendModel;
+                }
+                else
+                {
+                    throw new Error('argument is not an instance of LegendModel');
+                }
+            }
+
+            public function get widgetModel():IWidgetModel
+            {
+                return legendModel;
+            }
+
+            public function submit():Boolean
+            {
+                return true;
+            }
+
+            public function cancel():void
+            {
+                // NOOP
+            }
+
+            private function layerList_layerIncludedHandler(event:ExcludeLayerListEvent):void
+            {
+                legendModel.excludedLayers.removeItem(event.layerName);
+            }
+
+            private function layerList_layerExcludedHandler(event:ExcludeLayerListEvent):void
+            {
+                legendModel.excludedLayers.addItem(event.layerName);
+            }
+
+            protected function layerList_creationCompleteHandler(event:FlexEvent):void
+            {
+                layerList.layerListItems = ExcludeLayerList.configLayersToLayerListItems(Model.instance.getOpLayers());
+            }
+        ]]>
+    </fx:Script>
+
+    <s:Form>
+        <s:layout>
+            <s:FormLayout paddingLeft="-15" paddingTop="-10"/>
+        </s:layout>
+
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'legend.useBaseMap')}">
+            <components:SliderToggleButton deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                           selected="@{legendModel.useBaseMaps}"
+                                           selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
+        </s:FormItem>
+
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'legend.useOperationalLayers')}">
+            <components:SliderToggleButton deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                           selected="@{legendModel.useOperationalLayers}"
+                                           selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
+        </s:FormItem>
+
+    </s:Form>
+
+    <s:Group>
+        <s:CheckBox left="10" bottom="20"
+                    label="{resourceManager.getString('BuilderStrings', 'legend.showLayersOnlyWhenVisible')}"
+                    selected="@{legendModel.respectCurrentMapScale}"/>
+    </s:Group>
+
+    <components:TitleContainer width="100%" height="100%"
+                               title="{resourceManager.getString('BuilderStrings', 'legend.excludeLayers')}">
+        <components:layout>
+            <s:VerticalLayout paddingBottom="10"
+                              paddingLeft="20"
+                              paddingRight="10"
+                              paddingTop="10"/>
+        </components:layout>
+
+        <s:Label text="{resourceManager.getString('BuilderStrings', 'legend.selectLayersToInclude')}"/>
+
+        <s:Label includeInLayout="{layerList.dataProvider.length == 0}"
+                 text="{resourceManager.getString('BuilderStrings', 'legend.noLayersAvailable')}"
+                 visible="{layerList.dataProvider.length == 0}"/>
+
+        <supportClasses:ExcludeLayerList id="layerList"
+                                         width="100%" height="100%"
+                                         borderVisible="false"
+                                         creationComplete="layerList_creationCompleteHandler(event)"
+                                         excludedLayerNames="{legendModel.excludedLayers}"
+                                         includeInLayout="{layerList.dataProvider.length > 0}"
+                                         itemRenderer="modules.supportClasses.ExcludeLayerListItemRenderer"
+                                         layerExcluded="layerList_layerExcludedHandler(event)"
+                                         layerIncluded="layerList_layerIncludedHandler(event)"
+                                         visible="{layerList.dataProvider.length > 0}"/>
+    </components:TitleContainer>
+</s:VGroup>

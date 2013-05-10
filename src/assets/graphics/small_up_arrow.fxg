@@ -1,0 +1,195 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<Graphic version="2.0" viewHeight="10.2681" viewWidth="22.6807" ai:appVersion="15.1.0.39" ATE:version="1.0.0" flm:version="1.0.0" d:id="1" d:using="" xmlns="http://ns.adobe.com/fxg/2008" xmlns:ATE="http://ns.adobe.com/ate/2009" xmlns:ai="http://ns.adobe.com/ai/2009" xmlns:d="http://ns.adobe.com/fxg/2008/dt" xmlns:flm="http://ns.adobe.com/flame/2008">
+  <Library/>
+  <Group ai:artboardActive="1" ai:artboardIndex="0" ai:seqID="1" d:layerType="page" d:pageHeight="10.268" d:pageWidth="22.681" d:type="layer" d:userLabel="Artboard 1">
+    <Group ai:objID="21aeb980" ai:seqID="2" fc:exportRoot="true" fc:type="skin" d:id="2" d:type="layer" d:userLabel="Button" xmlns:fc="http://ns.adobe.com/flashcatalyst/2009">
+      <Group ai:objID="21ae2d80" ai:seqID="3" fc:state="up" fc:type="state" d:id="3" d:type="layer" d:userLabel="State: Up">
+        <Path x="1.89844" y="0.585938" visible="false" ai:objID="e881f00" ai:seqID="4" data="M5.83984 5.39307 0 5.39307 9.45215 0 18.8984 5.39307 13.0488 5.39307 12.9443 5.43115 12.9443 9.07324 5.95801 9.07324 5.95801 5.44141 5.83984 5.39307Z">
+          <fill>
+            <LinearGradient x="9.44922" y="-0.0200195" scaleX="21.069" rotation="90">
+              <GradientEntry ratio="0" color="#B3B3B3"/>
+              <GradientEntry ratio="1" color="#666666"/>
+            </LinearGradient>
+          </fill>
+          <stroke>
+            <SolidColorStroke caps="none" joints="miter" miterLimit="10" color="#666666"/>
+          </stroke>
+        </Path>
+        <Path x="1.68945" y="0.580078" visible="false" ai:objID="e881d80" ai:seqID="5" data="M5.08887 5.26807 0 5.26807 8.23633 0 16.4668 5.26807 11.3711 5.26807 11.2793 5.30518 11.2793 8.86328 5.19141 8.86328 5.19141 5.31494 5.08887 5.26807Z">
+          <fill>
+            <LinearGradient x="8.2334" y="0" scaleX="21.367" rotation="90">
+              <GradientEntry ratio="0" color="#FFF7E4"/>
+              <GradientEntry ratio="1" color="#FFAE07"/>
+            </LinearGradient>
+          </fill>
+          <stroke>
+            <SolidColorStroke caps="none" joints="miter" miterLimit="10" color="#C38329"/>
+          </stroke>
+        </Path>
+        <Path x="1.89844" y="0.585938" visible="false" ai:objID="e880a00" ai:seqID="6" data="M5.83984 5.39307 0 5.39307 9.45215 0 18.8984 5.39307 13.0488 5.39307 12.9443 5.43115 12.9443 9.07324 5.95801 9.07324 5.95801 5.44141 5.83984 5.39307Z">
+          <fill>
+            <LinearGradient x="9.44922" y="-0.0200195" scaleX="21.069" rotation="90">
+              <GradientEntry ratio="0" color="#BAD995"/>
+              <GradientEntry ratio="1" color="#578D1E"/>
+            </LinearGradient>
+          </fill>
+          <stroke>
+            <SolidColorStroke caps="none" joints="miter" miterLimit="10" color="#578D1E"/>
+          </stroke>
+        </Path>
+        <Path x="1.42383" y="0.442383" visible="false" ai:objID="e880b80" ai:seqID="7" data="M5.86914 5.50195 0 5.50195 9.49707 0 18.9912 5.50195 13.1133 5.50195 13.0078 5.54102 13.0078 9.25684 5.98633 9.25684 5.98633 5.55078 5.86914 5.50195Z">
+          <fill>
+            <LinearGradient x="9.49609" y="-0.0170898" scaleX="22.113" rotation="90">
+              <GradientEntry ratio="0" color="#97C6D8"/>
+              <GradientEntry ratio="1" color="#0C77A1"/>
+            </LinearGradient>
+          </fill>
+          <stroke>
+            <SolidColorStroke weight="0.765208" caps="none" joints="miter" miterLimit="10" color="#0C77A1"/>
+          </stroke>
+        </Path>
+        <Path x="1.42383" y="0.442383" ai:objID="e87d580" ai:seqID="8" data="M5.86914 5.50195 0 5.50195 9.49707 0 18.9912 5.50195 13.1133 5.50195 13.0078 5.54102 13.0078 9.25684 5.98633 9.25684 5.98633 5.55078 5.86914 5.50195Z">
+          <fill>
+            <LinearGradient x="9.49609" y="-0.0170898" scaleX="22.113" rotation="90">
+              <GradientEntry ratio="0" color="#97C6D8"/>
+              <GradientEntry ratio="1" color="#0C77A1"/>
+            </LinearGradient>
+          </fill>
+          <stroke>
+            <SolidColorStroke weight="0.765208" caps="none" joints="miter" miterLimit="10" color="#0C77A1"/>
+          </stroke>
+        </Path>
+      </Group>
+      <Group visible="false" ai:objID="21ae6c80" ai:seqID="9" fc:state="over" fc:type="state" d:id="4" d:type="layer" d:userLabel="State: Over">
+        <Path x="1.89844" y="0.585938" visible="false" ai:objID="dfd9380" ai:seqID="10" data="M5.83984 5.39307 0 5.39307 9.45215 0 18.8984 5.39307 13.0488 5.39307 12.9443 5.43115 12.9443 9.07324 5.95801 9.07324 5.95801 5.44141 5.83984 5.39307Z">
+          <fill>
+            <LinearGradient x="9.44922" y="-0.0200195" scaleX="21.069" rotation="90">
+              <GradientEntry ratio="0" color="#B3B3B3"/>
+              <GradientEntry ratio="1" color="#666666"/>
+            </LinearGradient>
+          </fill>
+          <stroke>
+            <SolidColorStroke caps="none" joints="miter" miterLimit="10" color="#666666"/>
+          </stroke>
+        </Path>
+        <Path x="1.68945" y="0.580078" visible="false" ai:objID="dfd0200" ai:seqID="11" data="M5.08887 5.26807 0 5.26807 8.23633 0 16.4668 5.26807 11.3711 5.26807 11.2793 5.30518 11.2793 8.86328 5.19141 8.86328 5.19141 5.31494 5.08887 5.26807Z">
+          <fill>
+            <LinearGradient x="8.2334" y="0" scaleX="21.367" rotation="90">
+              <GradientEntry ratio="0" color="#FFF7E4"/>
+              <GradientEntry ratio="1" color="#FFAE07"/>
+            </LinearGradient>
+          </fill>
+          <stroke>
+            <SolidColorStroke caps="none" joints="miter" miterLimit="10" color="#C38329"/>
+          </stroke>
+        </Path>
+        <Path x="1.87598" y="0.588379" ai:objID="dfd0680" ai:seqID="12" data="M5.82129 5.45654 0 5.45654 9.42188 0 18.8379 5.45654 13.0068 5.45654 12.9033 5.49463 12.9033 9.17969 5.93945 9.17969 5.93945 5.50488 5.82129 5.45654Z">
+          <fill>
+            <LinearGradient x="9.41895" y="-0.0273438" scaleX="21.069" rotation="90">
+              <GradientEntry ratio="0" color="#BAD995"/>
+              <GradientEntry ratio="1" color="#578D1E"/>
+            </LinearGradient>
+          </fill>
+          <stroke>
+            <SolidColorStroke caps="none" joints="miter" miterLimit="10" color="#578D1E"/>
+          </stroke>
+        </Path>
+        <Path x="1.42676" y="0.444336" ai:objID="dfcff00" ai:seqID="13" data="M5.90137 5.52393 0 5.52393 9.55078 0 19.0967 5.52393 13.1865 5.52393 13.0781 5.56396 13.0781 9.29395 6.01953 9.29395 6.01953 5.57275 5.90137 5.52393Z">
+          <fill>
+            <LinearGradient x="9.54785" y="-0.0390625" scaleX="23.221" rotation="90">
+              <GradientEntry ratio="0" color="#BAD995"/>
+              <GradientEntry ratio="1" color="#578D1E"/>
+            </LinearGradient>
+          </fill>
+          <stroke>
+            <SolidColorStroke weight="0.765208" caps="none" joints="miter" miterLimit="10" color="#578D1E"/>
+          </stroke>
+        </Path>
+      </Group>
+      <Group visible="false" ai:objID="21ae1080" ai:seqID="14" fc:state="down" fc:type="state" d:id="5" d:type="layer" d:userLabel="State: Down">
+        <Path x="1.89844" y="0.585938" visible="false" ai:objID="dfd9800" ai:seqID="15" data="M5.83984 5.39307 0 5.39307 9.45215 0 18.8984 5.39307 13.0488 5.39307 12.9443 5.43115 12.9443 9.07324 5.95801 9.07324 5.95801 5.44141 5.83984 5.39307Z">
+          <fill>
+            <LinearGradient x="9.44922" y="-0.0200195" scaleX="21.069" rotation="90">
+              <GradientEntry ratio="0" color="#BAD995"/>
+              <GradientEntry ratio="1" color="#578D1E"/>
+            </LinearGradient>
+          </fill>
+          <stroke>
+            <SolidColorStroke caps="none" joints="miter" miterLimit="10" color="#578D1E"/>
+          </stroke>
+        </Path>
+        <Path x="1.42383" y="0.442383" ai:objID="dfd9500" ai:seqID="16" data="M5.86914 5.50195 0 5.50195 9.49707 0 18.9912 5.50195 13.1133 5.50195 13.0078 5.54102 13.0078 9.25684 5.98633 9.25684 5.98633 5.55078 5.86914 5.50195Z">
+          <fill>
+            <LinearGradient x="9.49609" y="-0.0170898" scaleX="22.113" rotation="90">
+              <GradientEntry ratio="0" color="#97C6D8"/>
+              <GradientEntry ratio="1" color="#0C77A1"/>
+            </LinearGradient>
+          </fill>
+          <stroke>
+            <SolidColorStroke weight="0.765208" caps="none" joints="miter" miterLimit="10" color="#0C77A1"/>
+          </stroke>
+        </Path>
+      </Group>
+      <Group visible="false" ai:objID="21ae2480" ai:seqID="17" fc:state="disabled" fc:type="state" d:id="6" d:type="layer" d:userLabel="State: Disabled">
+        <Path x="1.89844" y="0.585938" ai:objID="dfd9b00" ai:seqID="18" data="M5.83984 5.39307 0 5.39307 9.45215 0 18.8984 5.39307 13.0488 5.39307 12.9443 5.43115 12.9443 9.07324 5.95801 9.07324 5.95801 5.44141 5.83984 5.39307Z">
+          <fill>
+            <LinearGradient x="9.44922" y="-0.0200195" scaleX="21.069" rotation="90">
+              <GradientEntry ratio="0" color="#B3B3B3"/>
+              <GradientEntry ratio="1" color="#666666"/>
+            </LinearGradient>
+          </fill>
+          <stroke>
+            <SolidColorStroke caps="none" joints="miter" miterLimit="10" color="#666666"/>
+          </stroke>
+        </Path>
+      </Group>
+    </Group>
+  </Group>
+  <Private>
+      <ai:PrivateElement d:ref="#1">
+        <ai:SaveOptions>
+          <ai:Dict data="B includeXMP 0 B writeImages 1 B includeSymbol 0 I versionKey 2 B aiEditCap 1 B includeObjectOutsideArtboard 0 I expandBlendsOption 5 B downsampleLinkedImages 0 I rasterizeResolution 72 I preserveFilterPolicy 3 I preserveTextPolicy 4 I preserveGradientPolicy 4 B clipToActiveArtboard 1 "/>
+        </ai:SaveOptions>
+        <ai:DocData base="btn_arrow_up_small.assets/images" globalOffsetH="769.17" globalOffsetV="-271.964" rulerCanvasDiffH="395.5" rulerCanvasDiffV="305.5">
+          <ai:DocRasterSettings>
+            <ai:Dict data="R padd 36 B mask 0 B spot 1 B alis 0 I dpi. 72 I colr 4 "/>
+          </ai:DocRasterSettings>
+        </ai:DocData>
+        <ai:AutoGenImageList>
+          <ai:Dict/>
+        </ai:AutoGenImageList>
+      </ai:PrivateElement>
+      <ai:PrivateElement flm:hashcode="24C0694E631EA3090E3DE5D9A89777C9" d:ref="#2">
+        <ai:LayerOptions color="5 79.31 257 128.502"/>
+      </ai:PrivateElement>
+      <ai:PrivateElement flm:hashcode="156D4519987A26AF35F2F71088298079" d:ref="#3">
+        <ai:LayerOptions color="5 257 79.31 79.31"/>
+      </ai:PrivateElement>
+      <ai:PrivateElement flm:hashcode="9DA68E57B05A36D6BA46BC7C16A90702" d:ref="#4">
+        <ai:LayerOptions color="5 79.31 79.31 257" visible="0"/>
+      </ai:PrivateElement>
+      <ai:PrivateElement flm:hashcode="C2C2B4AD6839FC27D8A4BE2F9050EC79" d:ref="#5">
+        <ai:LayerOptions color="5 79.31 257 79.31" visible="0"/>
+      </ai:PrivateElement>
+      <ai:PrivateElement flm:hashcode="8D7A15861904517241C8E25D1889D12C" d:ref="#6">
+        <ai:LayerOptions color="5 257 79.31 257" visible="0"/>
+      </ai:PrivateElement>
+    </Private>
+  </Graphic>

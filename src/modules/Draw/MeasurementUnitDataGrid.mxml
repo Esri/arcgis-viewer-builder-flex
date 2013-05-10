@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:DataGrid xmlns:fx="http://ns.adobe.com/mxml/2009"
+            xmlns:s="library://ns.adobe.com/flex/spark"
+            creationComplete="init()">
+    <fx:Script>
+        <![CDATA[
+            import mx.collections.IList;
+
+            [Bindable]
+            public var measurementUnitPool:ArrayList;
+
+            protected function init():void
+            {
+                addEventListener(MeasurementUnitDataGridEvent.REMOVE_MEASUREMENT_UNIT, removeMeasurementUnitHandler, false, 0, true);
+                addEventListener(MeasurementUnitDataGridEvent.SWAP_MEASUREMENT_UNIT, swapMeasurementUnitHandler, false, 0, true);
+            }
+
+            private function removeMeasurementUnitHandler(event:MeasurementUnitDataGridEvent):void
+            {
+                removeMeasurementUnit(event.measurementUnitToRemove);
+            }
+
+            private function removeMeasurementUnit(measurementUnit:MeasurementUnitBase):void
+            {
+                var measurementUnitIndex:int = dataProvider.getItemIndex(measurementUnit);
+                if (measurementUnitIndex > -1)
+                {
+                    dataProvider.removeItemAt(measurementUnitIndex);
+                }
+
+                returnToMeasurementUnitPool(measurementUnit);
+            }
+
+            private function returnToMeasurementUnitPool(measurementUnit:MeasurementUnitBase):void
+            {
+                measurementUnitPool.addItem(measurementUnit);
+            }
+
+            private function swapMeasurementUnitHandler(event:MeasurementUnitDataGridEvent):void
+            {
+                swapMeasurementUnit(event.measurementUnitToRemove, event.measurementUnitToAdd);
+            }
+
+            private function swapMeasurementUnit(measurementUnitToRemove:MeasurementUnitBase, measurementUnitToAdd:MeasurementUnitBase):void
+            {
+                var swapIndex:int = dataProvider.getItemIndex(measurementUnitToRemove);
+                removeMeasurementUnit(measurementUnitToRemove);
+                addMeasurementUnitAt(measurementUnitToAdd, swapIndex);
+            }
+
+            private function addMeasurementUnit(measurementUnit:MeasurementUnitBase):void
+            {
+                dataProvider.addItem(measurementUnit);
+                measurementUnitPool.removeItem(measurementUnit);
+            }
+
+            private function addMeasurementUnitAt(measurementUnit:MeasurementUnitBase, index:int):void
+            {
+                dataProvider.addItemAt(measurementUnit, index);
+                measurementUnitPool.removeItem(measurementUnit);
+            }
+        ]]>
+    </fx:Script>
+    <s:columns>
+        <s:ArrayList>
+            <s:GridColumn dataField="label"
+                          headerText="{resourceManager.getString('BuilderStrings', 'draw.label')}"
+                          itemRenderer="modules.Draw.MeasurementLabelGridItemRenderer"/>
+            <s:GridColumn dataField="abbreviation" headerText="{resourceManager.getString('BuilderStrings', 'draw.abbreviation')}"/>
+            <s:GridColumn dataField="conversionFactor" headerText="{resourceManager.getString('BuilderStrings', 'draw.conversion')}"/>
+            <s:GridColumn width="70"
+                          headerText="{resourceManager.getString('BuilderStrings', 'draw.actions')}"
+                          itemRenderer="modules.Draw.MeasurementUnitActionsGridItemRenderer"/>
+        </s:ArrayList>
+    </s:columns>
+</s:DataGrid>

@@ -1,0 +1,154 @@
+/* CSS file */
+@namespace s "library://ns.adobe.com/flex/spark";
+@namespace mx "library://ns.adobe.com/flex/mx";
+@namespace views "com.esri.builder.views.*";
+@namespace components "com.esri.builder.components.*";
+@namespace supportClasses "com.esri.builder.views.supportClasses.*";
+
+.homeButton
+{
+    skinClass: ClassReference("com.esri.builder.skins.HomeButtonSkin");
+}
+
+.emphasisText
+{
+	/* changed dynamically */
+}
+
+s|Label
+{
+    color: #000000;
+    verticalAlign: middle;
+}
+
+components|URLInputCheckerBase
+{
+    skinClass: ClassReference("com.esri.builder.skins.URLInputCheckerSkin");
+}
+
+components|FieldPickerBase
+{
+    skinClass: ClassReference("com.esri.builder.skins.FieldPickerSkin");
+}
+
+views|HelpButton
+{
+    skinClass: ClassReference("com.esri.builder.skins.HelpButtonSkin");
+}
+
+components|TitleContainer
+{
+    skinClass: ClassReference("com.esri.builder.skins.TitleContainerSkin");
+}
+
+components|SliderToggleButton
+{
+    skinClass: ClassReference("com.esri.builder.skins.ShortSliderToggleButtonSkin");
+}
+
+s|Form
+{
+    color: #000000;    
+}
+
+s|FormHeading
+{
+    color: #000000;
+}
+
+s|FormItem
+{
+    color: #000000;
+    requiredIndicatorSource: "assets/images/required.png";
+    skinClass: ClassReference("com.esri.builder.skins.FormItemSkin");
+}
+
+s|TextInput, mx|DateField
+{
+    color: #000000;
+    contentBackgroundColor: #FFFFFF;
+}
+
+s|TabBar, s|DropDownList, s|ComboBox, components|FieldPickerBase s|ListBase
+{
+    color: #000000;
+	contentBackgroundAlpha: 1.0;
+    borderVisible: true;    
+}
+
+s|Window
+{
+    backgroundColor:#FAFAFA;    
+}
+
+s|BorderContainer
+{
+    backgroundColor: #FAFAFA;
+    backgroundAlpha: 0.0;
+    borderStyle: solid;
+    borderColor: #000000;
+    borderWeight: 1;
+    cornerRadius: 5;
+}
+
+s|List
+{
+    contentBackgroundColor:#FAFAFA;
+    contentBackgroundAlpha: 0.0;
+    borderColor: #000000;    
+}
+
+mx|Tree
+{
+	contentBackgroundAlpha: 0;
+	rollOverColor: #97C6D8;
+	selectionColor: #97C6D8;
+    color: #000000;
+    borderColor: #000000;
+}
+
+views|BuilderAlert
+{
+    skinClass: ClassReference("com.esri.builder.skins.BuilderAlertSkin");
+}
+
+mx|ProgressBar
+{
+	chromeColor: #0097F0;
+	color: #DADADA;
+}
+
+components|PortalQueryResultViewer
+{
+    skinClass: ClassReference("com.esri.builder.skins.PortalQueryResultViewerSkin");
+}
+
+components|PortalQueryResultPager
+{
+    skinClass: ClassReference("com.esri.builder.skins.PortalQueryResultPagerSkin");
+}
+
+components|SearchInput
+{
+    skinClass: ClassReference("com.esri.builder.skins.SearchInputSkin");
+}
+
+supportClasses|KeyValueEditor
+{
+    skinClass: ClassReference("com.esri.builder.skins.KeyValueEditorSkin");
+}
+
+supportClasses|ContentEditor
+{
+    skinClass: ClassReference("com.esri.builder.skins.ContentEditorSkin");
+}
+
+components|SearchInput #searchButton
+{
+    skinClass: ClassReference("com.esri.builder.skins.BlueButtonSkin");
+}
+
+s|DataGrid
+{
+    stretchCursor: ClassReference("assets.graphics.stretch_cursor");
+}

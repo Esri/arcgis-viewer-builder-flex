@@ -1,0 +1,501 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:NavigatorContent xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark"
+                    xmlns:mx="library://ns.adobe.com/flex/mx"
+                    xmlns:views="com.esri.builder.views.*"
+                    xmlns:components="com.esri.builder.components.*"
+                    width="100%" height="100%"
+                    add="this_addHandler(event)"
+                    creationComplete="init()"
+                    hide="this_hideHandler(event)">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.supportClasses.AssetImporter;
+            import com.esri.builder.supportClasses.FileUtil;
+            import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.model.Widget;
+            import com.esri.builder.model.WidgetType;
+            import com.esri.builder.model.WidgetTypeRegistryModel;
+            import com.esri.builder.views.popups.WidgetEditorPopUp;
+            import com.esri.builder.views.supportClasses.WidgetAndModelSet;
+
+            import modules.IWidgetModel;
+            import modules.IWidgetView;
+
+            import mx.collections.ArrayList;
+            import mx.core.FlexGlobals;
+            import mx.events.FlexEvent;
+            import mx.utils.StringUtil;
+
+            import spark.events.PopUpEvent;
+
+            [Bindable]
+            private var activeWidgetType:WidgetType;
+            [Bindable]
+            private var activeWidget:Widget;
+            [Bindable]
+            private var widgetToEdit:Widget;
+
+            private var activeWidgetView:IWidgetView;
+
+            private var isInCreateMode:Boolean;
+
+            private var _isConfigXMLSaved:Boolean = false;
+
+            private var modifiedWidgetAndModelSets:ArrayList = new ArrayList();
+            private var _widgetConfigSavedCount:int = 0;
+
+            private var uniqueConfigFilePathRegistry:Array = [];
+
+            private function this_addHandler(event:FlexEvent):void
+            {
+                Model.instance.status = '';
+
+                AppEvent.addListener(AppEvent.SAVE_CONFIG_XML, onSaveConfigXML, false, 1);
+                AppEvent.addListener(AppEvent.CONFIG_XML_SAVED, configXMLSaved);
+            }
+
+            private function this_hideHandler(event:FlexEvent):void
+            {
+                typeList.selectedIndex = -1;
+            }
+
+            private function init():void
+            {
+                AppEvent.addListener(AppEvent.EDIT_WIDGET, editWidgetHandler, false, 0, true);
+            }
+
+            private function editWidgetHandler(event:AppEvent):void
+            {
+                activeWidget = event.data as Widget;
+                startWidgetConfigEditSession();
+            }
+
+            private function startWidgetConfigEditSession():void
+            {
+                widgetToEdit = activeWidget.clone();
+                activeWidgetType = WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.findWidgetTypeByURL(widgetToEdit.url);
+                isInCreateMode = false;
+
+                if (!activeWidgetType)
+                {
+                    showMissingModuleMessage(activeWidget)
+                    return;
+                }
+
+                var widgetAndModelSet:WidgetAndModelSet = findWidgetAndModelSetFromWidget(widgetToEdit);
+                if (widgetAndModelSet)
+                {
+                    var widgetModelCopy:IWidgetModel = activeWidgetType.createWidgetModel();
+                    widgetModelCopy.importXML(widgetAndModelSet.model.exportXML());
+                    showWidgetEditor(widgetModelCopy, activeWidgetType);
+                    return;
+                }
+
+                const configFile:File = Model.instance.appDir.resolvePath(widgetToEdit.config);
+                if (configFile.exists)
+                {
+                    const bytes:ByteArray = new ByteArray();
+                    const fileStream:FileStream = new FileStream();
+                    fileStream.open(configFile, FileMode.READ);
+                    fileStream.readBytes(bytes, 0, fileStream.bytesAvailable);
+                    fileStream.close();
+
+                    try
+                    {
+                        var configXML:XML = XML(bytes);
+                        const widgetModel:IWidgetModel = activeWidgetType.createWidgetModel();
+                        if (widgetModel)
+                        {
+                            widgetModel.importXML(configXML);
+                            showWidgetEditor(widgetModel, activeWidgetType);
+                        }
+                        else
+                        {
+                            showBadWidgetModelMessage(activeWidgetType);
+                        }
+                    }
+                    catch (e:Error)
+                    {
+                        showBadXMLMessage(configFile);
+                    }
+                }
+                else
+                {
+                    showBadWidgetModelMessage(activeWidgetType);
+                }
+            }
+
+            private function showMissingModuleMessage(activeWidget:Widget):void
+            {
+                const message:String = resourceManager.getString('BuilderStrings',
+                                                                 'widgetsView.missingModuleMessage',
+                                                                 [ Widget.widgetTypeNameFromConfig(activeWidget.config), activeWidget.label ]);
+                const title:String = resourceManager.getString('BuilderStrings', 'widgetsView.missingModuleTitle');
+                showErrorMessage(message, title);
+            }
+
+            private function showWidgetEditor(editedWidgetModel:IWidgetModel, widgetType:WidgetType):void
+            {
+                activeWidgetView = widgetType.createWidgetView();
+                activeWidgetView.widgetModel = editedWidgetModel;
+                Model.instance.status = '';
+
+                var widgetEditor:WidgetEditorPopUp = new WidgetEditorPopUp();
+                widgetEditor.widgetType = activeWidgetType;
+                widgetEditor.widget = widgetToEdit;
+                widgetEditor.widgetView = activeWidgetView;
+                widgetEditor.height = FlexGlobals.topLevelApplication.screen.height - 20;
+                widgetEditor.width = FlexGlobals.topLevelApplication.screen.width - 10;
+                widgetEditor.addEventListener(PopUpEvent.CLOSE, widgetEditor_closeHandler);
+                widgetEditor.open(FlexGlobals.topLevelApplication as DisplayObjectContainer, true);
+            }
+
+            private function widgetEditor_closeHandler(event:PopUpEvent):void
+            {
+                event.currentTarget.removeEventListener(PopUpEvent.CLOSE, widgetEditor_closeHandler);
+
+                if (event.commit)
+                {
+                    saveWidgetProperties(event.data);
+                }
+            }
+
+            private function saveWidgetProperties(data:Object):void
+            {
+                if (widgetToEdit == null)
+                {
+                    return;
+                }
+
+                if (widgetToEdit.name.length === 0)
+                {
+                    Model.instance.status = resourceManager.getString('BuilderStrings', 'widgetsView.missingName');
+                    return;
+                }
+                if (widgetToEdit.label === '')
+                {
+                    widgetToEdit.label = widgetToEdit.name;
+                }
+
+                updateWidgetIcon(widgetToEdit.iconFile);
+
+                if (isInCreateMode)
+                {
+                    var widgetRelativeConfigFilePath:String = StringUtil.substitute("widgets/{0}/{0}Widget.xml", activeWidgetType.name);
+                    var uniqueWidgetConfig:String = FileUtil.generateUniqueRelativePath(Model.instance.appDir,
+                                                                                        widgetRelativeConfigFilePath,
+                                                                                        uniqueConfigFilePathRegistry);
+                    widgetToEdit.config = uniqueWidgetConfig;
+                    uniqueConfigFilePathRegistry.push(uniqueWidgetConfig);
+                    Model.instance.widgetList.addItem(widgetToEdit);
+                    activeWidgetType.widgetList.addItem(widgetToEdit);
+                }
+                else
+                {
+                    replaceWidgetFromList(activeWidget, widgetToEdit, activeWidgetType.widgetList);
+                    replaceWidgetFromList(activeWidget, widgetToEdit, Model.instance.widgetList);
+                }
+
+                AppEvent.dispatch(AppEvent.WIDGET_ADDED_TO_APP, activeWidgetType);
+                trackModifiedWidget();
+                Model.instance.config.isDirty = true;
+                Model.instance.status = '';
+            }
+
+            private function showBadWidgetModelMessage(widgetType:WidgetType):void
+            {
+                const text:String = resourceManager.getString('BuilderStrings', 'widgetsView.badWidgetModelText', [ widgetType.name ]);
+                const title:String = resourceManager.getString('BuilderStrings', 'widgetsView.badWidgetModelTitle');
+                showErrorMessage(text, title);
+            }
+
+            private function showErrorMessage(text:String, title:String):void
+            {
+                Model.instance.status = text;
+                BuilderAlert.show(text, title);
+            }
+
+            private function showBadXMLMessage(file:File):void
+            {
+                const text:String = resourceManager.getString('BuilderStrings', 'widgetsView.badXMLText', [ file.nativePath ]);
+                const title:String = resourceManager.getString('BuilderStrings', 'widgetsView.badXMLTitle');
+                showErrorMessage(text, title);
+            }
+
+            private function findWidgetAndModelSetFromWidget(widgetToEdit:Widget):WidgetAndModelSet
+            {
+                var modifiedWidgetsSource:Array = modifiedWidgetAndModelSets.source;
+                for each (var widgetAndModel:WidgetAndModelSet in modifiedWidgetsSource)
+                {
+                    if (widgetAndModel.widget.config == widgetToEdit.config)
+                    {
+                        return widgetAndModel;
+                    }
+                }
+
+                return null;
+            }
+
+            private function trackModifiedWidget():void
+            {
+                var existingModifiedWidgetAndModelSet:WidgetAndModelSet = findWidgetAndModelSetFromWidget(widgetToEdit);
+                if (existingModifiedWidgetAndModelSet)
+                {
+                    existingModifiedWidgetAndModelSet.model = activeWidgetView.widgetModel;
+                }
+                else
+                {
+                    modifiedWidgetAndModelSets.addItem(new WidgetAndModelSet(widgetToEdit, activeWidgetView.widgetModel));
+                }
+            }
+
+            private function replaceWidgetFromList(toBeReplaced:Widget, toReplaceBy:Widget, widgetListItems:ArrayList):void
+            {
+                const totalWidgetListItems:int = widgetListItems.length;
+                var widgetItem:Widget;
+                for (var i:int = 0; i < totalWidgetListItems; i++)
+                {
+                    widgetItem = widgetListItems.getItemAt(i) as Widget;
+                    if (widgetItem
+                        && widgetItem.config == toBeReplaced.config)
+                    {
+                        widgetListItems.addItemAt(toReplaceBy, i);
+                        widgetListItems.removeItemAt(i + 1);
+                        break;
+                    }
+                }
+            }
+
+            private function updateWidgetIcon(icon:File):void
+            {
+                if (!icon)
+                {
+                    return;
+                }
+
+                var iconPath:String = 'assets/images/' + icon.name;
+                if (widgetToEdit.icon != iconPath)
+                {
+                    widgetToEdit.icon = iconPath;
+                }
+
+                AssetImporter.importImage(icon);
+            }
+
+            private function writeConfigXML(widget:Widget, widgetModel:IWidgetModel):void
+            {
+                const configXML:XML = widgetModel.exportXML();
+
+                const configText:String = "<?xml version=\"1.0\" ?>\n" + configXML.toXMLString() + "\n";
+
+                const file:File = Model.instance.appDir.resolvePath(widget.config);
+                const fileStream:FileStream = new FileStream();
+                fileStream.open(file, FileMode.WRITE);
+                fileStream.writeUTFBytes(configText);
+                fileStream.close();
+
+                _widgetConfigSavedCount++;
+                if (_widgetConfigSavedCount == modifiedWidgetAndModelSets.length)
+                {
+                    AppEvent.dispatch(AppEvent.SAVE_CONFIG_XML, "widgets");
+                }
+                AppEvent.dispatch(AppEvent.WIDGET_CONFIG_XML_SAVED);
+            }
+
+            private function configXMLSaved(event:AppEvent):void
+            {
+                if (event.data == 'widgets')
+                {
+                    _isConfigXMLSaved = true;
+                    _widgetConfigSavedCount = 0;
+                    modifiedWidgetAndModelSets.removeAll() // empty unsaved widget list
+                    uniqueConfigFilePathRegistry = [];
+                }
+            }
+
+            protected function typeListRenderer_doubleClickHandler(event:MouseEvent):void
+            {
+                if (typeList.selectedIndex > -1)
+                {
+                    startWidgetConfigCreateSession();
+                }
+            }
+
+            private function includeWidget_clickHandler(event:MouseEvent):void
+            {
+                startWidgetConfigCreateSession();
+            }
+
+            private function startWidgetConfigCreateSession():void
+            {
+                widgetToEdit = new Widget();
+
+                activeWidgetType = typeList.selectedItem;
+                widgetToEdit.url = activeWidgetType.url;
+                widgetToEdit.icon = activeWidgetType.iconLocation;
+                widgetToEdit.name = activeWidgetType.label;
+                widgetToEdit.label = activeWidgetType.label;
+                widgetToEdit.preload = activeWidgetType.isOpenByDefault;
+
+                var defaultConfigFilePath:String = createDefaultWidgetConfigURL(activeWidgetType.name);
+
+                var iconFile:File;
+                var configFile:File;
+                if (activeWidgetType.isCustom)
+                {
+                    iconFile = WellKnownDirectories.getInstance().customFlexViewer.resolvePath(widgetToEdit.icon);
+                    configFile = WellKnownDirectories.getInstance().customFlexViewer.resolvePath(defaultConfigFilePath);
+                }
+                else
+                {
+                    iconFile = Model.instance.appDir.resolvePath(widgetToEdit.icon);
+                    configFile = Model.instance.appDir.resolvePath(defaultConfigFilePath);
+                }
+
+                widgetToEdit.iconFile = iconFile;
+
+                const widgetModel:IWidgetModel = activeWidgetType.createWidgetModel();
+                if (configFile.exists)
+                {
+                    const bytes:ByteArray = new ByteArray();
+                    const fileStream:FileStream = new FileStream();
+                    try
+                    {
+                        fileStream.open(configFile, FileMode.READ);
+                        fileStream.readBytes(bytes, 0, fileStream.bytesAvailable);
+
+                        var configXML:XML = XML(bytes);
+                        if (widgetModel)
+                        {
+                            widgetModel.importXML(configXML);
+                        }
+                    }
+                    catch (e:Error)
+                    {
+                        //swallow error
+                    }
+                    finally
+                    {
+                        fileStream.close();
+                    }
+                }
+
+                isInCreateMode = true;
+                showWidgetEditor(widgetModel, activeWidgetType);
+            }
+
+            private function createDefaultWidgetConfigURL(name:String):String
+            {
+                return StringUtil.substitute('widgets/{0}/{0}Widget.xml', name);
+            }
+
+            private function extractConfigLabel(config:String, label:String):String
+            {
+                const configNameConvention:RegExp = /^.+Widget_?(.*)\.xml$/;
+                const arr:Array = configNameConvention.exec(config);
+                if (arr && arr.length === 2 && arr[1] !== '')
+                {
+                    return arr[1];
+                }
+                return label.replace(/\s+/g, '_');
+            }
+
+            private function onSaveConfigXML(event:AppEvent):void
+            {
+                if (!event.data && modifiedWidgetAndModelSets.length)
+                {
+                    event.stopImmediatePropagation();
+                    writeConfigXMLForUnsavedWidgets();
+                }
+            }
+
+            protected function saveButton_clickHandler(event:MouseEvent):void
+            {
+                if (modifiedWidgetAndModelSets.length)
+                {
+                    writeConfigXMLForUnsavedWidgets();
+                }
+                else
+                {
+                    AppEvent.dispatch(AppEvent.SAVE_CONFIG_XML, "widgets");
+                }
+            }
+
+            private function writeConfigXMLForUnsavedWidgets():void
+            {
+                for (var i:int = 0; i < modifiedWidgetAndModelSets.length; i++)
+                {
+                    const widget:Widget = modifiedWidgetAndModelSets.getItemAt(i).widget;
+                    const widgetModel:IWidgetModel = modifiedWidgetAndModelSets.getItemAt(i).model;
+                    writeConfigXML(widget, widgetModel);
+                }
+            }
+
+            protected function typeList_keyDownHandler(event:KeyboardEvent):void
+            {
+                if (typeList.selectedIndex > -1
+                    && event.keyCode == Keyboard.ENTER)
+                {
+                    startWidgetConfigCreateSession();
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <s:layout>
+        <s:VerticalLayout gap="5"
+                          horizontalAlign="center"
+                          paddingLeft="10"
+                          paddingRight="10"
+                          paddingTop="10"/>
+    </s:layout>
+
+    <s:HGroup width="100%" horizontalAlign="right">
+        <s:Button id="saveButton"
+                  click="saveButton_clickHandler(event)"
+                  label="{resourceManager.getString('BuilderStrings', 'save')}"
+                  skinClass="com.esri.builder.skins.BlueSaveButtonSkin"/>
+    </s:HGroup>
+
+    <components:TitleContainer width="100%" height="100%"
+                               title="{resourceManager.getString('BuilderStrings', 'widgetsView.catalog')}">
+        <s:List id="typeList"
+                width="100%" height="100%"
+                borderVisible="false"
+                dataProvider="{WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.widgetTypes}"
+                doubleClick="typeListRenderer_doubleClickHandler(event)"
+                itemRenderer="com.esri.builder.renderers.WidgetTypeRenderer"
+                keyDown="typeList_keyDownHandler(event)">
+            <s:layout>
+                <s:TileLayout/>
+            </s:layout>
+        </s:List>
+    </components:TitleContainer>
+
+    <s:Button click="includeWidget_clickHandler(event)"
+              enabled="{typeList.selectedIndex > -1}"
+              label="{resourceManager.getString('BuilderStrings', 'include')}"
+              skinClass="com.esri.builder.skins.GreenDownArrowButtonSkin"
+              toolTip="{resourceManager.getString('BuilderStrings', 'widgetsView.addTooltip')}"/>
+    <views:AppWidgets id="widgetList" width="100%"/>
+</s:NavigatorContent>

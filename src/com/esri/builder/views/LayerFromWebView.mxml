@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         width="100%" height="100%"
+         creationComplete="this_creationCompleteHandler(event)"
+         implements="com.esri.builder.views.supportClasses.IIncludeLayerSelection">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.virtualearth.VETiledLayer;
+            import com.esri.builder.supportClasses.URLUtil;
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.ConfigLayer;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.views.supportClasses.IIncludeLayerDispatcher;
+
+            import mx.events.FlexEvent;
+
+            private const ROAD:String = VETiledLayer.MAP_STYLE_ROAD;
+            private const AERIAL:String = VETiledLayer.MAP_STYLE_AERIAL;
+            private const HYBRID:String = VETiledLayer.MAP_STYLE_AERIAL_WITH_LABELS;
+
+            [Bindable]
+            private var layerName:String;
+
+            private var _serviceURL:String;
+
+            [Bindable]
+            public function get serviceURL():String
+            {
+                return _serviceURL;
+            }
+
+            public function set serviceURL(value:String):void
+            {
+                _serviceURL = URLUtil.encode(value);
+            }
+
+            protected function serviceURLInput_enterHandler(event:FlexEvent):void
+            {
+                if (isLayerValid())
+                {
+                    (owner as IIncludeLayerDispatcher).dispatchIncludeLayer();
+                }
+            }
+
+            public function getConfiguredLayer():ConfigLayer
+            {
+                var configLayer:ConfigLayer;
+
+                if (serviceURL)
+                {
+                    if (layerTypeOptionGroup.selectedItem == kmlOption)
+                    {
+                        configLayer = createKMLConfigLayer();
+                    }
+                    else if (layerTypeOptionGroup.selectedItem == csvOption)
+                    {
+                        configLayer = createCSVConfigLayer();
+                    }
+                    else if (layerTypeOptionGroup.selectedItem == geoRSSOption)
+                    {
+                        configLayer = createGeoRSSConfigLayer();
+                    }
+                    else if (layerTypeOptionGroup.selectedItem == wmsOption)
+                    {
+                        configLayer = createWMSConfigLayer();
+                    }
+                    else if (layerTypeOptionGroup.selectedItem == wmtsOption)
+                    {
+                        configLayer = createWMTSConfigLayer();
+                    }
+                    else if (layerTypeOptionGroup.selectedItem == webTiledOption)
+                    {
+                        configLayer = createWebTiledConfigLayer();
+                    }
+                    else if (layerTypeOptionGroup.selectedItem == bingOption)
+                    {
+                        configLayer = createBingConfigLayer();
+                    }
+                }
+
+                return configLayer;
+            }
+
+            private function createKMLConfigLayer():ConfigLayer
+            {
+                return createConfigLayer(ConfigLayer.KML, findAppropriateLabel(serviceURL), serviceURL);
+            }
+
+            private function findAppropriateLabel(url:String):String
+            {
+                const labelToken:RegExp = /( [^\/.]+ ) (?: \.[a-zA-Z0-9]+ )? $/x;
+                const labelMatches:Array = labelToken.exec(url);
+                return (labelMatches && labelMatches.length > 0) ? labelMatches[1] : url;
+            }
+
+            private function createCSVConfigLayer():ConfigLayer
+            {
+                return createConfigLayer(ConfigLayer.CSV, findAppropriateLabel(serviceURL), serviceURL);
+            }
+
+            private function createGeoRSSConfigLayer():ConfigLayer
+            {
+                return createConfigLayer(ConfigLayer.GEO_RSS, findAppropriateLabel(serviceURL), serviceURL);
+            }
+
+            private function createWMSConfigLayer():ConfigLayer
+            {
+                return createConfigLayer(ConfigLayer.WMS, layerName, serviceURL);
+            }
+
+            private function createWMTSConfigLayer():ConfigLayer
+            {
+                return createConfigLayer(ConfigLayer.WMTS, layerName, serviceURL);
+            }
+
+            private function createWebTiledConfigLayer():ConfigLayer
+            {
+                return createConfigLayer(ConfigLayer.WEB_TILED, layerName, decodeTemplates(serviceURL));
+            }
+
+            private function createBingConfigLayer():ConfigLayer
+            {
+                var configLayer:ConfigLayer = createConfigLayer(ConfigLayer.BING, "Bing Maps " + bingTypes.selectedItem.label);
+                configLayer.style = bingTypes.selectedItem.value;
+                configLayer.culture = Model.instance.cultureCode;
+                return configLayer;
+            }
+
+            private function createConfigLayer(type:String, label:String, url:String = null):ConfigLayer
+            {
+                const configLayer:ConfigLayer = new ConfigLayer();
+                configLayer.url = url;
+                configLayer.type = type;
+                configLayer.label = label;
+                configLayer.visible = true;
+                configLayer.alpha = 1.0;
+                return configLayer;
+            }
+
+            private function decodeTemplates(serviceURL:String):String
+            {
+                return serviceURL.replace(/%7B/g, '{').replace(/%7D/g, '}');
+            }
+
+            public function hasValidSelection():Boolean
+            {
+                return isLayerValid();
+            }
+
+            private function isLayerValid():Boolean
+            {
+                return selectedOptionRequiresName() ?
+                    serviceURL && layerName : layerTypeOptionGroup.selectedItem != null && serviceURL;
+            }
+
+            private function selectedOptionRequiresName():Boolean
+            {
+                return layerTypeOptionGroup.selectedItem == webTiledOption
+                    || layerTypeOptionGroup.selectedItem == wmsOption
+                    || layerTypeOptionGroup.selectedItem == wmtsOption;
+            }
+
+            private function dispatchUpdateLayerSelection():void
+            {
+                (owner as IIncludeLayerDispatcher).updateLayerSelection();
+            }
+
+            protected function this_creationCompleteHandler(event:FlexEvent):void
+            {
+                AppEvent.addListener(AppEvent.SETTINGS_SAVED, settingsSavedHandler)
+                updateState();
+            }
+
+            private function settingsSavedHandler(event:AppEvent):void
+            {
+                updateState();
+            }
+
+            private function updateState():void
+            {
+                currentState = Model.instance.bingKey ? "bingKeySet" : "noBingKeySet";
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="bingKeySet"/>
+        <s:State name="noBingKeySet"/>
+    </s:states>
+
+    <s:Rect left="0" right="0" top="0" bottom="0">
+        <s:stroke>
+            <s:SolidColorStroke color="black" weight="1"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:Form width="100%" height="100%">
+        <s:layout>
+            <s:FormLayout gap="-5"/>
+        </s:layout>
+
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'mapsView.layerType')}" skinClass="spark.skins.spark.StackedFormItemSkin">
+            <s:DropDownList id="layerTypeOptionGroup"
+                            requireSelection="true"
+                            valueCommit="dispatchUpdateLayerSelection()">
+                <s:ArrayList>
+                    <s:DataItem id="kmlOption" label="KML"/>
+                    <s:DataItem id="csvOption" label="CSV"/>
+                    <s:DataItem id="geoRSSOption" label="GeoRSS"/>
+                    <s:DataItem id="wmsOption" label="WMS"/>
+                    <s:DataItem id="wmtsOption" label="WMTS"/>
+                    <s:DataItem id="webTiledOption" label="Web Tiled"/>
+                    <s:DataItem id="bingOption"
+                                excludeFrom="noBingKeySet"
+                                label="Bing"/>
+                </s:ArrayList>
+            </s:DropDownList>
+        </s:FormItem>
+
+        <s:FormItem includeInLayout="{layerTypeOptionGroup.selectedItem != bingOption}"
+                    label="{resourceManager.getString('BuilderStrings', 'mapsView.url')}"
+                    skinClass="spark.skins.spark.StackedFormItemSkin"
+                    visible="{layerTypeOptionGroup.selectedItem != bingOption}">
+            <s:TextInput width="100%"
+                         change="dispatchUpdateLayerSelection()"
+                         direction="ltr"
+                         enter="serviceURLInput_enterHandler(event)"
+                         text="@{serviceURL}"/>
+        </s:FormItem>
+
+        <s:FormItem includeInLayout="{layerTypeOptionGroup.selectedItem == webTiledOption
+                                    || layerTypeOptionGroup.selectedItem == wmsOption
+                                    || layerTypeOptionGroup.selectedItem == wmtsOption}"
+                    label="{resourceManager.getString('BuilderStrings', 'configLayerView.label')}"
+                    skinClass="spark.skins.spark.StackedFormItemSkin"
+                    visible="{layerTypeOptionGroup.selectedItem == webTiledOption
+                            || layerTypeOptionGroup.selectedItem == wmsOption
+                            || layerTypeOptionGroup.selectedItem == wmtsOption}">
+            <s:TextInput width="100%"
+                         change="dispatchUpdateLayerSelection()"
+                         enter="serviceURLInput_enterHandler(event)"
+                         text="@{layerName}"/>
+        </s:FormItem>
+
+        <s:FormItem includeInLayout="{layerTypeOptionGroup.selectedItem == bingOption}"
+                    label="{resourceManager.getString('BuilderStrings', 'configLayerView.mapStyle')}"
+                    skinClass="spark.skins.spark.StackedFormItemSkin"
+                    visible="{layerTypeOptionGroup.selectedItem == bingOption}">
+            <s:DropDownList id="bingTypes" requireSelection="true">
+                <s:ArrayList>
+                    <s:DataItem label="Road" value="{ROAD}"/>
+                    <s:DataItem label="Aerial" value="{AERIAL}"/>
+                    <s:DataItem label="Hybrid" value="{HYBRID}"/>
+                </s:ArrayList>
+            </s:DropDownList>
+        </s:FormItem>
+    </s:Form>
+</s:Group>

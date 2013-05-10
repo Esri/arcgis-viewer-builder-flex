@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:components="com.esri.builder.components.*"
+         xmlns:esri="http://www.esri.com/2008/ags"
+         width="100%" height="100%"
+         add="group1_addHandler(event)">
+
+    <fx:Declarations>
+        <esri:CallResponder id="responder"/>
+    </fx:Declarations>
+
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.portal.Portal;
+            import com.esri.ags.portal.supportClasses.PortalGroup;
+            import com.esri.ags.portal.supportClasses.PortalItem;
+            import com.esri.ags.portal.supportClasses.PortalQueryParameters;
+            import com.esri.ags.portal.supportClasses.PortalQueryResult;
+            import com.esri.builder.components.PortalQueryResultEvent;
+            import com.esri.builder.components.PortalQueryResultItemEvent;
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.model.PortalModel;
+
+            import mx.events.FlexEvent;
+            import mx.rpc.AsyncResponder;
+            import mx.rpc.AsyncToken;
+            import mx.rpc.Fault;
+            import mx.utils.StringUtil;
+
+            [Bindable]
+            public var portalGroup:PortalGroup;
+
+            private var lastPortalGroup:PortalGroup
+
+            protected function group1_addHandler(event:FlexEvent):void
+            {
+                if (lastPortalGroup != portalGroup)
+                {
+                    lastPortalGroup = portalGroup;
+                    currentState = "loading";
+
+                    taglabel.text = "";
+                    taglabel.text = resourceManager.getString('BuilderStrings', 'agsPortal.groupTags');
+                    for each (var tag:String in portalGroup.tags)
+                    {
+                        taglabel.text += "   " + tag;
+                    }
+                    var queryParams:PortalQueryParameters = new PortalQueryParameters();
+                    queryParams.ofType(PortalItem.TYPE_WEB_MAP).withSortField("name").withLimit(20);
+                    responder.token = portalGroup.queryItems(queryParams, new AsyncResponder(groupItems_resultHandler, portal_faultHandler));
+                    // always show 'maps' first
+                    viewstack.selectedIndex = 1;
+                }
+            }
+
+            private function groupItems_resultHandler(queryResult:PortalQueryResult, asyncToken:AsyncToken):void
+            {
+                if (queryResult.results.length)
+                {
+                    currentState = "loaded";
+                }
+                else
+                {
+                    currentState = "nomaps";
+                }
+            }
+
+            private function portal_faultHandler(fault:Fault, asyncToken:AsyncToken = null):void
+            {
+                currentState = "nomaps";
+            }
+
+            protected function portalqueryresultviewer_webmapSelectedHandler(event:PortalQueryResultItemEvent):void
+            {
+                AppEvent.dispatch(AppEvent.SET_WEB_MAP, event.portalItem);
+            }
+
+            protected function portalqueryresultviewer_newQueryHandler(event:PortalQueryResultEvent):void
+            {
+                var portal:Portal = PortalModel.getInstance().portal;
+                currentState = "loading";
+                responder.token = portal.queryItems(event.queryParameters, new AsyncResponder(groupItems_resultHandler, portal_faultHandler));
+            }
+        ]]>
+    </fx:Script>
+    <s:layout>
+        <s:VerticalLayout gap="0"/>
+    </s:layout>
+
+    <s:states>
+        <s:State name="loading"/>
+        <s:State name="loaded"/>
+        <s:State name="nomaps"/>
+    </s:states>
+    <s:Label width="100%"
+             color="0x217598"
+             fontSize="16"
+             fontWeight="bold"
+             paddingBottom="5"
+             paddingLeft="5"
+             paddingTop="5"
+             text="{portalGroup.title}"/>
+    <s:Line width="100%">
+        <s:stroke>
+            <s:SolidColorStroke color="0x000000"/>
+        </s:stroke>
+    </s:Line>
+    <s:HGroup width="100%" height="100"
+              paddingLeft="5"
+              paddingTop="5"
+              verticalAlign="top">
+        <s:Image x="5" y="4" width="80" height="80"
+                 enableLoadingState="true"
+                 scaleMode="letterbox"
+                 skinClass="com.esri.builder.skins.PortalUserThumbnailSkin"
+                 smooth="true"
+                 source="{!portalGroup.thumbnailURL ? 'assets/images/portal_no_thumbnail.png' : portalGroup.thumbnailURL}"/>
+        <s:VGroup width="100%" height="100%">
+            <s:Label x="76" y="28" width="100%"
+                     lineBreak="toFit"
+                     maxDisplayedLines="2"
+                     paddingRight="5"
+                     showTruncationTip="true"
+                     text="{portalGroup.snippet}"
+                     textAlign="justify"/>
+            <s:Spacer height="20"/>
+            <s:Label x="76" y="28"
+                     lineBreak="toFit"
+                     maxDisplayedLines="1"
+                     text="{StringUtil.substitute(resourceManager.getString('BuilderStrings', 'agsPortal.groupOwner'), portalGroup.owner)}"/>
+            <s:Label id="taglabel"
+                     x="76" y="28" width="100%"
+                     lineBreak="toFit"
+                     maxDisplayedLines="1"
+                     paddingRight="5"
+                     text="{resourceManager.getString('BuilderStrings', 'agsPortal.groupTags')}"/>
+        </s:VGroup>
+    </s:HGroup>
+    <s:VGroup width="100%" height="100%"
+              gap="-1"
+              paddingLeft="5"
+              paddingTop="10">
+        <s:TabBar id="topMenuBar"
+                  cornerRadius="2"
+                  dataProvider="{viewstack}"
+                  skinClass="com.esri.builder.skins.HorizontalTabBarSkin">
+        </s:TabBar>
+        <s:Line width="100%">
+            <s:stroke>
+                <s:SolidColorStroke color="0x000000"/>
+            </s:stroke>
+        </s:Line>
+        <mx:ViewStack id="viewstack"
+                      width="100%" height="100%"
+                      paddingTop="5"
+                      selectedIndex="1">
+            <s:NavigatorContent label="{resourceManager.getString('BuilderStrings', 'agsPortal.description')}">
+                <mx:HTML width="99%" height="99%"
+                         htmlText="{portalGroup.description ? portalGroup.description : ''}"
+                         paintsDefaultBackground="false"/>
+            </s:NavigatorContent>
+            <s:NavigatorContent label="{resourceManager.getString('BuilderStrings', 'agsPortal.maps')}">
+                <components:PortalQueryResultViewer width="100%" height="100%"
+                                                    includeIn="loaded"
+                                                    itemSelected="portalqueryresultviewer_webmapSelectedHandler(event)"
+                                                    newQuery="portalqueryresultviewer_newQueryHandler(event)"
+                                                    nextLabel="{resourceManager.getString('BuilderStrings', 'next')}"
+                                                    previousLabel="{resourceManager.getString('BuilderStrings', 'previous')}"
+                                                    queryResult="{responder.lastResult}"
+                                                    selectedItem="{Model.instance.webmap}">
+                    <components:resultsListLayout>
+                        <s:TileLayout horizontalGap="10" verticalGap="10"/>
+                    </components:resultsListLayout>
+                </components:PortalQueryResultViewer>
+                <s:SWFLoader width="40" height="40"
+                             autoLoad="true"
+                             horizontalCenter="0"
+                             includeIn="loading"
+                             source="@Embed(source='/assets/images/ico_loading.swf')"
+                             verticalCenter="0"/>
+                <s:Label width="100%" height="100%"
+                         fontSize="16"
+                         fontWeight="bold"
+                         includeIn="nomaps"
+                         text="{resourceManager.getString('BuilderStrings', 'agsPortal.noWebmapsFound')}"
+                         textAlign="center"
+                         verticalAlign="middle"/>
+            </s:NavigatorContent>
+        </mx:ViewStack>
+    </s:VGroup>
+</s:Group>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<Graphic version="2.0" viewHeight="32" viewWidth="32" ai:appVersion="15.1.0.39" ATE:version="1.0.0" flm:version="1.0.0" d:using="" xmlns="http://ns.adobe.com/fxg/2008" xmlns:ATE="http://ns.adobe.com/ate/2009" xmlns:ai="http://ns.adobe.com/ai/2009" xmlns:d="http://ns.adobe.com/fxg/2008/dt" xmlns:flm="http://ns.adobe.com/flame/2008">
+  <Library/>
+  <Group ai:seqID="1" d:layerType="page" d:pageHeight="32" d:pageWidth="32" d:type="layer" d:userLabel="Artboard 1">
+    <Group ai:seqID="2" d:type="layer" d:userLabel="Layer 19">
+      <Path x="5.71046" y="4.50153" winding="nonZero" ai:seqID="3" data="M20.5727 0.000915527C20.8169 -0.0791626 13.4077 5.13031 11.3462 14.4677 10.8667 16.6401 9.03758 22.2558 6.60789 21.6962 4.17821 21.1367 4.06004 15.5248 1.04344 14.3515 -1.97316 13.1782 2.39305 13.018 3.56688 13.6884 4.74071 14.3588 5.64891 16.9589
+ 6.73875 16.9589 7.8286 16.9589 10.6977 3.25043 20.5727 0.000915527Z">
+        <fill>
+          <LinearGradient x="8.30028" y="5.58197" scaleX="11.1738" rotation="46">
+            <GradientEntry ratio="0" color="#35AC46"/>
+            <GradientEntry ratio="1" color="#2A7433"/>
+          </LinearGradient>
+        </fill>
+      </Path>
+    </Group>
+  </Group>
+  <Private/>
+</Graphic>

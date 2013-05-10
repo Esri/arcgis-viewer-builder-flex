@@ -1,0 +1,19 @@
+# Ant build files
+env.properties
+local.properties
+
+# Build and Release Folders
+bin-debug/
+bin-release/
+temp/
+build/
+release/
+
+# Flash Builder
+.settings/
+.project
+.actionScriptProperties
+.flexProperties
+
+# Other files
+*.swc

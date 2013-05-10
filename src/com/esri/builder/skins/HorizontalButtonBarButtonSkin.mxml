@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:SparkButtonSkin xmlns:fx="http://ns.adobe.com/mxml/2009"
+                   xmlns:s="library://ns.adobe.com/flex/spark"
+                   alpha.disabledStates="0.5"
+                   minHeight="30"
+                   minWidth="100">
+    <fx:Metadata>[HostComponent("spark.components.ButtonBarButton")]</fx:Metadata>
+
+    <s:states>
+        <s:State name="up"/>
+        <s:State name="over" stateGroups="overStates"/>
+        <s:State name="down" stateGroups="downStates"/>
+        <s:State name="disabled" stateGroups="disabledStates"/>
+        <s:State name="upAndSelected" stateGroups="selectedStates, selectedUpStates"/>
+        <s:State name="overAndSelected" stateGroups="overStates, selectedStates"/>
+        <s:State name="downAndSelected" stateGroups="downStates, selectedStates"/>
+        <s:State name="disabledAndSelected" stateGroups="disabledStates, selectedStates"/>
+    </s:states>
+
+    <!--border & fill kept in separate rects to hide the bottom border line-->
+
+    <!--BORDER-->
+    <s:Rect left="0" right="0" top="5" top.down="3" top.over="0" top.overAndSelected="0" bottom="0">
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color.disabled="#666666"
+                                color.selectedStates="#007AC2"
+                                joints="miter"
+                                miterLimit="10"/>
+        </s:stroke>
+    </s:Rect>
+
+    <!--FILL-->
+    <s:Rect left="1" right="1" top="6" top.down="4" top.over="1" top.overAndSelected="1" bottom="0">
+        <s:fill.selectedStates>
+            <s:SolidColor alpha.disabled="0.5" color="#007AC2"/>
+        </s:fill.selectedStates>
+
+        <s:fill.disabled>
+            <s:LinearGradient x="43" y="0"
+                              rotation="90"
+                              scaleX="25">
+                <s:entries>
+                    <s:GradientEntry color="#B3B3B3" ratio="0"/>
+                    <s:GradientEntry color="#666666" ratio="1"/>
+                </s:entries>
+            </s:LinearGradient>
+        </s:fill.disabled>
+
+        <s:fill.up>
+            <s:LinearGradient x="43" y="25"
+                              rotation="270"
+                              scaleX="25">
+                <s:GradientEntry color="#FFFFFF" ratio="0"/>
+                <s:GradientEntry color="#DADADA" ratio="1"/>
+            </s:LinearGradient>
+        </s:fill.up>
+
+        <s:fill>
+            <s:LinearGradient x="43" y="29"
+                              rotation="270"
+                              scaleX="29">
+                <s:GradientEntry color="#DADADA" ratio="0"/>
+                <s:GradientEntry color="#DADADA" ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Rect>
+
+    <!-- LABEL -->
+    <s:Label id="labelDisplay"
+             left="5" right="5"
+             color="#000000"
+             color.downAndSelected="#FFFFFF"
+             color.overAndSelected="#FFFFFF"
+             color.upAndSelected="#FFFFFF"
+             fontSize="14"
+             kerning="on"
+             textAlign="center"
+             verticalCenter="5"
+             verticalCenter.downStates="3"
+             verticalCenter.overStates="0"/>
+</s:SparkButtonSkin>

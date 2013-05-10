@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Skin xmlns:s="library://ns.adobe.com/flex/spark"
+        xmlns:fx="http://ns.adobe.com/mxml/2009"
+        minHeight="25"
+        minWidth="60">
+    <fx:Metadata>[HostComponent("spark.components.Button")]</fx:Metadata>
+
+    <s:states>
+        <s:State name="up"/>
+        <s:State name="over"/>
+        <s:State name="down"/>
+        <s:State name="disabled"/>
+    </s:states>
+
+    <!--background-->
+    <s:Rect left="0" right="0" top="0" bottom="0"
+            radiusX="7"
+            radiusY="7"
+            verticalCenter="0">
+        <s:fill>
+            <s:LinearGradient x="54" y="0"
+                              rotation="90"
+                              scaleX="35">
+                <s:GradientEntry color="#97C6D8"
+                                 color.disabled="#B3B3B3"
+                                 color.over="#BAD995"
+                                 ratio="0"/>
+
+                <s:GradientEntry color="#0C77A1"
+                                 color.disabled="#666666"
+                                 color.over="#578D1E"
+                                 ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#0C77A1"
+                                color.disabled="#666666"
+                                color.over="#578D1E"
+                                joints="miter"
+                                miterLimit="10"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:Label id="labelDisplay"
+             left="18" right="5" top="5" bottom="5"
+             color="#FFFFFF"
+             fontWeight="bold"
+             textAlign="center"
+             verticalAlign="middle"
+             verticalCenter="0.5"/>
+
+    <!--floppy disk-->
+    <s:Group left="5" verticalCenter="0">
+        <!--background-->
+        <s:Rect x="0" y="0" width="11" height="12">
+            <s:fill>
+                <s:SolidColor color="#000000"/>
+            </s:fill>
+        </s:Rect>
+
+        <!--label-->
+        <s:Rect x="2" y="1" width="7" height="5">
+            <s:fill>
+                <s:SolidColor color="#FFFFFF"/>
+            </s:fill>
+        </s:Rect>
+
+        <!--plate-->
+        <s:Rect x="2" y="8" width="7" height="4">
+            <s:fill>
+                <s:SolidColor color="#999999"/>
+            </s:fill>
+        </s:Rect>
+
+        <!--background through plate-->
+        <s:Rect x="3" y="9" width="2" height="3">
+            <s:fill>
+                <s:SolidColor color="#000000"/>
+            </s:fill>
+        </s:Rect>
+    </s:Group>
+</s:Skin>

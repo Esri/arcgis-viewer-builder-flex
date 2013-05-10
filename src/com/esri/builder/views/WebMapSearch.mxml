@@ -1,0 +1,382 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:views="com.esri.builder.views.*"
+         xmlns:components="com.esri.builder.components.*"
+         xmlns:esri="http://www.esri.com/2008/ags"
+         width="100%" height="100%"
+         add="addHandler(event)"
+         currentState="{Model.instance.webmapState}"
+         remove="removeHandler(event)">
+
+    <fx:Declarations>
+        <esri:CallResponder id="featuredMapsResponder"/>
+        <esri:CallResponder id="searchResponder"/>
+    </fx:Declarations>
+
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.portal.Portal;
+            import com.esri.ags.portal.supportClasses.PortalQueryResult;
+            import com.esri.builder.components.PortalQueryResultEvent;
+            import com.esri.builder.components.PortalQueryResultItemEvent;
+            import com.esri.builder.components.SearchInputEvent;
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.model.PortalModel;
+
+            import mx.events.FlexEvent;
+            import mx.utils.StringUtil;
+
+            //--------------------------------------------------------------------------
+            //
+            //  Variables
+            //
+            //--------------------------------------------------------------------------
+
+            private var lastUsedBingKey:String;
+            private var lastUsedPortalURL:String;
+            private var lastUsedCultureCode:String;
+
+            /**
+             * Boolean that will store the signedIn state.
+             * When the portal will load after a sign, the current searches will be refreshed.
+             */
+            private var lastUsername:String = null;
+
+            private var portal:Portal = PortalModel.getInstance().portal;
+
+            [Bindable]
+            private var lastSearchTerm:String;
+
+            //--------------------------------------------------------------------------
+            //
+            //  Methods
+            //
+            //--------------------------------------------------------------------------
+
+            /**
+             * Search against the portal
+             */
+            private function queryPortal(searchTerm:String):void
+            {
+                lastSearchTerm = searchTerm;
+                AppEvent.dispatch(AppEvent.WEB_MAP_SEARCH, { type: "search", searchTerm: lastSearchTerm, responder: searchResponder });
+            }
+
+            /**
+             * Returns true if the searches has to be refreshed.
+             * Eg: a search made anonymously is no longer valid if the user signed in.
+             */
+            private function get needToRefreshSearch():Boolean
+            {
+                var username:String = portal.signedIn ? portal.user.username : null;
+                return !(lastUsedBingKey == Model.instance.bingKey
+                    && lastUsedPortalURL == PortalModel.getInstance().portalURL
+                    && lastUsedCultureCode == Model.instance.cultureCode
+                    && lastUsername == username);
+            }
+
+            private function getSearchResultLabel(queryResults:PortalQueryResult, userSearch:String):String
+            {
+                return StringUtil.substitute(resourceManager.getString('BuilderStrings', 'agsPortal.searchResultLabel'), queryResults.totalResults, userSearch);
+            }
+
+            //--------------------------------------------------------------------------
+            //
+            //  Event Handlers
+            //
+            //--------------------------------------------------------------------------
+
+            protected function addHandler(event:FlexEvent):void
+            {
+                AppEvent.addListener(AppEvent.PORTAL_STATUS_UPDATED, portalStatusUpdatedHandler);
+                updateViewBasedOnPortal();
+            }
+
+            private function portalStatusUpdatedHandler(event:AppEvent):void
+            {
+                updateViewBasedOnPortal();
+            }
+
+            private function updateViewBasedOnPortal():void
+            {
+                if (!portal.loaded)
+                {
+                    return;
+                }
+
+                // Which view is shown
+                if (!portal.signedIn)
+                {
+                    Model.instance.webmapState = "featuredmaps";
+                }
+                else
+                {
+                    Model.instance.webmapState = "mycontent";
+                }
+
+                // Does the search has to be refreshed
+                if (searchResponder.lastResult && needToRefreshSearch)
+                {
+                    queryPortal(lastSearchTerm);
+                }
+
+                // Does the featured map has to be refreshed
+                var featuredWebMaps:PortalQueryResult = featuredMapsResponder.lastResult;
+                var isFeaturedWebMapsRefreshing:Boolean = false;
+                if (!featuredWebMaps || needToRefreshSearch)
+                {
+                    AppEvent.dispatch(AppEvent.WEB_MAP_SEARCH, { type: "featured", responder: featuredMapsResponder });
+                }
+
+                // Store the current model state
+                lastUsedBingKey = Model.instance.bingKey;
+                lastUsedPortalURL = PortalModel.getInstance().portalURL;
+                lastUsedCultureCode = Model.instance.cultureCode;
+                lastUsername = portal.signedIn ? portal.user.username : null;
+            }
+
+            protected function removeHandler(event:FlexEvent):void
+            {
+                AppEvent.addListener(AppEvent.PORTAL_STATUS_UPDATED, portalStatusUpdatedHandler);
+            }
+
+            //--------------------------------------------------------------------------
+            //
+            //  Event Handlers : Tab Bar
+            //
+            //--------------------------------------------------------------------------
+
+            protected function featured_clickHandler(event:MouseEvent):void
+            {
+                if (!featuredMapsResponder.lastResult)
+                {
+                    Model.instance.webmapState = "featuredmaps";
+
+                    // Does the featured map has to be refreshed
+                    var featuredWebMaps:PortalQueryResult = featuredMapsResponder.lastResult;
+                    var isFeaturedWebMapsRefreshing:Boolean = false;
+                    if ((featuredWebMaps || !portal.signedIn) && needToRefreshSearch)
+                    {
+                        AppEvent.dispatch(AppEvent.WEB_MAP_SEARCH, { type: "featured", responder: featuredMapsResponder });
+                    }
+                }
+                else
+                {
+                    if (featuredMapsResponder.lastResult.results.length)
+                    {
+                        Model.instance.webmapState = "featuredmaps";
+                    }
+                    else
+                    {
+                        Model.instance.webmapState = "nomatch";
+                    }
+                }
+            }
+
+            protected function search_clickHandler(event:MouseEvent):void
+            {
+                Model.instance.webmapState = "searchmaps";
+            }
+
+            protected function myContent_clickHandler(event:MouseEvent):void
+            {
+                if (!portal.signedIn)
+                {
+                    AppEvent.dispatch(AppEvent.PORTAL_SIGN_IN);
+                }
+                else
+                {
+                    Model.instance.webmapState = "mycontent";
+                }
+            }
+
+            //--------------------------------------------------------------------------
+            //
+            //  Event Handler : Result View
+            //
+            //--------------------------------------------------------------------------
+
+            protected function queryresultviewer_newQueryHandler(event:PortalQueryResultEvent):void
+            {
+                // Prevent the event to make the query through the controller first.
+                event.preventDefault();
+                var type:String = currentState == "featuredmaps" ? "featured" : (currentState == "searchresultmaps" || currentState == "searchmaps") ? "search" : null;
+                if (type)
+                {
+                    var responder:CallResponder = type == "featured" ? featuredMapsResponder : searchResponder;
+                    AppEvent.dispatch(AppEvent.WEB_MAP_SEARCH, { type: type, queryParameters: event.queryParameters, responder: responder });
+                }
+            }
+
+            protected function queryresultviewer_itemSelectedHandler(event:PortalQueryResultItemEvent):void
+            {
+                AppEvent.dispatch(AppEvent.SET_WEB_MAP, event.portalItem);
+            }
+
+            //--------------------------------------------------------------------------
+            //
+            //  Search Input
+            //
+            //--------------------------------------------------------------------------
+
+            protected function searchinput_searchHandler(event:SearchInputEvent):void
+            {
+                queryPortal(event.searchTerm);
+            }
+
+            protected function searchInput_addHandler(event:FlexEvent):void
+            {
+                searchInput.setFocus();
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="featuredmaps" stateGroups="featured"/>
+        <s:State name="loading" stateGroups="featured"/>
+        <s:State name="nomatch" stateGroups="featured"/>
+        <s:State name="searchmaps" stateGroups="search"/>
+        <s:State name="searchloading" stateGroups="search"/>
+        <s:State name="searchresultmaps" stateGroups="search"/>
+        <s:State name="searchnomatch" stateGroups="search"/>
+        <s:State name="mycontent"/>
+    </s:states>
+
+    <s:SWFLoader width="40" height="40"
+                 autoLoad="true"
+                 horizontalCenter="0"
+                 includeIn="loading,searchloading"
+                 source="@Embed(source='/assets/images/ico_loading.swf')"
+                 verticalCenter="0"/>
+
+    <s:BorderContainer width="100%" height="100%"
+                       left="5" top="15"
+                       borderVisible="true"
+                       cornerRadius="0">
+        <s:layout>
+            <s:VerticalLayout paddingBottom="8"
+                              paddingLeft="8"
+                              paddingRight="8"
+                              paddingTop="8"/>
+        </s:layout>
+
+        <s:HGroup width="100%"
+                  horizontalAlign="left"
+                  verticalAlign="middle">
+            <s:Label buttonMode="true"
+                     buttonMode.featured="false"
+                     click="featured_clickHandler(event)"
+                     color="0x367AD5"
+                     fontWeight.featured="bold"
+                     text="{resourceManager.getString('BuilderStrings', 'agsPortal.featuredMaps')}"
+                     textDecoration="underline"
+                     textDecoration.featured="none"/>
+
+            <s:Line height="18">
+                <s:stroke>
+                    <s:SolidColorStroke color="0x000000"/>
+                </s:stroke>
+            </s:Line>
+
+            <s:Label buttonMode="true"
+                     buttonMode.search="false"
+                     click="search_clickHandler(event)"
+                     color="0x367AD5"
+                     fontWeight.search="bold"
+                     text="{resourceManager.getString('BuilderStrings', 'agsPortal.search')}"
+                     textDecoration="underline"
+                     textDecoration.search="none"/>
+
+            <s:Line height="18">
+                <s:stroke>
+                    <s:SolidColorStroke color="0x000000"/>
+                </s:stroke>
+            </s:Line>
+
+            <s:Label buttonMode="true"
+                     buttonMode.mycontent="false"
+                     click="myContent_clickHandler(event)"
+                     color="0x367AD5"
+                     fontWeight.mycontent="bold"
+                     text="{resourceManager.getString('BuilderStrings', 'agsPortal.myContent')}"
+                     textDecoration="underline"
+                     textDecoration.mycontent="none"/>
+        </s:HGroup>
+
+        <s:HGroup id="searchGroup"
+                  width="100%"
+                  horizontalAlign="center"
+                  includeIn="search"
+                  paddingBottom="10"
+                  paddingTop="15"
+                  verticalAlign="middle">
+
+            <components:SearchInput id="searchInput"
+                                    width="100%"
+                                    add="searchInput_addHandler(event)"
+                                    search="searchinput_searchHandler(event)"
+                                    searchButtonLabel="{resourceManager.getString('BuilderStrings', 'mapsView.search')}"
+                                    searchButtonToolTip="{resourceManager.getString('BuilderStrings', 'mapsView.searchTooltip')}"
+                                    searchHistory="{Model.instance.webMapSearchHistory}"
+                                    searchTextInputToolTip="{resourceManager.getString('BuilderStrings', 'mapsView.webmapTooltip')}"/>
+
+            <s:Label styleName="emphasisText" text="{resourceManager.getString('BuilderStrings', 'mapsView.searchExample')}"/>
+
+        </s:HGroup>
+
+        <s:Label id="searchResultLabel"
+                 includeIn="searchmaps,searchresultmaps"
+                 paddingBottom="10"
+                 text="{getSearchResultLabel(searchResponder.lastResult, lastSearchTerm)}"/>
+
+        <s:HGroup width="100%" height="100%"
+                  includeIn="featuredmaps, searchmaps, searchresultmaps"
+                  paddingTop.featured="10">
+
+            <components:PortalQueryResultViewer width="100%" height="100%"
+                                                top.searchresultmaps="100"
+                                                itemSelected="queryresultviewer_itemSelectedHandler(event)"
+                                                newQuery="queryresultviewer_newQueryHandler(event)"
+                                                nextLabel="{resourceManager.getString('BuilderStrings', 'next')}"
+                                                previousLabel="{resourceManager.getString('BuilderStrings', 'previous')}"
+                                                queryResult.featured="{featuredMapsResponder.lastResult}"
+                                                queryResult.search="{searchResponder.lastResult}"
+                                                selectedItem="{Model.instance.webmap}"/>
+
+        </s:HGroup>
+
+        <views:WebMapMyContentView width="100%" height="98%"
+                                   top="45"
+                                   includeIn="mycontent"/>
+
+        <s:Label width="100%" height="100%"
+                 fontSize="16"
+                 fontWeight="bold"
+                 includeIn="nomatch,searchnomatch"
+                 text="{resourceManager.getString('BuilderStrings', 'mapsView.noWebMap')}"
+                 textAlign="center"
+                 verticalAlign="middle"/>
+
+    </s:BorderContainer>
+
+</s:Group>

@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:mx="library://ns.adobe.com/flex/mx"
+          xmlns:Draw="modules.Draw.*"
+          width="100%" height="100%"
+          gap="0"
+          implements="modules.IWidgetView"
+          stateChangeComplete="this_stateChangeCompleteHandler(event)">
+    <fx:Script>
+        <![CDATA[
+            import modules.IWidgetModel;
+
+            import mx.collections.IList;
+            import mx.events.FlexEvent;
+
+            import spark.events.IndexChangeEvent;
+
+            [Bindable]
+            private var model:DrawModel;
+            [Bindable]
+            private var distanceUnitPool:ArrayList;
+            [Bindable]
+            private var areaUnitPool:ArrayList;
+
+            private function this_stateChangeCompleteHandler(event:FlexEvent):void
+            {
+                if (currentState == 'dist')
+                {
+                    measurementUnitOptions = distanceUnitPool;
+                }
+                else
+                {
+                    measurementUnitOptions = areaUnitPool;
+                }
+            }
+
+            private var _measurementUnitOptions:IList;
+
+            [Bindable]
+            public function set measurementUnitOptions(value:IList):void
+            {
+                _measurementUnitOptions = value;
+            }
+
+            public function get measurementUnitOptions():IList
+            {
+                return _measurementUnitOptions;
+            }
+
+            private function initMeasurementUnitPools():void
+            {
+                initDistanceUnitPool();
+                initAreaUnitPool();
+            }
+
+            private function initDistanceUnitPool():void
+            {
+                distanceUnitPool = new ArrayList();
+                distanceUnitPool.addItem(new DistanceMeasurementUnit(resourceManager.getString('BuilderStrings', 'units.kilometers'),
+                                                                     resourceManager.getString('BuilderStrings', 'units.kilometersAbbr'),
+                                                                     .001));
+                distanceUnitPool.addItem(new DistanceMeasurementUnit(resourceManager.getString('BuilderStrings', 'units.miles'),
+                                                                     resourceManager.getString('BuilderStrings', 'units.milesAbbr'),
+                                                                     .000621));
+                distanceUnitPool.addItem(new DistanceMeasurementUnit(resourceManager.getString('BuilderStrings', 'units.meters'),
+                                                                     resourceManager.getString('BuilderStrings', 'units.metersAbbr'),
+                                                                     1));
+                distanceUnitPool.addItem(new DistanceMeasurementUnit(resourceManager.getString('BuilderStrings', 'units.feet'),
+                                                                     resourceManager.getString('BuilderStrings', 'units.feetAbbr'),
+                                                                     3.2808));
+                distanceUnitPool.addItem(new DistanceMeasurementUnit(resourceManager.getString('BuilderStrings', 'units.yards'),
+                                                                     resourceManager.getString('BuilderStrings', 'units.yardsAbbr'),
+                                                                     1.0936133));
+            }
+
+            private function initAreaUnitPool():void
+            {
+                areaUnitPool = new ArrayList();
+                areaUnitPool.addItem(new AreaMeasurementUnit(resourceManager.getString('BuilderStrings', 'units.squareKilometers'),
+                                                             resourceManager.getString('BuilderStrings', 'units.squareKilometersAbbr'),
+                                                             .000001));
+                areaUnitPool.addItem(new AreaMeasurementUnit(resourceManager.getString('BuilderStrings', 'units.squareMiles'),
+                                                             resourceManager.getString('BuilderStrings', 'units.squareMilesAbbr'),
+                                                             0000003861021));
+                areaUnitPool.addItem(new AreaMeasurementUnit(resourceManager.getString('BuilderStrings', 'units.acres'),
+                                                             resourceManager.getString('BuilderStrings', 'units.acresAbbr'),
+                                                             0.00024710538147));
+                areaUnitPool.addItem(new AreaMeasurementUnit(resourceManager.getString('BuilderStrings', 'units.hectares'),
+                                                             resourceManager.getString('BuilderStrings', 'units.hectaresAbbr'),
+                                                             0.0001));
+                areaUnitPool.addItem(new AreaMeasurementUnit(resourceManager.getString('BuilderStrings', 'units.squareMeters'),
+                                                             resourceManager.getString('BuilderStrings', 'units.squareMetersAbbr'),
+                                                             1));
+                areaUnitPool.addItem(new AreaMeasurementUnit(resourceManager.getString('BuilderStrings', 'units.squareFeet'),
+                                                             resourceManager.getString('BuilderStrings', 'units.squareFeetAbbr'),
+                                                             10.763910417));
+                areaUnitPool.addItem(new AreaMeasurementUnit(resourceManager.getString('BuilderStrings', 'units.squareYards'),
+                                                             resourceManager.getString('BuilderStrings', 'units.squareYardsAbbr'),
+                                                             1.19599005));
+            }
+
+            public function set widgetModel(value:IWidgetModel):void
+            {
+                if (value is DrawModel)
+                {
+                    model = value as DrawModel;
+                    initMeasurementUnitPools();
+                    removeSelectedMeasurementsFromPools();
+                }
+                else
+                {
+                    throw new Error('argument is not an instance of DrawModel');
+                }
+            }
+
+            public function get widgetModel():IWidgetModel
+            {
+                return model;
+            }
+
+            private function buttonBar_changeHandler(event:IndexChangeEvent):void
+            {
+                switch (event.newIndex)
+                {
+                    case 0:
+                    {
+                        currentState = 'dist';
+                        break;
+                    }
+                    case 1:
+                    {
+                        currentState = 'area';
+                        break;
+                    }
+                }
+            }
+
+            public function submit():Boolean
+            {
+                return true;
+            }
+
+            public function cancel():void
+            {
+                // NOOP
+            }
+
+            private function addSelectedUnit():void
+            {
+                var measurementUnitSelection:IList = measurementUnitDataGrid.dataProvider;
+                var nextAvailableMeasurementUnit:MeasurementUnitBase = measurementUnitOptions.removeItemAt(0) as MeasurementUnitBase;
+                measurementUnitSelection.addItem(nextAvailableMeasurementUnit);
+            }
+
+            private function removeSelectedMeasurementsFromPools():void
+            {
+                removeSelectedMeasurementFromDistancePool();
+                removeSelectedMeasurementFromAreaPool();
+            }
+
+            private function removeSelectedMeasurementFromDistancePool():void
+            {
+                var selectedDistanceUnitsSource:Array = model.distUnitList.source;
+                for each (var distanceUnit:DistanceMeasurementUnit in selectedDistanceUnitsSource)
+                {
+                    removeDistanceUnitByLabel(distanceUnit.label);
+                }
+            }
+
+            private function removeDistanceUnitByLabel(label:String):void
+            {
+                removeMeasurementUnitByLabel(label, distanceUnitPool);
+            }
+
+            private function removeMeasurementUnitByLabel(label:String, measurementUnitPool:IList):void
+            {
+                var measurementUnitPoolSource:Array = measurementUnitPool.toArray();
+                var totalMeasurementUnits:int = measurementUnitPoolSource.length;
+                var currentMeasurementUnit:MeasurementUnitBase;
+                for (var i:int = 0; i < totalMeasurementUnits; i++)
+                {
+                    currentMeasurementUnit = measurementUnitPoolSource[i];
+                    if (currentMeasurementUnit.label == label)
+                    {
+                        measurementUnitPool.removeItemAt(i);
+                        break;
+                    }
+                }
+            }
+
+            private function removeSelectedMeasurementFromAreaPool():void
+            {
+                var selectedAreaUnitsSource:Array = model.areaUnitList.source;
+                for each (var areaUnit:AreaMeasurementUnit in selectedAreaUnitsSource)
+                {
+                    removeAreaUnitByLabel(areaUnit.label);
+                }
+            }
+
+            private function removeAreaUnitByLabel(label:String):void
+            {
+                removeMeasurementUnitByLabel(label, areaUnitPool);
+            }
+        ]]>
+    </fx:Script>
+    <s:states>
+        <s:State name="dist"/>
+        <s:State name="area"/>
+    </s:states>
+
+    <s:TabBar change="buttonBar_changeHandler(event)" requireSelection="true">
+        <s:dataProvider>
+            <s:ArrayList>
+                <fx:String>{resourceManager.getString('BuilderStrings', 'draw.distances')}</fx:String>
+                <fx:String>{resourceManager.getString('BuilderStrings', 'draw.areas')}</fx:String>
+            </s:ArrayList>
+        </s:dataProvider>
+    </s:TabBar>
+    <s:Group width="100%" height="100%">
+        <s:Rect left="0" right="0" top="-1" bottom="0">
+            <s:stroke>
+                <s:SolidColorStroke/>
+            </s:stroke>
+        </s:Rect>
+        <s:Button right="10" top="5"
+                  click="addSelectedUnit()"
+                  enabled="{measurementUnitOptions.length > 0}"
+                  label.area="{resourceManager.getString('BuilderStrings', 'draw.addArea')}"
+                  label.dist="{resourceManager.getString('BuilderStrings', 'draw.addDistance')}"
+                  minWidth="120"
+                  skinClass="com.esri.builder.skins.BlueAddButtonSkin"/>
+        <Draw:MeasurementUnitDataGrid id="measurementUnitDataGrid"
+                                      left="10" right="10" top="35" bottom="10"
+                                      dataProvider.area="{model.areaUnitList}"
+                                      dataProvider.dist="{model.distUnitList}"
+                                      measurementUnitPool.area="{areaUnitPool}"
+                                      measurementUnitPool.dist="{distanceUnitPool}"/>
+    </s:Group>
+</s:VGroup>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<Graphic version="2.0" viewHeight="47.167" viewWidth="84.3335" ai:appVersion="15.1.0.39" ATE:version="1.0.0" flm:version="1.0.0" d:using="" xmlns="http://ns.adobe.com/fxg/2008" xmlns:ATE="http://ns.adobe.com/ate/2009" xmlns:ai="http://ns.adobe.com/ai/2009" xmlns:d="http://ns.adobe.com/fxg/2008/dt" xmlns:flm="http://ns.adobe.com/flame/2008">
+  <Library/>
+  <Group ai:seqID="1" d:layerType="page" d:pageHeight="47.167" d:pageWidth="84.333" d:type="layer" d:userLabel="Artboard 1">
+    <Group ai:seqID="2" d:type="layer" d:userLabel="Layer 2">
+      <Group x="1" y="1.3335" ai:seqID="3" flm:knockout="false">
+        <Rect x="0.5" y="0.5" width="81.3335" height="44" radiusX="7.00039" radiusY="7.00039" ai:seqID="4">
+          <fill>
+            <SolidColor color="#EEEEEE"/>
+          </fill>
+        </Rect>
+        <Path winding="nonZero" ai:seqID="5" data="M65.8335 45 55.8335 45 55.8335 44 65.8335 44 65.8335 45ZM45.8335 45 35.8335 45 35.8335 44 45.8335 44 45.8335 45ZM25.8335 45 15.8335 45 15.8335 44 25.8335 44 25.8335 45ZM75.9009 44.9248 75.7593 43.9346C78.937 43.4814 81.3335 40.7153 81.3335 37.5
+L82.3335 37.5C82.3335 41.21 79.5679 44.4019 75.9009 44.9248ZM5.73242 44.79C2.35693 43.9746 0 40.9771 0 37.5L0 36.8335 1 36.8335 1 37.5C1 40.5137 3.04248 43.1118 5.9668 43.8184L5.73242 44.79ZM82.3335 28.834 81.3335 28.834 81.3335 18.834 82.3335
+ 18.834 82.3335 28.834ZM1 26.8335 0 26.8335 0 16.8335 1 16.8335 1 26.8335ZM82.3335 8.83398 81.3335 8.83398 81.3335 7.5C81.3335 4.73047 79.5762 2.26123 76.9604 1.35596L77.2876 0.410645C80.3057 1.45557 82.3335 4.3042 82.3335 7.5L82.3335 8.83398Z
+M1.02881 6.88135 0.0336914 6.7876C0.381348 3.09619 3.43799 0.181641 7.14355 0.00830078L7.19043 1.00732C3.97949 1.15723 1.33057 3.68262 1.02881 6.88135ZM67.1665 1 57.1665 1 57.1665 0 67.1665 0 67.1665 1ZM47.1665 1 37.1665 1 37.1665 0 47.1665 0
+ 47.1665 1ZM27.1665 1 17.1665 1 17.1665 0 27.1665 0 27.1665 1Z">
+          <fill>
+            <SolidColor color="#666666"/>
+          </fill>
+        </Path>
+      </Group>
+    </Group>
+  </Group>
+  <Private/>
+</Graphic>

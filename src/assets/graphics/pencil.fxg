@@ -1,0 +1,72 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<Graphic version="2.0" viewHeight="32" viewWidth="32" ai:appVersion="15.1.0.39" ATE:version="1.0.0" flm:version="1.0.0" d:using="" xmlns="http://ns.adobe.com/fxg/2008" xmlns:ATE="http://ns.adobe.com/ate/2009" xmlns:ai="http://ns.adobe.com/ai/2009" xmlns:d="http://ns.adobe.com/fxg/2008/dt" xmlns:flm="http://ns.adobe.com/flame/2008">
+  <Library/>
+  <Group ai:seqID="1" d:layerType="page" d:pageHeight="32" d:pageWidth="32" d:type="layer" d:userLabel="Artboard 1">
+    <Group ai:seqID="2" d:type="layer" d:userLabel="Pencil">
+      <Path x="0.835568" y="24.7882" winding="nonZero" ai:seqID="3" data="M0.0169712 4.25765C0.0169712 4.25765 2.02527 4.41683 2.11951 6.38949 2.11951 6.38949 5.33045 6.31722 6.45105 5.36214 7.50916 4.45882 5.58191 1.49691 4.7699 0.824059 3.95789 0.152184 0.619022 -0.233559 0.397831 0.155113 0.176639 0.544762 -0.0670131
+ 3.92171 0.0169712 4.25765Z">
+        <fill>
+          <LinearGradient x="-0.000118613" y="3.19418" scaleX="6.76074">
+            <GradientEntry ratio="0" color="#E7C687"/>
+            <GradientEntry ratio="1" color="#A77D51"/>
+          </LinearGradient>
+        </fill>
+      </Path>
+      <Path x="21.7031" y="0.749973" winding="nonZero" ai:seqID="4" data="M0 3.83548C0 3.83548 5.32422 9.57425 5.66797 9.32766 6.12305 9.00003 8.80566 6.37698 9.38574 4.95803 10.1738 3.03225 5.66797 -0.738254 4.03613 0.12698 2.21582 1.09231 0 3.83548 0 3.83548Z">
+        <fill>
+          <LinearGradient x="2.44629" y="1.25296" scaleX="8.08008" rotation="46">
+            <GradientEntry ratio="0" color="#FAA5A5"/>
+            <GradientEntry ratio="1" color="#8E4242"/>
+          </LinearGradient>
+        </fill>
+      </Path>
+      <Path x="18.7979" y="4.3125" winding="nonZero" ai:seqID="5" data="M3.1084 0 0 3.05469 5.69922 8.86133 8.91309 5.46191 3.1084 0Z">
+        <fill>
+          <LinearGradient x="0" y="4.43066" scaleX="8.91309">
+            <GradientEntry ratio="0" color="#A8A8A9"/>
+            <GradientEntry ratio="1" color="#323133"/>
+          </LinearGradient>
+        </fill>
+      </Path>
+      <Path x="1.11929" y="7.23975" winding="nonZero" ai:seqID="6" data="M17.8084 0C17.8084 0 -0.352689 17.8433 0.00522149 17.8687 3.53403 18.1216 4.87876 19.6616 6.16733 22.9106L23.5877 5.71387 17.8084 0Z">
+        <fill>
+          <LinearGradient x="8.84458" y="8.84033" scaleX="8.21484" rotation="45">
+            <GradientEntry ratio="0" color="#FAEEB4"/>
+            <GradientEntry ratio="0.381818" color="#F0D778"/>
+            <GradientEntry ratio="0.581818" color="#F0D778"/>
+            <GradientEntry ratio="0.664194" color="#E6CB71"/>
+            <GradientEntry ratio="0.767421" color="#CDB061"/>
+            <GradientEntry ratio="0.879843" color="#A9874A"/>
+            <GradientEntry ratio="1" color="#7A522B"/>
+          </LinearGradient>
+        </fill>
+      </Path>
+      <Path x="0.800941" y="29.017" winding="nonZero" ai:seqID="7" data="M0.050133 2.31012C0.050133 2.31012 -0.0636365 0.0317955 0.0515978 0.0298424 0.167809 0.0278893 0.928063 -0.185001 1.6683 0.555233 2.40804 1.29547 2.15414 2.16168 2.15414 2.16168L0.050133 2.31012Z">
+        <fill>
+          <LinearGradient x="-0.23307" y="0.301327" scaleX="2.99707" rotation="46">
+            <GradientEntry ratio="0" color="#91897A"/>
+            <GradientEntry ratio="1" color="#383839"/>
+          </LinearGradient>
+        </fill>
+      </Path>
+    </Group>
+  </Group>
+  <Private/>
+</Graphic>

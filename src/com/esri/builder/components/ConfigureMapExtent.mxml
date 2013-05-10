@@ -1,0 +1,588 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:esri="http://www.esri.com/2008/ags"
+         width="100%" height="100%"
+         creationComplete="this_creationCompleteHandler(event)">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.Map;
+            import com.esri.ags.SpatialReference;
+            import com.esri.ags.events.ExtentEvent;
+            import com.esri.ags.events.LayerEvent;
+            import com.esri.ags.events.MapEvent;
+            import com.esri.ags.events.WebMapEvent;
+            import com.esri.ags.geometry.Extent;
+            import com.esri.ags.layers.ArcGISTiledMapServiceLayer;
+            import com.esri.ags.layers.Layer;
+            import com.esri.ags.layers.OpenStreetMapLayer;
+            import com.esri.ags.portal.Portal;
+            import com.esri.ags.tasks.GeometryServiceSingleton;
+            import com.esri.ags.tasks.supportClasses.ProjectParameters;
+            import com.esri.ags.utils.WebMercatorUtil;
+            import com.esri.ags.virtualearth.VETiledLayer;
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.ConfigLayer;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.model.PortalModel;
+            import com.esri.builder.supportClasses.ErrorMessageUtil;
+            import com.esri.builder.supportClasses.LogUtil;
+
+            import mx.events.FlexEvent;
+            import mx.logging.ILogger;
+            import mx.logging.Log;
+            import mx.rpc.AsyncResponder;
+            import mx.rpc.Fault;
+            import mx.rpc.events.FaultEvent;
+
+            private static const LOG:ILogger = LogUtil.createLogger(ConfigureMapExtent);
+
+            public var isWebMap:Boolean;
+
+            private var map:Map;
+            private var extentInited:Boolean;
+            private var unitedOpLayersExtent:Extent;
+            private var totalOpLayersToUnite:int;
+
+            protected function this_creationCompleteHandler(event:FlexEvent):void
+            {
+                if (Log.isInfo())
+                {
+                    LOG.info("Configuring map extent");
+                }
+
+                if (isWebMap)
+                {
+                    if (Log.isDebug())
+                    {
+                        LOG.debug("Creating WebMap");
+                    }
+
+                    webMapUtil.createMapById(Model.instance.config.configMap.itemId);
+                }
+                else
+                {
+                    if (Model.instance.configBasemapsList.hasLayers)
+                    {
+                        if (Log.isDebug())
+                        {
+                            LOG.debug("Configure extent from config layers");
+                        }
+
+                        configureMapFromConfigLayers();
+                    }
+                    else if (Model.instance.config.configMap.addArcGISBasemaps)
+                    {
+                        if (Log.isDebug())
+                        {
+                            LOG.debug("Configure extent from Portal");
+                        }
+
+                        if (PortalModel.getInstance().portal.loaded)
+                        {
+                            addDefaultPortalBasemap(PortalModel.getInstance().portal);
+                        }
+                        else
+                        {
+                            if (Log.isDebug())
+                            {
+                                LOG.debug("No basemap available");
+                            }
+
+                            currentState = "noBasemap";
+                        }
+                    }
+                    else
+                    {
+                        if (Log.isDebug())
+                        {
+                            LOG.debug("No basemap available");
+                        }
+
+                        currentState = "noBasemap";
+                    }
+                }
+            }
+
+            private function configureMapFromConfigLayers():void
+            {
+                var basemapFound:Boolean;
+                map = new Map();
+                map.wrapAround180 = true;
+                map.panEasingFactor = 1;
+
+                map.addEventListener(ExtentEvent.EXTENT_CHANGE, map_extentChangeHandler, false, 0, true);
+                map.addEventListener(MapEvent.LOAD, map_loadHandler, false, 0, true);
+                map.addEventListener(FaultEvent.FAULT, map_faultHandler, false, 0, true);
+
+                const bottomBasemapConfigLayer:ConfigLayer = Model.instance.configBasemapsList.getLayerAt(0);
+                if (bottomBasemapConfigLayer)
+                {
+                    map.addLayer(bottomBasemapConfigLayer.createLayer());
+
+                    //check if next layer is part of hybrid layer
+                    const topBasemapConfigLayer:ConfigLayer = Model.instance.configBasemapsList.getLayerAt(1);
+                    if (topBasemapConfigLayer
+                        && bottomBasemapConfigLayer.label == topBasemapConfigLayer.label)
+                    {
+                        map.addLayer(topBasemapConfigLayer.createLayer());
+                    }
+
+                    addAllOperationalLayers();
+
+                    basemapFound = true;
+                    currentState = "basemapAndOpLayers";
+                    mapContainer.addElement(map);
+                }
+
+                if (!basemapFound)
+                {
+                    if (Log.isDebug())
+                    {
+                        LOG.debug("No basemap available");
+                    }
+
+                    currentState = "noBasemap";
+                }
+            }
+
+            private function addDefaultPortalBasemap(portal:Portal):void
+            {
+                map = new Map();
+                map.wrapAround180 = true;
+
+                map.addEventListener(ExtentEvent.EXTENT_CHANGE, map_extentChangeHandler, false, 0, true);
+                map.addEventListener(MapEvent.LOAD, map_loadHandler, false, 0, true);
+                map.addEventListener(FaultEvent.FAULT, map_faultHandler, false, 0, true);
+
+                var portalDefaultBasemapObject:Object = portal.info.defaultBasemap;
+                var defaultBasemapLayerObjects:Array = portalDefaultBasemapObject.baseMapLayers;
+
+                if (defaultBasemapLayerObjects)
+                {
+                    for each (var defaultBasemapLayerObject:Object in defaultBasemapLayerObjects)
+                    {
+                        if (defaultBasemapLayerObject.url)
+                        {
+                            map.addLayer(new ArcGISTiledMapServiceLayer(defaultBasemapLayerObject.url));
+                        }
+                        else if (isAllowedType(defaultBasemapLayerObject.type))
+                        {
+                            map.addLayer(createBasemapLayerFromType(defaultBasemapLayerObject.type));
+                        }
+                    }
+
+                    addAllOperationalLayers();
+                    currentState = "basemapAndOpLayers";
+                    mapContainer.addElement(map);
+                }
+                else
+                {
+                    if (Log.isDebug())
+                    {
+                        LOG.debug("No basemap available");
+                    }
+
+                    currentState = "noBasemap";
+                }
+            }
+
+            private function addAllOperationalLayers():void
+            {
+                const opLayers:Array = Model.instance.configOpsLayerList.getAllLayers();
+
+                for each (var configLayer:ConfigLayer in opLayers)
+                {
+                    map.addLayer(configLayer.createLayer());
+                }
+            }
+
+            private function isAllowedType(type:String):Boolean
+            {
+                return type == "OpenStreetMap" ||
+                    (isBingBasemap(type) && hasBingKey());
+            }
+
+            private function isBingBasemap(type:String):Boolean
+            {
+                return type.indexOf('BingMaps') > -1;
+            }
+
+            private function hasBingKey():Boolean
+            {
+                var bingKey:String = Model.instance.bingKey;
+                return (bingKey != null && bingKey.length > 0);
+            }
+
+            private function createBasemapLayerFromType(type:String):Layer
+            {
+                var layer:Layer;
+                if (type == "OpenStreetMap")
+                {
+                    layer = new OpenStreetMapLayer();
+                }
+                else
+                {
+                    //assuming bing
+                    var veLayer:VETiledLayer = new VETiledLayer();
+                    veLayer.key = Model.instance.bingKey;
+                    layer = veLayer;
+                }
+
+                return layer;
+            }
+
+            private function map_extentChangeHandler(event:ExtentEvent):void
+            {
+                Model.instance.config.configMap.initExtent = event.extent;
+                if (!extentInited)
+                {
+                    extentInited = true;
+                }
+                else
+                {
+                    Model.instance.config.isDirty = true;
+                }
+            }
+
+            protected function map_loadHandler(event:MapEvent):void
+            {
+                if (Log.isInfo())
+                {
+                    LOG.info("Map loaded");
+                }
+
+                map.removeEventListener(MapEvent.LOAD, map_loadHandler);
+                map.removeEventListener(FaultEvent.FAULT, map_faultHandler);
+
+                if (Model.instance.config.configMap.initExtent)
+                {
+                    if (Log.isDebug())
+                    {
+                        LOG.debug("Setting previous extent");
+                    }
+
+                    assignPreviousExtentIfCompatible();
+                }
+                else
+                {
+                    if (Log.isDebug())
+                    {
+                        LOG.debug("Zooming to operational layer union");
+                    }
+
+                    zoomToOpLayersUnion();
+                }
+            }
+
+            private function zoomToOpLayersUnion():void
+            {
+                if (Log.isDebug())
+                {
+                    LOG.debug("Loading operational layers");
+                }
+
+                var configOpLayers:Array = Model.instance.configOpsLayerList.getAllLayers();
+                totalOpLayersToUnite = configOpLayers.length;
+                unitedOpLayersExtent = null;
+
+                for each (var configLayer:ConfigLayer in configOpLayers)
+                {
+                    var layer:Layer = configLayer.createLayer();
+                    layer.addEventListener(LayerEvent.LOAD, layer_loadHandler);
+                    layer.addEventListener(LayerEvent.LOAD_ERROR, layer_loadErrorHandler);
+                }
+            }
+
+            private function layer_loadHandler(event:LayerEvent):void
+            {
+                if (Log.isDebug())
+                {
+                    LOG.debug("Layer loaded");
+                }
+
+                var layer:Layer = event.layer;
+                layer.removeEventListener(LayerEvent.LOAD, layer_loadHandler);
+                layer.removeEventListener(LayerEvent.LOAD_ERROR, layer_loadErrorHandler);
+
+                var layerExtent:Extent = layer.initialExtent;
+                var layerSR:SpatialReference = layer.spatialReference;
+                var mapSR:SpatialReference = map.spatialReference;
+                if ((mapSR.wkid == 4326) && layerSR.isWebMercator())
+                {
+                    addToOpLayersExtent(WebMercatorUtil.webMercatorToGeographic(layerExtent) as Extent);
+                    decreaseTotalOpLayersToUnite();
+                }
+                else if (mapSR.isWebMercator() && (layerSR.wkid == 4326))
+                {
+                    // clip the layer extent, so it's not going to Infinity; otherwise gives an error
+                    clipExtent(layerExtent);
+                    addToOpLayersExtent(WebMercatorUtil.geographicToWebMercator(layerExtent) as Extent);
+                    decreaseTotalOpLayersToUnite();
+                }
+                else
+                {
+                    if (Log.isDebug())
+                    {
+                        LOG.debug("Need to project layer geometry");
+                    }
+
+                    var projectParams:ProjectParameters = new ProjectParameters();
+                    projectParams.outSpatialReference = map.spatialReference;
+                    projectParams.geometries = [ layerExtent ];
+                    GeometryServiceSingleton.instance.project(projectParams, new AsyncResponder(projectResultHandler, projectFaultHandler));
+                }
+            }
+
+            private function clipExtent(extent:Extent):void
+            {
+                extent.xmin = Math.max(extent.xmin, -180);
+                extent.xmax = Math.min(extent.xmax, 180);
+                extent.ymin = Math.max(extent.ymin, -89.99);
+                extent.ymax = Math.min(extent.ymax, 89.99);
+            }
+
+            private function projectResultHandler(projectedGeometries:Array, token:Object = null):void
+            {
+                if (Log.isDebug())
+                {
+                    LOG.debug("Projected layer geometry success");
+                }
+
+                addToOpLayersExtent(projectedGeometries[0]);
+                decreaseTotalOpLayersToUnite();
+            }
+
+            private function addToOpLayersExtent(extent:Extent):void
+            {
+                if (Log.isDebug())
+                {
+                    LOG.debug("Unioned layer extent");
+                }
+
+                if (!unitedOpLayersExtent)
+                {
+                    unitedOpLayersExtent = extent;
+                }
+                else
+                {
+                    unitedOpLayersExtent = unitedOpLayersExtent.union(extent);
+                }
+            }
+
+            private function decreaseTotalOpLayersToUnite():void
+            {
+                totalOpLayersToUnite--;
+                if (totalOpLayersToUnite == 0)
+                {
+                    commitUnitedOpLayersExtent();
+                }
+            }
+
+            private function commitUnitedOpLayersExtent():void
+            {
+                if (Log.isDebug())
+                {
+                    LOG.debug("Operational layer extent union complete");
+                }
+
+                map.extent = unitedOpLayersExtent;
+                if (!map.extent.contains(unitedOpLayersExtent))
+                {
+                    map.level--;
+                }
+            }
+
+            private function projectFaultHandler(fault:Fault, token:Object = null):void
+            {
+                if (Log.isDebug())
+                {
+                    LOG.debug("Could not project layer geometry - fault: {0}", fault.toString());
+                }
+
+                decreaseTotalOpLayersToUnite();
+            }
+
+            private function layer_loadErrorHandler(event:LayerEvent):void
+            {
+                if (Log.isDebug())
+                {
+                    LOG.debug("Could not load layer");
+                }
+
+                decreaseTotalOpLayersToUnite();
+                var layer:Layer = event.layer;
+                layer.removeEventListener(LayerEvent.LOAD, layer_loadHandler);
+                layer.removeEventListener(LayerEvent.LOAD_ERROR, layer_loadErrorHandler);
+            }
+
+            private function assignPreviousExtentIfCompatible():void
+            {
+                var previousExtent:Extent = Model.instance.config.configMap.initExtent;
+                if (!previousExtent)
+                {
+                    return;
+                }
+
+                var currentExtent:Extent = map.extent;
+                if (!currentExtent)
+                {
+                    map.extent = previousExtent;
+                    return;
+                }
+
+                if (Log.isDebug())
+                {
+                    LOG.debug("Checking if previous extent compatible");
+                }
+
+                var previousSpatialReference:SpatialReference = previousExtent.spatialReference;
+                var currentSpatialReference:SpatialReference = currentExtent.spatialReference;
+
+                var canOverrideExtent:Boolean = !currentSpatialReference || !previousSpatialReference
+                    || ((previousSpatialReference.wkid == currentSpatialReference.wkid)
+                    || (previousSpatialReference.wkt == currentSpatialReference.wkt));
+                if (canOverrideExtent)
+                {
+                    if (Log.isDebug())
+                    {
+                        LOG.debug("Spatial reference is compatible, assigning");
+                    }
+
+                    map.extent = previousExtent;
+                }
+                else
+                {
+                    if (Log.isDebug())
+                    {
+                        LOG.debug("Incompatible spatial reference, will not assign");
+                    }
+                }
+            }
+
+            protected function map_faultHandler(event:FaultEvent):void
+            {
+                if (Log.isDebug())
+                {
+                    LOG.debug("Map load fault: {0}", event.fault.toString());
+                }
+
+                map.removeEventListener(MapEvent.LOAD, map_loadHandler);
+                map.removeEventListener(FaultEvent.FAULT, map_faultHandler);
+            }
+
+            protected function webMapUtil_createMapByIdCompleteHandler(event:WebMapEvent):void
+            {
+                if (Log.isDebug())
+                {
+                    LOG.debug("Map from ID complete");
+                }
+
+                map = event.map;
+                map.wrapAround180 = true;
+                map.panEasingFactor = 1;
+
+                if (Model.instance.config.configMap.initExtent)
+                {
+                    if (Log.isDebug())
+                    {
+                        LOG.debug("Setting initial extent");
+                    }
+
+                    map.extent = Model.instance.config.configMap.initExtent;
+                }
+                map.addEventListener(ExtentEvent.EXTENT_CHANGE, map_extentChangeHandler);
+
+                currentState = "webmap";
+                mapContainer.addElement(map);
+            }
+
+            protected function webMapUtil_faultHandler(event:FaultEvent):void
+            {
+                if (Log.isDebug())
+                {
+                    LOG.debug("Map from ID fault");
+                }
+
+                AppEvent.dispatch(AppEvent.SHOW_ERROR,
+                                  ErrorMessageUtil.getKnownErrorCauseMessage(event.fault));
+            }
+
+            private function restoreOriginalExtent():void
+            {
+                if (Log.isDebug())
+                {
+                    LOG.debug("Restoring original extent");
+                }
+
+                map.extent = Model.instance.lastSavedExtent;
+            }
+        ]]>
+    </fx:Script>
+
+    <fx:Declarations>
+        <esri:WebMapUtil id="webMapUtil"
+                         createMapByIdComplete="webMapUtil_createMapByIdCompleteHandler(event)"
+                         fault="webMapUtil_faultHandler(event)"
+                         portalURL="{PortalModel.getInstance().portalURL}"/>
+    </fx:Declarations>
+
+    <s:states>
+        <s:State name="loading"/>
+        <s:State name="webmap" stateGroups="map"/>
+        <s:State name="basemapAndOpLayers" stateGroups="map"/>
+        <s:State name="noBasemap"/>
+    </s:states>
+
+    <s:SWFLoader id="loadingIcon"
+                 width="40" height="40"
+                 autoLoad="true"
+                 horizontalCenter="0"
+                 includeIn="loading"
+                 source="@Embed(source='/assets/images/ico_loading.swf')"
+                 verticalCenter="0"/>
+
+    <s:Group id="mapContainer"
+             left="0" right="0" top="0" bottom="30"
+             includeIn="map"/>
+
+    <s:HGroup left="0" right="0" bottom="0"
+              horizontalAlign="center"
+              includeIn="map">
+        <s:Button click="restoreOriginalExtent()"
+                  enabled="{Model.instance.lastSavedExtent != null}"
+                  label="{resourceManager.getString('BuilderStrings', 'mapsView.restoreExtent')}"
+                  skinClass="com.esri.builder.skins.GreenButtonSkin"/>
+
+        <s:Button click="zoomToOpLayersUnion()"
+                  enabled="{Model.instance.configOpsLayerList.hasLayers}"
+                  includeIn="basemapAndOpLayers"
+                  label="{resourceManager.getString('BuilderStrings', 'mapsView.zoomToOperationalLayersExtent')}"
+                  skinClass="com.esri.builder.skins.GreenButtonSkin"/>
+    </s:HGroup>
+
+    <s:Label id="noBasemap"
+             fontSize="18"
+             horizontalCenter="0"
+             includeIn="noBasemap"
+             text="{resourceManager.getString('BuilderStrings', 'mapsView.noBasemapSelected')}"
+             verticalCenter="0"/>
+</s:Group>

@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:SkinnableContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                      xmlns:s="library://ns.adobe.com/flex/spark"
+                      xmlns:mx="library://ns.adobe.com/flex/mx"
+                      xmlns:views="com.esri.builder.views.*"
+                      creationComplete="this_creationCompleteHandler(event)"
+                      minHeight="150"
+                      minWidth="450">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.Model;
+
+            import mx.events.CloseEvent;
+            import mx.events.FlexEvent;
+            import mx.utils.StringUtil;
+
+            [Bindable]
+            private var hasValidApplicationName:Boolean;
+            [Bindable]
+            private var processedApplicationName:String = "";
+
+            private function cancelButton_clickHandler(event:MouseEvent):void
+            {
+                dispatchEvent(new CloseEvent(CloseEvent.CLOSE));
+            }
+
+            private function okButton_clickHandler(event:MouseEvent):void
+            {
+                dispatchCloseAndCreateExecute();
+            }
+
+            private function dispatchCloseAndCreateExecute():void
+            {
+                dispatchCreateExecute();
+                dispatchEvent(new CloseEvent(CloseEvent.CLOSE));
+            }
+
+            private function dispatchCreateExecute():void
+            {
+                if (hasValidApplicationName)
+                {
+                    Model.instance.status = '';
+                    AppEvent.dispatch(AppEvent.CREATE_EXECUTE, processedApplicationName);
+                }
+                else
+                {
+                    Model.instance.status = resourceManager.getString('BuilderStrings', 'createApplicationPopUp.noApplicationName');
+                }
+            }
+
+            private function this_creationCompleteHandler(event:FlexEvent):void
+            {
+                applicationNameTextInput.setFocus()
+            }
+
+            private function applicationNameTextInput_enterHandler(event:FlexEvent):void
+            {
+                if (hasValidApplicationName)
+                {
+                    dispatchCloseAndCreateExecute();
+                }
+            }
+
+            private function validateAppName():void
+            {
+                processedApplicationName = StringUtil.trim(applicationNameTextInput.text);
+                hasValidApplicationName = (processedApplicationName.length > 0);
+            }
+        ]]>
+    </fx:Script>
+
+    <!--background-->
+    <s:Rect left="0" right="0" top="0" bottom="0">
+        <s:fill>
+            <s:SolidColor color="#FFFFFF"/>
+        </s:fill>
+
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:Rect height="25"
+            left="2" right="2" top="2">
+        <s:fill>
+            <s:LinearGradient rotation="90">
+                <s:GradientEntry alpha="1"
+                                 color="#FFFFFF"
+                                 ratio="0"/>
+                <s:GradientEntry alpha="1.0"
+                                 color="#CCCCCC"
+                                 ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Rect>
+
+    <s:Line left="0" right="0" top="26">
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Line>
+
+    <!--content-->
+    <s:Label left="10" top="9"
+             color="#000000"
+             fontSize="14"
+             fontWeight="bold"
+             text="{resourceManager.getString('BuilderStrings', 'createApplicationPopUp.title')}"
+             textAlign="center"
+             verticalAlign="middle"/>
+    <s:Form top="15" horizontalCenter="0">
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'createApplicationPopUp.applicationName')}" required="true">
+            <s:TextInput id="applicationNameTextInput"
+                         width="200"
+                         change="validateAppName()"
+                         enter="applicationNameTextInput_enterHandler(event)"
+                         maxChars="100"
+                         restrict='\u0020-\u007E^/?\\&gt;&lt;:*|"”\^.#&apos;%;'/>
+
+            <s:helpContent>
+                <views:HelpButton id="applicationNameHelp"
+                                  helpText="{resourceManager.getString('BuilderStrings', 'createApplicationPopUp.applicationNameHelp')}"
+                                  title="{resourceManager.getString('BuilderStrings', 'createApplicationPopUp.applicationName')}"/>
+            </s:helpContent>
+        </s:FormItem>
+
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'createApplicationPopUp.applicationURL')}">
+            <s:Label width="200"
+                     direction="ltr"
+                     maxDisplayedLines="1"
+                     showTruncationTip="true"
+                     text="{Model.instance.webServerURL + '/' + escape(processedApplicationName)}"/>
+
+            <s:helpContent>
+                <views:HelpButton id="applicationURLHelp"
+                                  helpText="{resourceManager.getString('BuilderStrings', 'createApplicationPopUp.applicationURLHelp')}"
+                                  title="{resourceManager.getString('BuilderStrings', 'createApplicationPopUp.applicationURL')}"/>
+            </s:helpContent>
+        </s:FormItem>
+    </s:Form>
+
+    <s:HGroup bottom="5"
+              horizontalAlign="center"
+              horizontalCenter="0"
+              verticalAlign="middle">
+        <s:Button id="okButton"
+                  click="okButton_clickHandler(event)"
+                  enabled="{hasValidApplicationName}"
+                  label="{resourceManager.getString('BuilderStrings', 'createApplicationPopUp.ok')}"
+                  skinClass="com.esri.builder.skins.BlueButtonSkin"/>
+
+        <s:Button id="cancelButton"
+                  click="cancelButton_clickHandler(event)"
+                  label="{resourceManager.getString('BuilderStrings', 'cancel')}"
+                  skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+    </s:HGroup>
+</s:SkinnableContainer>

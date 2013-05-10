@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:mx="library://ns.adobe.com/flex/mx"
+          add="this_addHandler(event)"
+          currentState="normal">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.portal.Portal;
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.model.PortalModel;
+            import com.esri.builder.views.popups.AboutPopUp;
+
+            import mx.core.FlexGlobals;
+            import mx.events.CloseEvent;
+            import mx.events.FlexEvent;
+            import mx.managers.PopUpManager;
+
+            private const APP_BUILDER_HELP_URL:String = "http://links.esri.com/flexviewer";
+
+            [Bindable]
+            private var portal:Portal = PortalModel.getInstance().portal;
+
+            protected function this_addHandler(event:FlexEvent):void
+            {
+                AppEvent.addListener(AppEvent.PORTAL_STATUS_UPDATED, portalStatusUpdatedHandler);
+                changeStateBasedOnPortal();
+
+                AppEvent.addListener(AppEvent.CHANGES_SAVED, onChangesSaved, false, 0, true);
+            }
+
+            private function portal_loadSuccessHandler(event:AppEvent):void
+            {
+                changeStateBasedOnPortal();
+            }
+
+            private function changeStateBasedOnPortal():void
+            {
+                if (portal.loaded)
+                {
+                    currentState = portal.user ? "signedintoportal" : "normal";
+                }
+                else
+                {
+                    currentState = "portalNotLoaded";
+                }
+            }
+
+            protected function portalStatusUpdatedHandler(event:AppEvent):void
+            {
+                changeStateBasedOnPortal();
+            }
+
+            private function onChangesSaved(event:AppEvent):void
+            {
+                if (event.data == "headermenu")
+                {
+                    Model.instance.status = '';
+                    Model.instance.appState = 'settings';
+                }
+            }
+
+            private function settings_clickHandler(event:MouseEvent):void
+            {
+                if (Model.instance.config.isDirty)
+                {
+                    AppEvent.dispatch(AppEvent.SAVE_CHANGES, "headermenu");
+                }
+                else
+                {
+                    Model.instance.status = '';
+                    Model.instance.appState = 'settings';
+                }
+            }
+
+            private function help_clickHandler(event:MouseEvent):void
+            {
+                navigateToURL(new URLRequest(APP_BUILDER_HELP_URL));
+            }
+
+            private function about_clickHandler(event:MouseEvent):void
+            {
+                var aboutPopUp:AboutPopUp = new AboutPopUp();
+                aboutPopUp.addEventListener(CloseEvent.CLOSE, aboutPopUp_closeHandler, false, 0, true);
+                PopUpManager.addPopUp(aboutPopUp, FlexGlobals.topLevelApplication as DisplayObject, true);
+                PopUpManager.centerPopUp(aboutPopUp);
+            }
+
+            protected function aboutPopUp_closeHandler(event:CloseEvent):void
+            {
+                var aboutPopUp:AboutPopUp = event.currentTarget as AboutPopUp;
+                aboutPopUp.removeEventListener(CloseEvent.CLOSE, aboutPopUp_closeHandler);
+                PopUpManager.removePopUp(aboutPopUp);
+                aboutPopUp = null;
+            }
+
+            protected function signIn_clickHandler(event:MouseEvent):void
+            {
+                AppEvent.dispatch(AppEvent.PORTAL_SIGN_IN);
+            }
+
+            protected function signOut_clickHandler(event:MouseEvent):void
+            {
+                AppEvent.dispatch(AppEvent.PORTAL_SIGN_OUT);
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="portalNotLoaded"/>
+        <s:State name="signedintoportal"/>
+    </s:states>
+
+    <s:HGroup includeIn="signedintoportal">
+        <s:Label text="{portal.user.fullname}"/>
+
+        <s:Line height="10">
+            <s:stroke>
+                <s:SolidColorStroke color="0x000000"/>
+            </s:stroke>
+        </s:Line>
+
+        <s:Label buttonMode="true"
+                 click="signOut_clickHandler(event)"
+                 color="0x367AD5"
+                 text="{resourceManager.getString('BuilderStrings', 'homeView.portalSignOut')}"
+                 textDecoration="underline"
+                 toolTip="{resourceManager.getString('BuilderStrings',
+                                                     'homeView.portalSignOutTooltip', 
+                                                     [ portal.info.portalName ])}"/>
+    </s:HGroup>
+
+    <s:Group excludeFrom="signedintoportal" toolTip.portalNotLoaded="{resourceManager.getString('BuilderStrings',
+             'agsPortal.requiresPortal')}">
+        <s:Label alpha.portalNotLoaded="0.5"
+                 buttonMode="true"
+                 buttonMode.portalNotLoaded="false"
+                 click.normal="signIn_clickHandler(event)"
+                 color="0x367AD5"
+                 color.portalNotLoaded="0x666666"
+                 text="{resourceManager.getString('BuilderStrings', 'homeView.portalSignIn')}"
+                 textDecoration="underline"
+                 textDecoration.portalNotLoaded="none"
+                 toolTip="{resourceManager.getString('BuilderStrings',
+                                                 'homeView.portalSignInTooltip', 
+                                                 [ portal.info.portalName ])}"/>
+    </s:Group>
+
+    <s:Line height="10">
+        <s:stroke>
+            <s:SolidColorStroke color="0xB6BCCC"/>
+        </s:stroke>
+    </s:Line>
+
+    <s:Label buttonMode="true"
+             click="settings_clickHandler(event)"
+             color="0x367AD5"
+             text="{resourceManager.getString('BuilderStrings', 'homeView.settings')}"
+             textDecoration="underline"
+             toolTip="{resourceManager.getString('BuilderStrings', 'homeView.settingsTooltip')}"/>
+
+    <s:Line height="10">
+        <s:stroke>
+            <s:SolidColorStroke color="0xB6BCCC"/>
+        </s:stroke>
+    </s:Line>
+
+    <s:Label buttonMode="true"
+             click="help_clickHandler(event)"
+             color="0x367AD5"
+             text="{resourceManager.getString('BuilderStrings', 'homeView.help')}"
+             textDecoration="underline"
+             toolTip="{resourceManager.getString('BuilderStrings', 'homeView.helpTooltip')}"/>
+
+    <s:Line height="10">
+        <s:stroke>
+            <s:SolidColorStroke color="0xB6BCCC"/>
+        </s:stroke>
+    </s:Line>
+
+    <s:Label buttonMode="true"
+             click="about_clickHandler(event)"
+             color="0x367AD5"
+             text="{resourceManager.getString('BuilderStrings', 'homeView.about')}"
+             textDecoration="underline"
+             toolTip="{resourceManager.getString('BuilderStrings', 'homeView.aboutTooltip')}"/>
+</s:HGroup>

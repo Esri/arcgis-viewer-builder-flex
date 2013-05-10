@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:graphics="assets.graphics.*"
+         xmlns:views="com.esri.builder.views.*"
+         width="100%" height="100%">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.Model;
+
+            private function createApp_clickHandler(event:MouseEvent):void
+            {
+                Model.instance.status = '';
+                AppEvent.dispatch(AppEvent.CREATE_APP);
+            }
+        ]]>
+    </fx:Script>
+    <s:VGroup left="10" right="10" top="30" bottom="0"
+              gap="10">
+        <s:Label alpha="0.4"
+                 fontSize="25"
+                 text="{resourceManager.getString('BuilderStrings', 'applicationBuilder')}"
+                 textAlign="right"/>
+        <s:Button id="createApplicationButton"
+                  click="createApp_clickHandler(event)"
+                  label="{resourceManager.getString('BuilderStrings', 'homeView.createApp')}"
+                  skinClass="com.esri.builder.skins.BlueAddButtonSkin"
+                  toolTip="{resourceManager.getString('BuilderStrings', 'homeView.createAppTooltip')}"/>
+        <views:AppList id="appList"
+                       width="100%" height="100%"/>
+    </s:VGroup>
+    <s:HGroup x="{(createApplicationButton.x + createApplicationButton.width) >> 1}" y="{(createApplicationButton.y + 50)}"
+              verticalAlign="bottom"
+              visible="{Model.instance.viewerAppList.length==0}">
+        <graphics:blue_arrow/>
+        <s:Label color="0x000000"
+                 fontSize="30"
+                 text="{resourceManager.getString('BuilderStrings', 'homeView.startBuildingFirstApplication')}"/>
+    </s:HGroup>
+</s:Group>

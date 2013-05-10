@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Form xmlns:fx="http://ns.adobe.com/mxml/2009"
+        xmlns:s="library://ns.adobe.com/flex/spark"
+        xmlns:mx="library://ns.adobe.com/flex/mx"
+        xmlns:esri="http://www.esri.com/2008/ags"
+        xmlns:components="com.esri.builder.components.*"
+        xmlns:graphics="assets.graphics.*"
+        width="100%" height="100%"
+        implements="modules.IWidgetView">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.tasks.PrintTask;
+            import com.esri.ags.tasks.supportClasses.PrintServiceInfo;
+            import com.esri.builder.components.serviceBrowser.nodes.GPTaskNode;
+            import com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent;
+            import com.esri.builder.model.RecentlyUsedURLsModel;
+            import com.esri.builder.supportClasses.LabelUtil;
+            import com.esri.builder.views.BuilderAlert;
+
+            import modules.IWidgetModel;
+            import modules.supportClasses.NoneOptionArrayList;
+
+            import mx.controls.Alert;
+            import mx.rpc.AsyncResponder;
+            import mx.rpc.Fault;
+
+            import spark.components.supportClasses.ListBase;
+
+            [Bindable]
+            private var printModel:PrintModel;
+            [Bindable]
+            private var hasValidPrintTask:Boolean;
+            [Bindable]
+            private var hasLayoutTemplateOptions:Boolean;
+            [Bindable]
+            private var hasFormatOptions:Boolean;
+
+            [Bindable]
+            public function get printTaskURL():String
+            {
+                return printModel.taskURL;
+            }
+
+            public function set printTaskURL(value:String):void
+            {
+                printModel.taskURL = value;
+                hasValidPrintTask = false;
+                requestServiceInfo();
+            }
+
+            private function requestServiceInfo():void
+            {
+                printTask.getServiceInfo(new AsyncResponder(printTask_getServiceInfoCompleteHandler,
+                                                            printTask_getServiceInfoFaultHandler));
+            }
+
+            protected function printTask_getServiceInfoCompleteHandler(serviceInfo:PrintServiceInfo, token:Object = null):void
+            {
+                defaultLayoutTemplateSelection.selectedIndex = 0;
+                defaultFormatSelection.selectedIndex = 0;
+
+                hasValidPrintTask = (serviceInfo != null && hasGPTaskEndPoint());
+                if (hasValidPrintTask)
+                {
+                    const layoutTemplateOptions:NoneOptionArrayList = new NoneOptionArrayList();
+                    if (serviceInfo.layoutTemplates)
+                    {
+                        layoutTemplateOptions.addAll(serviceInfo.layoutTemplates);
+                    }
+                    defaultLayoutTemplateSelection.dataProvider = layoutTemplateOptions;
+                    hasLayoutTemplateOptions = layoutTemplateOptions.length > 1; //exclude 'none' option
+
+                    const formatOptions:NoneOptionArrayList = new NoneOptionArrayList();
+                    if (serviceInfo.formats)
+                    {
+                        formatOptions.addAll(serviceInfo.formats);
+                    }
+                    defaultFormatSelection.dataProvider = formatOptions;
+                    hasFormatOptions = formatOptions.length > 1; //exclude 'none' option
+
+                    selectMatchingItem(printModel.defaultLayoutTemplate, defaultLayoutTemplateSelection);
+                    selectMatchingItem(printModel.defaultFormat, defaultFormatSelection);
+
+                    defaultLayoutTemplateSelection.typicalItem =
+                        LabelUtil.findLongestLabelItem(layoutTemplateOptions.toArray());
+                    defaultFormatSelection.typicalItem =
+                        LabelUtil.findLongestLabelItem(formatOptions.toArray());
+                }
+                else
+                {
+                    hasLayoutTemplateOptions = false;
+                    hasFormatOptions = false;
+                }
+
+                updateDefaultLayoutTemplate();
+                updateDefaultFormat();
+            }
+
+            private function selectMatchingItem(item:String, itemList:ListBase):void
+            {
+                const options:Array = itemList.dataProvider.toArray();
+                for each (var option:String in options)
+                {
+                    if (option && option == item)
+                    {
+                        itemList.selectedItem = option;
+                        break;
+                    }
+                }
+            }
+
+            protected function printTask_getServiceInfoFaultHandler(fault:Fault, token:Object = null):void
+            {
+                hasValidPrintTask = false;
+                hasLayoutTemplateOptions = false;
+                hasFormatOptions = false;
+            }
+
+            public function set widgetModel(value:IWidgetModel):void
+            {
+                printModel = value as PrintModel;
+                if (printModel === null)
+                {
+                    throw new Error('argument is not an instance of PrintModel');
+                }
+                updateState();
+            }
+
+            public function get widgetModel():IWidgetModel
+            {
+                return printModel;
+            }
+
+            public function submit():Boolean
+            {
+                if (printModel.willUseExportWebMap)
+                {
+                    if (!printTaskURL)
+                    {
+                        BuilderAlert.show(resourceManager.getString('BuilderStrings', 'print.missingTaskURL'),
+                                          resourceManager.getString('BuilderStrings', 'widgetsView.widgetConfigurationError'),
+                                          Alert.OK);
+                        return false;
+                    }
+                    else if (!hasValidPrintTask)
+                    {
+                        BuilderAlert.show(resourceManager.getString('BuilderStrings', 'print.invalidPrintTask'),
+                                          resourceManager.getString('BuilderStrings', 'widgetsView.widgetConfigurationError'),
+                                          Alert.OK);
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            public function cancel():void
+            {
+                //do nothing
+            }
+
+            private function updateState():void
+            {
+                currentState = printModel.willUseExportWebMap ? 'webPrint' : 'basicPrint';
+            }
+
+            private function validateOrBrowseTasksIfNeeded():void
+            {
+                if (hasGPTaskEndPoint())
+                {
+                    requestServiceInfo();
+                }
+                else
+                {
+                    currentState = 'browsingTasks';
+                    serviceBrowser.browseService();
+                }
+            }
+
+            private function hasGPTaskEndPoint():Boolean
+            {
+                const endsWithGPServerAndTaskName:RegExp = / \/ GPServer \/ .+ $ /ix;
+                return endsWithGPServerAndTaskName.test(printTaskURL);
+            }
+
+            private function serviceBrowser_selectionChangeHandler(event:ServiceBrowserEvent):void
+            {
+                if (event.hasValidSelection)
+                {
+                    var selectedGPTask:GPTaskNode = serviceBrowser.serviceSelection.getItemAt(0) as GPTaskNode;
+                    printTaskURL = selectedGPTask.url;
+                    //TODO: inspect print service on load (if using print task URL)
+                    //TODO: show loading icon when inspecting
+                    requestServiceInfo();
+                    updateState();
+                }
+            }
+
+            private function updateDefaultLayoutTemplate():void
+            {
+                printModel.defaultLayoutTemplate = defaultLayoutTemplateSelection.selectedItem;
+            }
+
+            private function updateDefaultFormat():void
+            {
+                printModel.defaultFormat = defaultFormatSelection.selectedItem;
+            }
+        ]]>
+    </fx:Script>
+
+    <fx:Declarations>
+        <esri:PrintTask id="printTask" url="{printModel.taskURL}"/>
+    </fx:Declarations>
+
+    <s:states>
+        <s:State name="basicPrint"/>
+        <s:State name="webPrint" enterState="requestServiceInfo()"/>
+        <s:State name="browsingTasks"/>
+    </s:states>
+
+    <s:VGroup width="100%" height="100%"
+              left="10" right="10" top="10" bottom="10"
+              horizontalAlign="right"
+              includeIn="browsingTasks">
+        <components:ServiceBrowser id="serviceBrowser"
+                                   allowMultipleSelection="false"
+                                   searchType="printtasks"
+                                   selectionChange="serviceBrowser_selectionChangeHandler(event)"
+                                   serviceURL="{printTaskURL}"/>
+
+        <s:Button click="updateState()"
+                  label="{resourceManager.getString('BuilderStrings', 'goBack')}"
+                  skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+    </s:VGroup>
+
+    <s:FormItem excludeFrom="browsingTasks" label="{resourceManager.getString('BuilderStrings', 'print.printWithArcGISServer')}">
+        <s:CheckBox change="updateState()" selected="@{printModel.willUseExportWebMap}"/>
+    </s:FormItem>
+
+    <s:FormItem excludeFrom="basicPrint,browsingTasks" label="{resourceManager.getString('BuilderStrings', 'print.taskURL')}">
+        <s:layout>
+            <s:HorizontalLayout verticalAlign="middle"/>
+        </s:layout>
+
+        <components:SearchInput width="100%"
+                                direction="ltr"
+                                search="validateOrBrowseTasksIfNeeded()"
+                                searchButtonLabel="{resourceManager.getString('BuilderStrings', 'serviceBrowser.browse')}"
+                                searchButtonToolTip="{resourceManager.getString('BuilderStrings', 'serviceBrowser.browseTooltip')}"
+                                searchHistory="{RecentlyUsedURLsModel.getInstance().urls}"
+                                searchTextInputToolTip="{resourceManager.getString('BuilderStrings', 'serviceBrowser.urlTooltip')}"
+                                text="@{printTaskURL}"/>
+
+        <graphics:green_check width="20" height="20"
+                              layoutDirection="ltr"
+                              visible="{hasValidPrintTask}"/>
+    </s:FormItem>
+
+    <s:FormItem excludeFrom="browsingTasks"
+                label="{resourceManager.getString('BuilderStrings', 'print.title')}"
+                toolTip="{resourceManager.getString('BuilderStrings', 'print.titleToolTip')}">
+        <s:layout>
+            <s:HorizontalLayout/>
+        </s:layout>
+
+        <s:CheckBox includeInLayout="{printModel.willUseExportWebMap}"
+                    label="{resourceManager.getString('BuilderStrings', 'print.visible')}"
+                    selected="@{printModel.isTitleVisible}"
+                    visible="{printModel.willUseExportWebMap}"/>
+
+        <s:TextInput width="400" text="@{printModel.title}"/>
+    </s:FormItem>
+
+    <s:FormItem excludeFrom="webPrint,browsingTasks"
+                label="{resourceManager.getString('BuilderStrings', 'print.subtitle')}"
+                toolTip="{resourceManager.getString('BuilderStrings', 'print.subtitleToolTip')}">
+        <s:TextInput width="400" text="@{printModel.subtitle}"/>
+    </s:FormItem>
+
+    <s:FormItem id="authorInput"
+                excludeFrom="basicPrint,browsingTasks"
+                label="{resourceManager.getString('BuilderStrings', 'print.author')}">
+        <s:layout>
+            <s:HorizontalLayout/>
+        </s:layout>
+
+        <s:CheckBox label="{resourceManager.getString('BuilderStrings', 'print.visible')}" selected="@{printModel.isAuthorVisible}"/>
+
+        <s:TextInput width="400" text="@{printModel.author}"/>
+    </s:FormItem>
+
+    <s:FormItem excludeFrom="browsingTasks"
+                label="{resourceManager.getString('BuilderStrings', 'print.copyright')}"
+                toolTip="{resourceManager.getString('BuilderStrings', 'print.copyrightToolTip')}">
+        <s:layout>
+            <s:HorizontalLayout/>
+        </s:layout>
+
+        <s:CheckBox includeInLayout="{printModel.willUseExportWebMap}"
+                    label="{resourceManager.getString('BuilderStrings', 'print.visible')}"
+                    selected="@{printModel.isCopyrightVisible}"
+                    visible="{printModel.willUseExportWebMap}"/>
+
+        <s:TextInput width="400" text="@{printModel.copyright}"/>
+    </s:FormItem>
+
+    <s:FormItem id="defaultFormatInput"
+                excludeFrom="basicPrint,browsingTasks"
+                label="{resourceManager.getString('BuilderStrings', 'print.defaultFormat')}">
+        <s:DropDownList id="defaultFormatSelection"
+                        change="updateDefaultFormat()"
+                        includeInLayout="{hasFormatOptions}"
+                        requireSelection="true"
+                        visible="{hasFormatOptions}"/>
+
+        <s:Label height="{defaultFormatSelection.height}"
+                 includeInLayout="{!hasFormatOptions}"
+                 text="{resourceManager.getString('BuilderStrings', 'print.noFormatsAvailable')}"
+                 visible="{!hasFormatOptions}"/>
+    </s:FormItem>
+
+    <s:FormItem id="defaultLayoutTemplateInput"
+                excludeFrom="basicPrint,browsingTasks"
+                label="{resourceManager.getString('BuilderStrings', 'print.defaultLayoutTemplate')}">
+        <s:DropDownList id="defaultLayoutTemplateSelection"
+                        change="updateDefaultLayoutTemplate()"
+                        includeInLayout="{hasLayoutTemplateOptions}"
+                        requireSelection="true"
+                        visible="{hasLayoutTemplateOptions}"/>
+
+        <s:Label height="{defaultLayoutTemplateSelection.height}"
+                 includeInLayout="{!hasLayoutTemplateOptions}"
+                 text="{resourceManager.getString('BuilderStrings', 'print.noLayoutTemplatesAvailable')}"
+                 visible="{!hasLayoutTemplateOptions}"/>
+    </s:FormItem>
+</s:Form>

@@ -1,0 +1,614 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:components="com.esri.builder.components.*"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:views="com.esri.builder.views.*"
+         width="100%" height="100%"
+         implements="modules.IWidgetView"
+         initialize="init()"
+         minHeight="300">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.tasks.JSONTask;
+            import com.esri.builder.model.ConfigLayer;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.supportClasses.LabelUtil;
+            import com.esri.builder.views.BuilderAlert;
+
+            import modules.IWidgetModel;
+
+            import mx.collections.ArrayList;
+            import mx.controls.Alert;
+            import mx.events.FlexEvent;
+            import mx.logging.ILogger;
+            import mx.logging.Log;
+            import mx.rpc.AsyncResponder;
+            import mx.rpc.Fault;
+
+            public const LOG:ILogger = Log.getLogger('modules.Time.TimeView');
+
+            [Bindable]
+            private var timeAwareLayersList:ArrayList = new ArrayList();
+
+            [Bindable]
+            private var timeStopsUnitOptions:ArrayList = new ArrayList();
+
+            [Bindable]
+            private var availableDateFormats:ArrayList = new ArrayList();
+
+            private function init():void
+            {
+                timeStopsUnitOptions.addItem(new TimeStopsUnit(TimeModel.YEARS, resourceManager.getString('BuilderStrings', 'time.years')));
+                timeStopsUnitOptions.addItem(new TimeStopsUnit(TimeModel.MONTHS, resourceManager.getString('BuilderStrings', 'time.months')));
+                timeStopsUnitOptions.addItem(new TimeStopsUnit(TimeModel.DAYS, resourceManager.getString('BuilderStrings', 'time.days')));
+                timeStopsUnitOptions.addItem(new TimeStopsUnit(TimeModel.HOURS, resourceManager.getString('BuilderStrings', 'time.hours')));
+                timeStopsUnitOptions.addItem(new TimeStopsUnit(TimeModel.MINUTES, resourceManager.getString('BuilderStrings', 'time.minutes')));
+                timeStopsUnitOptions.addItem(new TimeStopsUnit(TimeModel.SECONDS, resourceManager.getString('BuilderStrings', 'time.seconds')));
+
+                availableDateFormats.source = getUniqueDateFormats();
+
+                preselectDateFormat();
+                preselectTimeStopUnit();
+                preselectSlider();
+
+                listTimeAwareLayers();
+            }
+
+            [Bindable]
+            private var model:TimeModel;
+
+            public function get widgetModel():IWidgetModel
+            {
+                return model;
+            }
+
+            public function set widgetModel(value:IWidgetModel):void
+            {
+                if (value is TimeModel)
+                {
+                    model = value as TimeModel;
+                }
+                else
+                {
+                    throw new Error('argument is not an instance of TimeModel');
+                }
+            }
+
+            public function submit():Boolean
+            {
+                if (model.willSetFromLayer && !model.setFromLayer)
+                {
+                    BuilderAlert.show(resourceManager.getString('BuilderStrings', 'time.missingFromLayer'),
+                                      resourceManager.getString('BuilderStrings', 'widgetsView.widgetConfigurationError'),
+                                      Alert.OK);
+                    return false;
+                }
+
+                return true;
+            }
+
+            public function cancel():void
+            {
+                // NOOP
+            }
+
+            private function dateFormatLabelFunction(dateFormat:String):String
+            {
+                //TODO: refactor checking of custom label
+                if (dateFormat == resourceManager.getString('BuilderStrings', 'time.custom'))
+                {
+                    return resourceManager.getString('BuilderStrings', 'time.custom');
+                }
+                else
+                {
+                    dateFormatter.formatString = dateFormat;
+                    return dateFormatter.format(sampleDate);
+                }
+            }
+
+            private function updateDateFormat():void
+            {
+                const selectedDateFormat:String = dateFormatSelection.selectedItem;
+                if (selectedDateFormat != resourceManager.getString('BuilderStrings', 'time.custom'))
+                {
+                    model.dateFormat = selectedDateFormat;
+                }
+            }
+
+            private function updateTimeExtentOptions():void
+            {
+                model.willSetFromLayer = (timeExtentOptions.selection == setFromLayerOption);
+                if (model.willSetFromLayer)
+                {
+                    updateSetFromLayer();
+                }
+            }
+
+            private function updateStopMethodOptions():void
+            {
+                model.willUseTimeStopsCount = (stopMethodOptions.selection == useTimeStopsCountOption);
+            }
+
+            private function updateSliderOptions():void
+            {
+                if (sliderOptions.selection == singleThumbTimeInstantSliderOption)
+                {
+                    model.singleThumbAsTimeInstant = true;
+                    model.thumbCount = 1;
+                }
+                else if (sliderOptions.selection == singleThumbSliderOption)
+                {
+                    model.singleThumbAsTimeInstant = false;
+                    model.thumbCount = 1;
+                }
+                else if (sliderOptions.selection == doubleThumbSliderOption)
+                {
+                    model.singleThumbAsTimeInstant = false;
+                    model.thumbCount = 2;
+                }
+            }
+
+            private function updateSetFromLayer():void
+            {
+                if (layerSelection.selectedItem)
+                {
+                    model.setFromLayer = layerSelection.selectedItem.label;
+                }
+            }
+
+            private function updateTimeStopsUnit():void
+            {
+                model.timeStopsUnits = timeStopsUnitSelection.selectedItem.unit;
+            }
+
+            private function preselectDateFormat():void
+            {
+                const dateFormat:String = model.dateFormat;
+                const dateFormatOptions:Array = dateFormatSelection.dataProvider.toArray();
+                var isDateFormatCustom:Boolean = true;
+                for each (var dateFormatOption:String in dateFormatOptions)
+                {
+                    if (dateFormatOption == dateFormat)
+                    {
+                        dateFormatSelection.selectedItem = dateFormat;
+                        isDateFormatCustom = false;
+                        break;
+                    }
+                }
+
+                if (isDateFormatCustom)
+                {
+                    dateFormatSelection.selectedIndex = dateFormatSelection.dataProvider.length - 1;
+                }
+            }
+
+            private function preselectTimeStopUnit():void
+            {
+                const timeStopUnit:String = model.timeStopsUnits;
+                const timeStopsUnitsOptionsSource:Array = timeStopsUnitOptions.source;
+                for each (var timeStopUnitOption:TimeStopsUnit in timeStopsUnitsOptionsSource)
+                {
+                    if (timeStopUnitOption.unit == timeStopUnit)
+                    {
+                        timeStopsUnitSelection.selectedItem = timeStopUnitOption;
+                        break;
+                    }
+                }
+            }
+
+            private function preselectSetFromLayer():void
+            {
+                const setFromLayerName:String = model.setFromLayer;
+                const layerOptions:Array = layerSelection.dataProvider.toArray();
+                for each (var layerOption:ConfigLayer in layerOptions)
+                {
+                    if (layerOption.label == setFromLayerName)
+                    {
+                        layerSelection.selectedItem = layerOption;
+                        break;
+                    }
+                }
+            }
+
+            private function preselectSlider():void
+            {
+                if (model.thumbCount == 1)
+                {
+                    if (model.singleThumbAsTimeInstant)
+                    {
+                        singleThumbTimeInstantSliderOption.selected = true;
+                    }
+                    else
+                    {
+                        singleThumbSliderOption.selected = true;
+                    }
+                }
+                else
+                {
+                    doubleThumbSliderOption.selected = true;
+                }
+            }
+
+            [Bindable]
+            private var totalConfigLayersToProcess:int = 0;
+
+            private function listTimeAwareLayers():void
+            {
+                const timeAwareLayers:Array = [];
+                const allLayers:Array = Model.instance.getAllLayers();
+                totalConfigLayersToProcess = allLayers.length;
+                var serviceInspector:JSONTask;
+                const urlVars:URLVariables = new URLVariables();
+                urlVars.f = 'json';
+
+                for each (var configLayer:ConfigLayer in allLayers)
+                {
+                    serviceInspector = new JSONTask(configLayer.url);
+                    serviceInspector.execute(urlVars, new AsyncResponder(serviceInspector_resultHandler, serviceInspector_faultHandler, configLayer));
+                }
+
+                function serviceInspector_resultHandler(serviceDescription:Object, configLayer:ConfigLayer):void {
+                    if (serviceDescription.timeInfo) {
+                        timeAwareLayers.push(configLayer);
+                    }
+
+                    updateProcessedTimeAwareConfigLayers(timeAwareLayers);
+                }
+
+                function serviceInspector_faultHandler(event:Fault, configLayer:ConfigLayer):void {
+                    if (Log.isWarn()) {
+                        LOG.warn('Could not get details for {0} layer', configLayer.label);
+                    }
+
+                    updateProcessedTimeAwareConfigLayers(timeAwareLayers);
+                }
+            }
+
+            private function updateProcessedTimeAwareConfigLayers(timeAwareLayers:Array):void
+            {
+                totalConfigLayersToProcess--;
+                if (totalConfigLayersToProcess == 0)
+                {
+                    sortAndAssignTimeAwareLayers(timeAwareLayers);
+                    preselectSetFromLayer();
+                }
+            }
+
+            private function sortAndAssignTimeAwareLayers(timeAwareLayers:Array):void
+            {
+                timeAwareLayers.sortOn('label');
+                timeAwareLayersList.source = timeAwareLayers;
+            }
+
+            protected function dateFormatSelection_creationCompleteHandler(event:FlexEvent):void
+            {
+                dateFormatSelection.typicalItem = LabelUtil.findLongestLabelItem(
+                    dateFormatSelection.dataProvider.toArray(),
+                    null,
+                    dateFormatLabelFunction);
+            }
+
+            private function dateFieldLabelFunction(date:Date):String
+            {
+                dateFormatter.formatString = resourceManager.getString('BuilderStrings', 'time.shortDate');
+                return dateFormatter.format(date);
+            }
+
+            private function getUniqueDateFormats():Array
+            {
+                var dateFormats:Array = [ resourceManager.getString('BuilderStrings', 'time.dayShortMonthYear'),
+                                          resourceManager.getString('BuilderStrings', 'time.longDate'),
+                                          resourceManager.getString('BuilderStrings', 'time.longMonthDayYear'),
+                                          resourceManager.getString('BuilderStrings', 'time.longMonthYear'),
+                                          resourceManager.getString('BuilderStrings', 'time.shortDate'),
+                                          resourceManager.getString('BuilderStrings', 'time.shortDateLongTime'),
+                                          resourceManager.getString('BuilderStrings', 'time.shortDateLongTime24'),
+                                          resourceManager.getString('BuilderStrings', 'time.shortDateShortTime'),
+                                          resourceManager.getString('BuilderStrings', 'time.shortDateShortTime24'),
+                                          resourceManager.getString('BuilderStrings', 'time.shortMonthYear'),
+                                          resourceManager.getString('BuilderStrings', 'time.year'),
+                                          resourceManager.getString('BuilderStrings', 'time.custom')];
+
+                var uniqueDateFormats:Array = [];
+
+                for each (var dateFormat:String in dateFormats)
+                {
+                    if (uniqueDateFormats.indexOf(dateFormat) == -1)
+                    {
+                        uniqueDateFormats.push(dateFormat);
+                    }
+                }
+
+                return uniqueDateFormats;
+            }
+        ]]>
+    </fx:Script>
+
+    <fx:Declarations>
+        <mx:DateFormatter id="dateFormatter"/>
+        <fx:Date id="sampleDate"/>
+
+        <s:RadioButtonGroup id="sliderOptions" change="updateSliderOptions()"/>
+        <s:RadioButtonGroup id="timeExtentOptions" change="updateTimeExtentOptions()"/>
+        <s:RadioButtonGroup id="stopMethodOptions" change="updateStopMethodOptions()"/>
+    </fx:Declarations>
+
+    <s:layout>
+        <s:ConstraintLayout>
+            <s:constraintRows>
+                <s:ConstraintRow id="row1"
+                                 height="10%"
+                                 baseline="maxAscent:0"/>
+                <s:ConstraintRow id="row2"
+                                 height="10%"
+                                 baseline="maxAscent:0"/>
+                <s:ConstraintRow id="row3"
+                                 height="10%"
+                                 baseline="maxAscent:0"/>
+                <s:ConstraintRow id="row4"
+                                 height="10%"
+                                 baseline="maxAscent:0"/>
+                <s:ConstraintRow id="row5"
+                                 height="50%"
+                                 baseline="maxAscent:0"/>
+            </s:constraintRows>
+
+            <s:constraintColumns>
+                <s:ConstraintColumn id="column1" width="15%"/>
+                <s:ConstraintColumn id="column2" width="35%"/>
+                <s:ConstraintColumn id="column3" width="50%"/>
+            </s:constraintColumns>
+        </s:ConstraintLayout>
+    </s:layout>
+
+    <s:Label left="column1:10" right="column1:0"
+             baseline="row1:0"
+             text="{resourceManager.getString('BuilderStrings', 'time.dateFormat')}"/>
+
+    <s:DropDownList id="dateFormatSelection"
+                    left="column2:0"
+                    baseline="row1:0"
+                    change="updateDateFormat()"
+                    dataProvider="{availableDateFormats}"
+                    initialize="dateFormatSelection_creationCompleteHandler(event)"
+                    labelFunction="dateFormatLabelFunction"
+                    requireSelection="true"/>
+
+    <s:TextInput left="{dateFormatSelection.x + dateFormatSelection.width + 10}" right="column2:0"
+                 baseline="row1:0"
+                 includeInLayout="{dateFormatSelection.selectedIndex == dateFormatSelection.dataProvider.length - 1}"
+                 text="@{model.dateFormat}"
+                 visible="{dateFormatSelection.selectedIndex == dateFormatSelection.dataProvider.length - 1}"/>
+
+    <s:Label left="column1:10" right="column2:10"
+             baseline="row2:5"
+             text="{resourceManager.getString('BuilderStrings', 'time.loop')}"/>
+
+    <components:SliderToggleButton left="column2:0"
+                                   baseline="row2:0"
+                                   deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                   selected="@{model.loop}"
+                                   selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
+
+    <s:Label left="column1:10" right="column1:10"
+             baseline="row3:0"
+             text="{resourceManager.getString('BuilderStrings', 'time.movingRate')}"/>
+
+    <s:NumericStepper id="thumbMovingRateStepper"
+                      left="column2:0"
+                      baseline="row3:0"
+                      maximum="10000"
+                      minimum="0"
+                      snapInterval="0"
+                      stepSize="500"
+                      value="@{model.thumbMovingRate}"/>
+
+    <s:Label left="{thumbMovingRateStepper.x + thumbMovingRateStepper.width + 10}" right="column2:40"
+             baseline="row3:0"
+             text="{resourceManager.getString('BuilderStrings', 'time.milliseconds')}"/>
+
+    <s:VGroup left="column3:10" baseline="row1:0">
+        <s:Group width="100%">
+            <s:Label left="0"
+                     text="{resourceManager.getString('BuilderStrings', 'time.slider')}"
+                     verticalCenter="0"/>
+
+            <views:HelpButton right="0"
+                              helpText="{resourceManager.getString('BuilderStrings', 'time.sliderHelp')}"
+                              title="{resourceManager.getString('BuilderStrings', 'time.slider')}"
+                              verticalCenter="0"/>
+        </s:Group>
+
+        <s:HGroup paddingLeft="10" verticalAlign="middle">
+            <s:RadioButton id="singleThumbTimeInstantSliderOption" group="{sliderOptions}"/>
+
+            <mx:HSlider enabled="false" value="5"/>
+        </s:HGroup>
+
+        <s:HGroup paddingLeft="10" verticalAlign="middle">
+            <s:RadioButton id="singleThumbSliderOption" group="{sliderOptions}"/>
+
+            <mx:HSlider enabled="false"
+                        showTrackHighlight="true"
+                        value="5"/>
+        </s:HGroup>
+
+        <s:HGroup paddingLeft="10" verticalAlign="middle">
+            <s:RadioButton id="doubleThumbSliderOption" group="{sliderOptions}"/>
+
+            <mx:HSlider enabled="false"
+                        showTrackHighlight="true"
+                        thumbCount="2"
+                        values="{[3,7]}"/>
+        </s:HGroup>
+    </s:VGroup>
+
+    <s:HGroup width="100%" height="100%"
+              left="column1:10"
+              baseline="row5:0"
+              verticalAlign="middle">
+        <components:TitleContainer width="50%" height="100%"
+                                   title="{resourceManager.getString('BuilderStrings', 'time.timeExtent')}">
+            <components:layout>
+                <s:ConstraintLayout>
+                    <s:constraintRows>
+                        <s:ConstraintRow id="timeExtentRow1"
+                                         height="33%"
+                                         baseline="maxAscent:0"/>
+                        <s:ConstraintRow id="timeExtentRow2"
+                                         height="33%"
+                                         baseline="maxAscent:0"/>
+                        <s:ConstraintRow id="timeExtentRow3"
+                                         height="33%"
+                                         baseline="maxAscent:0"/>
+                    </s:constraintRows>
+
+                    <s:constraintColumns>
+                        <s:ConstraintColumn id="timeExtentColumn1" width="40%"/>
+                        <s:ConstraintColumn id="timeExtentColumn2" width="15%"/>
+                        <s:ConstraintColumn id="timeExtentColumn3" width="45%"/>
+                    </s:constraintColumns>
+                </s:ConstraintLayout>
+            </components:layout>
+
+            <s:RadioButton id="setFromLayerOption"
+                           left="timeExtentColumn1:10" right="timeExtentColumn1:0"
+                           baseline="timeExtentRow1:0"
+                           group="{timeExtentOptions}"
+                           label="{resourceManager.getString('BuilderStrings', 'time.fromLayer')}"
+                           selected="{model.willSetFromLayer}"/>
+
+            <s:Group width="200"
+                     left="timeExtentColumn2:10"
+                     baseline="timeExtentRow1:0"
+                     includeInLayout="{totalConfigLayersToProcess &gt; 0}"
+                     visible="{totalConfigLayersToProcess &gt; 0}">
+                <s:SWFLoader width="30" height="30"
+                             autoLoad="true"
+                             horizontalCenter="0"
+                             source="@Embed(source='/assets/images/ico_loading.swf')"/>
+            </s:Group>
+
+            <s:Label left="timeExtentColumn2:10"
+                     baseline="timeExtentRow1:0"
+                     includeInLayout="{totalConfigLayersToProcess == 0
+                                        &amp;&amp; layerSelection.dataProvider.length == 0}"
+                     text="{resourceManager.getString('BuilderStrings', 'time.noLayersAvailable')}"
+                     visible="{totalConfigLayersToProcess == 0
+                                &amp;&amp; layerSelection.dataProvider.length == 0}"/>
+
+            <s:DropDownList id="layerSelection"
+                            width="200"
+                            left="timeExtentColumn2:10"
+                            baseline="timeExtentRow1:0"
+                            dataProvider="{timeAwareLayersList}"
+                            includeInLayout="{totalConfigLayersToProcess == 0
+                                                &amp;&amp; layerSelection.dataProvider.length > 0}"
+                            requireSelection="true"
+                            valueCommit="updateSetFromLayer()"
+                            visible="{totalConfigLayersToProcess == 0
+                                        &amp;&amp; layerSelection.dataProvider.length > 0}"/>
+
+            <s:RadioButton left="timeExtentColumn1:10" right="timeExtentColumn1:0"
+                           baseline="timeExtentRow2:0"
+                           group="{timeExtentOptions}"
+                           label="{resourceManager.getString('BuilderStrings', 'time.specificTimes')}"
+                           selected="{!model.willSetFromLayer}"
+                           skinClass="com.esri.builder.skins.WrappableRadioButtonSkin"/>
+
+            <s:Label left="timeExtentColumn2:10"
+                     baseline="timeExtentRow2:0"
+                     text="{resourceManager.getString('BuilderStrings', 'time.start')}"/>
+
+            <mx:DateField left="timeExtentColumn3:10"
+                          baseline="timeExtentRow2:0"
+                          labelFunction="dateFieldLabelFunction"
+                          selectedDate="@{model.startTime}"/>
+
+            <s:Label left="timeExtentColumn2:10"
+                     baseline="timeExtentRow3:0"
+                     text="{resourceManager.getString('BuilderStrings', 'time.end')}"/>
+
+            <mx:DateField left="timeExtentColumn3:10"
+                          baseline="timeExtentRow3:0"
+                          labelFunction="dateFieldLabelFunction"
+                          selectedDate="@{model.endTime}"/>
+        </components:TitleContainer>
+
+        <components:TitleContainer width="50%" height="100%"
+                                   title="{resourceManager.getString('BuilderStrings', 'time.stopMethod')}">
+            <components:layout>
+                <s:ConstraintLayout>
+                    <s:constraintRows>
+                        <s:ConstraintRow id="stopMethodRow1"
+                                         height="33%"
+                                         baseline="maxAscent:0"/>
+                        <s:ConstraintRow id="stopMethodRow2"
+                                         height="33%"
+                                         baseline="maxAscent:0"/>
+                    </s:constraintRows>
+
+                    <s:constraintColumns>
+                        <s:ConstraintColumn id="stopMethodColumn1" width="25%"/>
+                        <s:ConstraintColumn id="stopMethodColumn2" width="25%"/>
+                        <s:ConstraintColumn id="stopMethodColumn3" width="15%"/>
+                        <s:ConstraintColumn id="stopMethodColumn4" width="30%"/>
+                    </s:constraintColumns>
+                </s:ConstraintLayout>
+            </components:layout>
+
+            <s:RadioButton id="useTimeStopsCountOption"
+                           left="stopMethodColumn1:10"
+                           baseline="stopMethodRow1:0"
+                           group="{stopMethodOptions}"
+                           label="{resourceManager.getString('BuilderStrings', 'time.count')}"
+                           selected="{model.willUseTimeStopsCount}"/>
+
+            <s:NumericStepper left="stopMethodColumn2:10"
+                              baseline="stopMethodRow1:0"
+                              value="@{model.timeStopsCount}"/>
+
+            <s:RadioButton left="stopMethodColumn1:10"
+                           baseline="stopMethodRow2:0"
+                           group="{stopMethodOptions}"
+                           label="{resourceManager.getString('BuilderStrings', 'time.interval')}"
+                           selected="{!model.willUseTimeStopsCount}"/>
+
+            <s:NumericStepper left="stopMethodColumn2:10"
+                              baseline="stopMethodRow2:0"
+                              maximum="10000"
+                              minimum="1"
+                              value="@{model.timeStopsInterval}"/>
+
+            <s:Label left="stopMethodColumn3:10" right="stopMethodColumn3:0"
+                     baseline="stopMethodRow2:0"
+                     maxDisplayedLines="2"
+                     text="{resourceManager.getString('BuilderStrings', 'time.units')}"/>
+
+            <s:DropDownList id="timeStopsUnitSelection"
+                            left="stopMethodColumn4:10"
+                            baseline="stopMethodRow2:0"
+                            change="updateTimeStopsUnit()"
+                            dataProvider="{timeStopsUnitOptions}"
+                            requireSelection="true"/>
+        </components:TitleContainer>
+    </s:HGroup>
+</s:Group>

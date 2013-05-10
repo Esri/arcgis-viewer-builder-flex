@@ -1,0 +1,571 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:components="com.esri.builder.components.*"
+         xmlns:supportClasses="modules.supportClasses.*"
+         xmlns:graphics="assets.graphics.*"
+         xmlns:views="com.esri.builder.views.*"
+         width="100%" height="100%"
+         implements="modules.IWidgetView">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.layers.supportClasses.Field;
+            import com.esri.ags.layers.supportClasses.LayerDetails;
+            import com.esri.ags.tasks.DetailsTask;
+            import com.esri.builder.components.ModifyItemEvent;
+            import com.esri.builder.components.serviceBrowser.nodes.LayerNode;
+            import com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.model.RecentlyUsedURLsModel;
+            import com.esri.builder.supportClasses.FieldUtil;
+            import com.esri.builder.views.BuilderAlert;
+
+            import modules.IWidgetModel;
+
+            import mx.controls.Alert;
+            import mx.events.FlexEvent;
+            import mx.rpc.AsyncResponder;
+            import mx.rpc.Fault;
+            import mx.utils.ObjectUtil;
+
+            import spark.events.GridEvent;
+
+            private const SEARCH_EXPRESSION_SAMPLE:String =
+                "PARCELID like \'[value]\'\n" +
+                "upper(STATE) LIKE upper(\'[value]\')\n" +
+                "upper(NAME) LIKE upper(\'%[value]%\')";
+
+            private var lastLoadedURL:String;
+
+            [Bindable]
+            private var layerFields:ArrayList = new ArrayList();
+            [Bindable]
+            public var searchLayerURL:String;
+            [Bindable]
+            public var searchLayerName:String;
+            [Bindable]
+            public var searchLayerLabel:String;
+            [Bindable]
+            public var searchLayerExpression:String;
+            [Bindable]
+            public var searchLayerUseProxy:Boolean;
+            [Bindable]
+            public var searchLayerFields:ArrayList = new ArrayList();
+            [Bindable]
+            private var searchModel:SearchModel;
+            [Bindable]
+            private var isInCreateMode:Boolean;
+            [Bindable]
+            private var hasValidExpression:Boolean;
+
+            private var searchLayerToEdit:SearchLayer;
+
+            public function get widgetModel():IWidgetModel
+            {
+                return searchModel;
+            }
+
+            public function set widgetModel(widgetModel:IWidgetModel):void
+            {
+                if (widgetModel is SearchModel)
+                {
+                    searchModel = widgetModel as SearchModel;
+                }
+                else
+                {
+                    throw new Error('argument is not an instance of SearchModel');
+                }
+            }
+
+            public function submit():Boolean
+            {
+                var wasOKClickedDuringSearchLayerConfiguration:Boolean = (currentState == "configureSearchLayer");
+                if (wasOKClickedDuringSearchLayerConfiguration)
+                {
+                    commitUnsavedSearchLayerEdits();
+                }
+
+                if (searchModel.searchLayers.length == 0)
+                {
+                    BuilderAlert.show(resourceManager.getString('BuilderStrings', 'search.missingSearchLayers'),
+                                      resourceManager.getString('BuilderStrings', 'widgetsView.widgetConfigurationError'),
+                                      Alert.OK);
+                    return false;
+                }
+
+                return true;
+            }
+
+            private function commitUnsavedSearchLayerEdits():void
+            {
+                var hasValidEdits:Boolean = (searchLayerURL && searchLayerName);
+                if (hasValidEdits)
+                {
+                    commitSearchLayerEdits();
+                }
+            }
+
+            public function cancel():void
+            {
+            }
+
+            private function startEditSearchLayerMode(searchLayerToEdit:SearchLayer):void
+            {
+                isInCreateMode = false;
+
+                var fields:Array = cloneFields(searchLayerToEdit.fields.source);
+
+                searchLayerURL = searchLayerToEdit.url;
+                searchLayerExpression = searchLayerToEdit.expression;
+                searchLayerName = searchLayerToEdit.name;
+                searchLayerLabel = searchLayerToEdit.textSearchLabel;
+                searchLayerUseProxy = searchLayerToEdit.useProxy;
+                searchLayerFields.source = fields;
+
+                lastLoadedURL = searchLayerURL;
+                getFieldsFromURL();
+                validateExpression();
+
+                currentState = "configureSearchLayer";
+                displayFieldsDataGrid.updateTitleField(
+                    FieldUtil.findFieldByName(fields, searchLayerToEdit.titleField));
+                displayFieldsDataGrid.updateOrderByField(
+                    FieldUtil.findFieldByName(fields, searchLayerToEdit.orderByField),
+                    searchLayerToEdit.orderByFieldDirection);
+            }
+
+            private function cloneFields(fields:Array):Array
+            {
+                var clonedFields:Array = [];
+
+                for each (var field:Field in fields)
+                {
+                    clonedFields.push(cloneField(field));
+                }
+
+                return clonedFields;
+            }
+
+            private function cloneField(field:Field):Field
+            {
+                return ObjectUtil.copy(field) as Field;
+            }
+
+            private function getFieldsFromURL():void
+            {
+                //TODO: use regEx validator
+                var urlRE:RegExp = /https?:\/\/([^\s.]+.)+([^\s.]+)/;
+                var layerURL:String = searchLayerURL;
+                if (urlRE.test(layerURL))
+                {
+                    var detailsTask:DetailsTask = new DetailsTask();
+                    var endsWithLayerIndex:RegExp = /^\s*(.+)\/(\d+)\s*$/;
+                    var layerURLAndLayerIndex:Array = endsWithLayerIndex.exec(layerURL) as Array;
+                    if (layerURLAndLayerIndex)
+                    {
+                        detailsTask.url = layerURLAndLayerIndex[1];
+                        detailsTask.getDetails(Number(layerURLAndLayerIndex[2]), new AsyncResponder(getDetailsResultHandler, getDetailsFaultHandler, detailsTask));
+                    }
+                }
+            }
+
+            private function getDetailsResultHandler(layerDetails:LayerDetails, detailsTask:DetailsTask):void
+            {
+                const currentLoadedURL:String = detailsTask.url + "/" + layerDetails.id;
+                if (lastLoadedURL != currentLoadedURL)
+                {
+                    lastLoadedURL = currentLoadedURL;
+                    searchLayerFields.removeAll();
+                }
+
+                layerFields.source = FieldUtil.getValidFields(layerDetails.fields);
+            }
+
+            private function getDetailsFaultHandler(fault:Fault, token:Object):void
+            {
+                //TODO: log error
+            }
+
+            private function addSelectedFields():void
+            {
+                const selectedFields:Vector.<Object> = fieldsDataGrid.selectedItems;
+
+                for each (var field:Field in selectedFields)
+                {
+                    const fieldCopy:Field = new Field();
+                    fieldCopy.name = field.name;
+                    fieldCopy.alias = field.alias;
+                    searchLayerFields.addItem(fieldCopy);
+                }
+            }
+
+            private function fieldsDataGrid_gridDoubleClickHandler(event:GridEvent):void
+            {
+                addSelectedFields();
+            }
+
+            private function okButton_clickHandler(event:MouseEvent):void
+            {
+                commitSearchLayerEdits();
+                currentState = "listSearchLayers";
+            }
+
+            private function commitSearchLayerEdits():void
+            {
+                var newSearchLayer:SearchLayer = createSearchLayer();
+
+                if (isInCreateMode)
+                {
+                    searchModel.searchLayers.addItem(newSearchLayer);
+                }
+                else
+                {
+                    replaceSearchLayer(searchLayerToEdit, newSearchLayer);
+                }
+            }
+
+            private function createSearchLayer():SearchLayer
+            {
+                var searchLayer:SearchLayer = new SearchLayer();
+                searchLayer.url = searchLayerURL;
+                searchLayer.expression = searchLayerExpression;
+                searchLayer.textSearchLabel = searchLayerLabel;
+                searchLayer.titleField = displayFieldsDataGrid.titleFieldName;
+                searchLayer.orderByField = displayFieldsDataGrid.orderByFieldName;
+                searchLayer.orderByFieldDirection = displayFieldsDataGrid.orderByFieldDirection;
+                searchLayer.name = searchLayerName;
+                searchLayer.useProxy = searchLayerUseProxy;
+                searchLayer.fields.addAll(searchLayerFields);
+
+                return searchLayer;
+            }
+
+            private function replaceSearchLayer(toBeReplaced:SearchLayer, toReplaceBy:SearchLayer):void
+            {
+                var searchLayers:ArrayList = searchModel.searchLayers;
+                var toBeReplacedIndex:int = searchLayers.getItemIndex(toBeReplaced);
+                searchLayers.addItemAt(toReplaceBy, toBeReplacedIndex);
+                searchLayers.removeItem(toBeReplaced);
+            }
+
+            private function cancelButton_clickHandler(event:MouseEvent):void
+            {
+                currentState = "listSearchLayers";
+            }
+
+            private function startCreateSearchLayerMode():void
+            {
+                isInCreateMode = true;
+
+                searchLayerURL = "http://server.arcgisonline.com/ArcGIS/rest/services/Demographics/USA_Median_Age/MapServer/4";
+                searchLayerName = "Name";
+                searchLayerLabel = "Label";
+                searchLayerExpression = "";
+                searchLayerUseProxy = false;
+                searchLayerFields.source = [];
+                validateExpression();
+
+                layerFields.removeAll();
+
+                currentState = "configureSearchLayer";
+            }
+
+            private function validateExpression():void
+            {
+                const valueToken:RegExp = /.*\[value\].*/g;
+                hasValidExpression = searchLayerExpression.length == 0 || valueToken.test(searchLayerExpression);
+            }
+
+            protected function serviceBrowser_selectionChangeHandler(event:ServiceBrowserEvent):void
+            {
+                if (event.hasValidSelection)
+                {
+                    const selectedLayer:LayerNode = serviceBrowser.serviceSelection.getItemAt(0) as LayerNode;
+                    searchLayerURL = selectedLayer.url;
+                    getFieldsFromURL();
+                    currentState = "configureSearchLayer";
+                }
+            }
+
+            protected function backButton_clickHandler(event:MouseEvent):void
+            {
+                currentState = "configureSearchLayer";
+            }
+
+            protected function searchLayerURLInput_enterHandler(event:FlexEvent):void
+            {
+                processServiceLayerURL();
+            }
+
+            private function browseForQueryLayers():void
+            {
+                currentState = "browsingQueryLayers";
+                serviceBrowser.browseService();
+            }
+
+            private function hasLayerEndPoint():Boolean
+            {
+                const layerEndPoint:RegExp = / \/ [a-z]+ Server \/ [0-9]+ $ /ix;
+                return layerEndPoint.test(searchLayerURL);
+            }
+
+            private function processServiceLayerURL():void
+            {
+                if (hasLayerEndPoint())
+                {
+                    getFieldsFromURL();
+                }
+                else
+                {
+                    browseForQueryLayers();
+                }
+            }
+
+            private function searchLayerDataGrid_editItemHandler(event:ModifyItemEvent):void
+            {
+                searchLayerToEdit = event.item as SearchLayer;
+                startEditSearchLayerMode(searchLayerToEdit);
+            }
+
+            private function searchLayerDataGrid_removeItemHandler(event:ModifyItemEvent):void
+            {
+                searchModel.searchLayers.removeItem(event.item);
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="listSearchLayers"/>
+        <s:State name="configureSearchLayer"/>
+        <s:State name="browsingQueryLayers"/>
+    </s:states>
+
+    <s:VGroup width="100%" height="100%"
+              includeIn="listSearchLayers"
+              paddingLeft="10"
+              paddingRight="10">
+        <s:Group width="100%" height="100%">
+            <s:Button right="0"
+                      click="startCreateSearchLayerMode()"
+                      label="{resourceManager.getString('BuilderStrings', 'search.addASearch')}"
+                      skinClass="com.esri.builder.skins.GreenButtonSkin"/>
+
+            <components:ItemModifierDataGrid id="searchLayerDataGrid"
+                                             width="100%" height="100%"
+                                             top="30"
+                                             dataProvider="{searchModel.searchLayers}"
+                                             editItem="searchLayerDataGrid_editItemHandler(event)"
+                                             removeItem="searchLayerDataGrid_removeItemHandler(event)">
+                <components:columns>
+                    <s:ArrayList>
+                        <s:GridColumn dataField="name" headerText="{resourceManager.getString('BuilderStrings', 'search.title')}"/>
+                        <s:GridColumn width="80"
+                                      headerText="{resourceManager.getString('BuilderStrings', 'search.actions')}"
+                                      itemRenderer="com.esri.builder.renderers.EditableRemovableGridItemRenderer"/>
+                    </s:ArrayList>
+                </components:columns>
+            </components:ItemModifierDataGrid>
+        </s:Group>
+
+        <s:HGroup width="100%"
+                  paddingBottom="6"
+                  paddingTop="6"
+                  verticalAlign="middle">
+            <s:Label text="{resourceManager.getString('BuilderStrings', 'search.zoomScale')}"/>
+
+            <s:Label text="1:"/>
+
+            <s:TextInput width="200"
+                         restrict="0-9"
+                         text="@{searchModel.zoomScale}"/>
+        </s:HGroup>
+
+        <s:CheckBox label="{resourceManager.getString('BuilderStrings', 'shareResults')}" selected="@{searchModel.shareResults}"/>
+    </s:VGroup>
+
+    <components:TitleContainer width="100%" height="100%"
+                               includeIn="configureSearchLayer"
+                               title="{resourceManager.getString('BuilderStrings', 'search.addASearch')}">
+        <components:layout>
+            <s:VerticalLayout paddingLeft="10" paddingRight="10"/>
+        </components:layout>
+
+        <s:Group width="100%" height="45%"
+                 minHeight="100">
+            <s:layout>
+                <s:ConstraintLayout>
+                    <s:constraintColumns>
+                        <s:ConstraintColumn id="editSearchColumn1" width="15%"/>
+                        <s:ConstraintColumn id="editSearchColumn2" width="20%"/>
+                        <s:ConstraintColumn id="editSearchColumn3" width="20%"/>
+                        <s:ConstraintColumn id="editSearchColumn4" width="10%"/>
+                        <s:ConstraintColumn id="editSearchColumn5" width="20%"/>
+                        <s:ConstraintColumn id="editSearchColumn6" width="15%"/>
+                    </s:constraintColumns>
+
+                    <s:constraintRows>
+                        <s:ConstraintRow id="editSearchRow1"
+                                         height="33%"
+                                         baseline="maxAscent:0"/>
+                        <s:ConstraintRow id="editSearchRow2"
+                                         height="33%"
+                                         baseline="maxAscent:0"/>
+                        <s:ConstraintRow id="editSearchRow3"
+                                         height="33%"
+                                         baseline="maxAscent:0"/>
+                    </s:constraintRows>
+                </s:ConstraintLayout>
+            </s:layout>
+
+            <s:Label left="editSearchColumn1:10" right="editSearchColumn1:10"
+                     baseline="editSearchRow1:0"
+                     maxDisplayedLines="2"
+                     text="{resourceManager.getString('BuilderStrings', 'search.url')}"/>
+
+            <components:SearchInput left="editSearchColumn2:10" right="editSearchColumn6:10"
+                                    baseline="editSearchRow1:0"
+                                    direction="ltr"
+                                    search="processServiceLayerURL()"
+                                    searchButtonLabel="{resourceManager.getString('BuilderStrings', 'serviceBrowser.browse')}"
+                                    searchButtonToolTip="{resourceManager.getString('BuilderStrings', 'serviceBrowser.browseTooltip')}"
+                                    searchHistory="{RecentlyUsedURLsModel.getInstance().urls}"
+                                    searchTextInputToolTip="{resourceManager.getString('BuilderStrings', 'serviceBrowser.urlTooltip')}"
+                                    text="@{searchLayerURL}"/>
+
+            <s:Label left="editSearchColumn1:10"
+                     baseline="editSearchRow2:0"
+                     text="{resourceManager.getString('BuilderStrings', 'search.name')}"/>
+
+            <s:TextInput left="editSearchColumn2:10" right="editSearchColumn2:0"
+                         baseline="editSearchRow2:0"
+                         text="@{searchLayerName}"/>
+
+            <s:Label left="editSearchColumn4:10"
+                     baseline="editSearchRow2:0"
+                     text="{resourceManager.getString('BuilderStrings', 'search.label')}"/>
+
+            <s:TextInput left="editSearchColumn5:10" right="editSearchColumn5:0"
+                         baseline="editSearchRow2:0"
+                         text="@{searchLayerLabel}"/>
+
+            <s:Label left="editSearchColumn1:10"
+                     baseline="editSearchRow3:0"
+                     text="{resourceManager.getString('BuilderStrings', 'search.expression')}"/>
+
+            <s:TextInput left="editSearchColumn2:10" right="editSearchColumn2:0"
+                         baseline="editSearchRow3:0"
+                         change="validateExpression()"
+                         text="@{searchLayerExpression}"/>
+
+            <s:Group left="editSearchColumn3:2"
+                     baseline="editSearchRow3:-13"
+                     toolTip="{resourceManager.getString('BuilderStrings', 'search.invalidExpression', [ '[value]' ])}"
+                     visible="{!hasValidExpression}">
+                <graphics:warning width="20" height="20"/>
+            </s:Group>
+
+            <views:HelpButton left="editSearchColumn3:24"
+                              baseline="editSearchRow3:0"
+                              helpText="{resourceManager.getString('BuilderStrings', 'search.expressionHelpContent', [ SEARCH_EXPRESSION_SAMPLE ])}"
+                              title="{resourceManager.getString('BuilderStrings', 'search.expression')}"/>
+
+            <s:Label left="editSearchColumn4:10" right="editSearchColumn4:5"
+                     baseline="editSearchRow3:0"
+                     text="{resourceManager.getString('BuilderStrings', 'configLayerView.useProxy')}"/>
+
+            <s:HGroup left="editSearchColumn5:10"
+                      baseline="editSearchRow3:0"
+                      verticalAlign="middle">
+                <s:CheckBox id="useProxy" selected="@{searchLayerUseProxy}"/>
+
+                <graphics:warning width="20" height="20"
+                                  visible="{useProxy.selected 
+                                      &amp;&amp; !Model.instance.proxyURL}"/>
+
+                <s:Label text="{resourceManager.getString('BuilderStrings', 'httpProxyMissing')}" visible="{useProxy.selected
+                         &amp;&amp; !Model.instance.proxyURL}"/>
+            </s:HGroup>
+        </s:Group>
+
+        <s:HGroup width="100%" height="100%"
+                  verticalAlign="middle">
+            <components:TitleContainer width="25%" height="100%"
+                                       title="{resourceManager.getString('BuilderStrings', 'search.availableFields')}">
+                <s:DataGrid id="fieldsDataGrid"
+                            left="10" right="10" top="0" bottom="0"
+                            dataProvider="{layerFields}"
+                            doubleClickEnabled="true"
+                            gridDoubleClick="fieldsDataGrid_gridDoubleClickHandler(event)"
+                            requireSelection="true"
+                            selectionMode="multipleRows">
+                    <s:columns>
+                        <s:ArrayList>
+                            <s:GridColumn dataField="name" headerText="{resourceManager.getString('BuilderStrings', 'search.name')}"/>
+                        </s:ArrayList>
+                    </s:columns>
+                </s:DataGrid>
+            </components:TitleContainer>
+
+            <s:Button click="addSelectedFields()"
+                      enabled="{fieldsDataGrid.selectedIndex > -1}"
+                      label="{resourceManager.getString('BuilderStrings', 'include')}"
+                      skinClass="com.esri.builder.skins.GreenNextButtonSkin"/>
+
+            <components:TitleContainer width="100%" height="100%"
+                                       title="{resourceManager.getString('BuilderStrings', 'search.includedFields')}">
+                <supportClasses:DisplayFieldsDataGrid id="displayFieldsDataGrid"
+                                                      width="100%" height="100%"
+                                                      left="10" right="10" top="0" bottom="0"
+                                                      dataProvider="{searchLayerFields}"/>
+            </components:TitleContainer>
+        </s:HGroup>
+
+        <s:HGroup horizontalAlign="center" verticalAlign="middle">
+            <s:Button id="okButton"
+                      click="okButton_clickHandler(event)"
+                      enabled="{searchLayerURL &amp;&amp; searchLayerName}"
+                      label="{isInCreateMode ? 
+                                resourceManager.getString('BuilderStrings','search.addSearch')
+                                : resourceManager.getString('BuilderStrings','search.updateSearch')}"
+                      skinClass="com.esri.builder.skins.BlueButtonSkin"/>
+
+            <s:Button id="cancelButton"
+                      click="cancelButton_clickHandler(event)"
+                      label="{resourceManager.getString('BuilderStrings', 'cancel')}"
+                      skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+        </s:HGroup>
+    </components:TitleContainer>
+
+    <s:VGroup width="100%" height="100%"
+              horizontalAlign="right"
+              includeIn="browsingQueryLayers">
+        <components:ServiceBrowser id="serviceBrowser"
+                                   width="100%" height="100%"
+                                   searchType="querylayers"
+                                   selectionChange="serviceBrowser_selectionChangeHandler(event)"
+                                   serviceURL="{searchLayerURL}"/>
+
+        <s:HGroup width="100%" verticalAlign="middle">
+            <s:Button click="backButton_clickHandler(event)"
+                      label="{resourceManager.getString('BuilderStrings', 'query.goBack')}"
+                      skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+        </s:HGroup>
+    </s:VGroup>
+</s:Group>

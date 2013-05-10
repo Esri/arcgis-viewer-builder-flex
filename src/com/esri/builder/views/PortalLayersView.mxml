@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:views="com.esri.builder.views.*"
+         xmlns:components="com.esri.builder.components.*"
+         width="100%" height="100%"
+         add="this_addHandler(event)"
+         creationComplete="init()"
+         currentState="{Model.instance.portalLayersState}"
+         implements="com.esri.builder.views.supportClasses.IIncludeLayerSelection">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.portal.Portal;
+            import com.esri.builder.components.SearchInputEvent;
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.model.PortalModel;
+            import com.esri.builder.views.supportClasses.IIncludeLayerDispatcher;
+
+            import mx.core.UIComponent;
+            import mx.events.FlexEvent;
+            import mx.utils.StringUtil;
+
+            private var lastUsedBingKey:String;
+            private var lastUsedPortalURL:String;
+            private var lastUsedCultureCode:String;
+
+            [Bindable]
+            private var portal:Portal;
+            [Bindable]
+            public var isFeaturedContentShown:Boolean = true;
+            [Bindable]
+            private var searchTerm:String;
+            private var textInputValue:String;
+
+            private function this_addHandler(event:FlexEvent):void
+            {
+                portal = PortalModel.getInstance().portal;
+                AppEvent.addListener(AppEvent.PORTAL_STATUS_UPDATED, portalStatusUpdatedHandler);
+                if (isFeaturedContentShown && portal.loaded && !portal.user)
+                {
+                    updateGalleryIfNeeded();
+                }
+            }
+
+            protected function portalStatusUpdatedHandler(event:AppEvent):void
+            {
+                // YCA: ugly fix to check if the component is visible
+                // CR: 242,418
+                // -> 2 PortalLayersView are create, so 2 react at the AppEvent...
+                //    Both modifiying the Model unique instance
+                if (!(this.parent && this.parent.parent && (this.parent.parent as UIComponent).owner.visible))
+                {
+                    return;
+                }
+
+                if (portal.user)
+                {
+                    Model.instance.portalLayersState = "mycontent";
+                    if (isFeaturedContentShown)
+                    {
+                        AppEvent.dispatch(AppEvent.PORTAL_LAYER_SEARCH, { searchTerm: "", isLoggingIn: true, user: portal.user });
+                    }
+                }
+                else
+                {
+                    if (isFeaturedContentShown)
+                    {
+                        if (Model.instance.portalLayersState != "featuredlayers")
+                        {
+                            Model.instance.portalLayersState = "featuredlayers";
+                        }
+
+                        AppEvent.dispatch(AppEvent.PORTAL_LAYER_SEARCH, { searchTerm: "", isLoggingIn: false, user: null });
+                    }
+                    else
+                    {
+                        Model.instance.portalLayersState = "searchlayers";
+                    }
+                }
+            }
+
+            protected function featured_clickHandler(event:MouseEvent):void
+            {
+                if (Model.instance.basemapList)
+                {
+                    Model.instance.portalLayersState =
+                        (Model.instance.basemapList.length) ? "featuredlayers" : "nomatch";
+                }
+                else
+                {
+                    Model.instance.portalLayersState = "featuredlayers";
+                }
+                updateGalleryIfNeeded();
+                if (searchInput)
+                {
+                    searchInput.text = "";
+                }
+            }
+
+            protected function search_clickHandler(event:MouseEvent):void
+            {
+                Model.instance.portalLayersState = "searchlayers";
+            }
+
+            protected function myContent_clickHandler(event:MouseEvent):void
+            {
+                if (portal.user)
+                {
+                    Model.instance.portalLayersState = "mycontent";
+                }
+                else
+                {
+                    AppEvent.dispatch(AppEvent.PORTAL_SIGN_IN);
+                }
+            }
+
+            private function updateGalleryIfNeeded():void
+            {
+                if (currentState === 'featuredlayers'
+                    && (Model.instance.basemapList === null || needToRefreshBasemaps()))
+                {
+                    AppEvent.dispatch(AppEvent.PORTAL_LAYER_SEARCH, { searchTerm: "", isLoggingIn: false, user: portal.user });
+                    lastUsedBingKey = Model.instance.bingKey;
+                    lastUsedPortalURL = PortalModel.getInstance().portalURL;
+                    lastUsedCultureCode = Model.instance.cultureCode;
+                }
+            }
+
+            private function needToRefreshBasemaps():Boolean
+            {
+                return !(lastUsedBingKey == Model.instance.bingKey
+                    && lastUsedPortalURL == PortalModel.getInstance().portalURL
+                    && lastUsedCultureCode == Model.instance.cultureCode);
+            }
+
+            private function init():void
+            {
+                AppEvent.addListener(AppEvent.BASEMAP_AND_OP_LAYERS_SELECTED, basemapAndOpLayersSelectedHandler, false, 0, true);
+            }
+
+            private function basemapAndOpLayersSelectedHandler(event:AppEvent):void
+            {
+                updateGalleryIfNeeded();
+            }
+
+            private function portalLayerList_valueCommitHandler(event:FlexEvent):void
+            {
+                dispatchUpdateLayerSelection();
+            }
+
+            private function dispatchUpdateLayerSelection():void
+            {
+                if (owner)
+                {
+                    (owner as IIncludeLayerDispatcher).updateLayerSelection();
+                }
+            }
+
+            private function searchInput_addHandler(event:FlexEvent):void
+            {
+                searchInput.setFocus();
+            }
+
+            private function dispatchIncludeLayer():void
+            {
+                (owner as IIncludeLayerDispatcher).dispatchIncludeLayer();
+            }
+
+            protected function searchinput_searchHandler(event:SearchInputEvent):void
+            {
+                searchTerm = event.searchTerm;
+                AppEvent.dispatch(AppEvent.PORTAL_LAYER_SEARCH, { searchTerm: searchTerm, isLoggingIn: false, user: portal.signedIn ? portal.user : null });
+            }
+
+            protected function portalLayerList_keyDownHandler(event:KeyboardEvent):void
+            {
+                if (event.keyCode == Keyboard.ENTER)
+                {
+                    dispatchIncludeLayer();
+                }
+            }
+
+            public function hasValidSelection():Boolean
+            {
+                return (currentState == "mycontent") ?
+                    portalLayersMyContentView.hasValidSelection() :
+                    portalLayerList && portalLayerList.selectedIndex > -1;
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="featuredlayers"
+                 enterState="dispatchUpdateLayerSelection()"
+                 stateGroups="featured"/>
+        <s:State name="loading"
+                 enterState="dispatchUpdateLayerSelection()"
+                 stateGroups="featured"/>
+        <s:State name="nomatch"
+                 enterState="dispatchUpdateLayerSelection()"
+                 stateGroups="featured"/>
+        <s:State name="searchlayers"
+                 enterState="dispatchUpdateLayerSelection()"
+                 stateGroups="search"/>
+        <s:State name="searchloading"
+                 enterState="dispatchUpdateLayerSelection()"
+                 stateGroups="search"/>
+        <s:State name="searchresultlayers"
+                 enterState="dispatchUpdateLayerSelection()"
+                 stateGroups="search"/>
+        <s:State name="searchnomatch"
+                 enterState="dispatchUpdateLayerSelection()"
+                 stateGroups="search"/>
+        <s:State name="mycontent" enterState="dispatchUpdateLayerSelection()"/>
+    </s:states>
+
+    <s:Rect left="0" right="0" top="0" bottom="0">
+        <s:stroke>
+            <s:SolidColorStroke color="black" weight="1"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:SWFLoader width="40" height="40"
+                 autoLoad="true"
+                 horizontalCenter="0"
+                 includeIn="loading, searchloading"
+                 source="@Embed(source='/assets/images/ico_loading.swf')"
+                 verticalCenter="0"/>
+
+    <s:Label fontSize="16"
+             fontWeight="bold"
+             horizontalCenter="0"
+             includeIn="nomatch, searchnomatch"
+             text.nomatch="{resourceManager.getString('BuilderStrings', 'mapsView.noBasemap')}"
+             text.searchnomatch="{resourceManager.getString('BuilderStrings', 'agsPortal.noLayersFound')}"
+             verticalCenter="0"/>
+
+    <s:HGroup width="100%"
+              horizontalAlign="left"
+              paddingLeft="10"
+              paddingTop="5"
+              verticalAlign="middle">
+
+        <s:Label buttonMode="true"
+                 buttonMode.featured="false"
+                 click="featured_clickHandler(event)"
+                 color="0x367AD5"
+                 fontWeight.featured="bold"
+                 includeInLayout="{isFeaturedContentShown}"
+                 text="{resourceManager.getString('BuilderStrings', 'agsPortal.featuredBasemaps')}"
+                 textDecoration="underline"
+                 textDecoration.featured="none"
+                 visible="{isFeaturedContentShown}"/>
+
+        <s:Line height="18"
+                includeInLayout="{isFeaturedContentShown}"
+                visible="{isFeaturedContentShown}">
+            <s:stroke>
+                <s:SolidColorStroke color="0x000000"/>
+            </s:stroke>
+        </s:Line>
+
+        <s:Label buttonMode="true"
+                 buttonMode.search="false"
+                 click="search_clickHandler(event)"
+                 color="0x367AD5"
+                 fontWeight.search="bold"
+                 text="{resourceManager.getString('BuilderStrings', 'agsPortal.search')}"
+                 textDecoration="underline"
+                 textDecoration.search="none"/>
+
+        <s:Line height="18">
+            <s:stroke>
+                <s:SolidColorStroke color="0x000000"/>
+            </s:stroke>
+        </s:Line>
+
+        <s:Label buttonMode="true"
+                 buttonMode.mycontent="false"
+                 click="myContent_clickHandler(event)"
+                 color="0x367AD5"
+                 fontWeight.mycontent="bold"
+                 text="{resourceManager.getString('BuilderStrings', 'agsPortal.myContent')}"
+                 textDecoration="underline"
+                 textDecoration.mycontent="none"/>
+    </s:HGroup>
+
+    <s:HGroup id="searchGroup"
+              width="100%"
+              horizontalAlign="center"
+              includeIn="search"
+              paddingBottom="10"
+              paddingTop="35"
+              verticalAlign="middle">
+
+        <components:SearchInput id="searchInput"
+                                width="250"
+                                add="searchInput_addHandler(event)"
+                                search="searchinput_searchHandler(event)"
+                                searchButtonLabel="{resourceManager.getString('BuilderStrings', 'mapsView.search')}"
+                                searchHistory="{Model.instance.webMapSearchHistory}"
+                                searchTextInputToolTip="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsOperationalLayers.portalSearcLayersTooltip')}"/>
+    </s:HGroup>
+
+    <s:Label id="searchResultLabel"
+             top="68"
+             includeIn="searchlayers, searchresultlayers"
+             includeInLayout="{Model.instance.portalLayerList.length &gt; 0}"
+             paddingLeft="10"
+             text="{StringUtil.substitute(resourceManager.getString('BuilderStrings', 'agsPortal.searchResultLabel'), Model.instance.portalLayerList.length, searchTerm)}"
+             visible="{Model.instance.portalLayerList.length &gt; 0}"/>
+
+    <s:VGroup width="100%" height="100%"
+              top="30" top.search="75"
+              paddingTop="10">
+        <s:List id="portalLayerList"
+                width="99%" height="99%"
+                borderVisible="false"
+                dataProvider.featuredlayers="{Model.instance.basemapList}"
+                dataProvider.searchlayers="{Model.instance.portalLayerList}"
+                dataProvider.searchresultlayers="{Model.instance.portalLayerList}"
+                doubleClick="dispatchIncludeLayer()"
+                includeIn="featuredlayers, searchlayers, searchresultlayers"
+                itemRenderer="com.esri.builder.renderers.PortalLayerRenderer"
+                keyDown="portalLayerList_keyDownHandler(event)"
+                valueCommit="portalLayerList_valueCommitHandler(event)">
+            <s:layout>
+                <s:TileLayout clipAndEnableScrolling="true"
+                              horizontalGap="3"
+                              paddingBottom="8"
+                              paddingLeft="8"
+                              paddingRight="0"
+                              paddingTop="8"
+                              requestedColumnCount="3"/>
+            </s:layout>
+        </s:List>
+    </s:VGroup>
+
+    <views:PortalLayersMyContentView id="portalLayersMyContentView"
+                                     width="100%" height="100%"
+                                     top="30"
+                                     includeIn="mycontent"/>
+</s:Group>

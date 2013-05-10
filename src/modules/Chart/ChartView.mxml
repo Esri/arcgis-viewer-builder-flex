@@ -1,0 +1,833 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:mx="library://ns.adobe.com/flex/mx"
+          xmlns:components="com.esri.builder.components.*"
+          width="100%" height="100%"
+          add="this_addHandler(event)"
+          gap="0"
+          implements="modules.IWidgetView">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.layers.supportClasses.Field;
+            import com.esri.ags.layers.supportClasses.LayerDetails;
+            import com.esri.ags.portal.supportClasses.PopUpFieldInfo;
+            import com.esri.ags.portal.supportClasses.PopUpMediaInfo;
+            import com.esri.ags.tasks.DetailsTask;
+            import com.esri.builder.components.ModifyItemEvent;
+            import com.esri.builder.components.serviceBrowser.nodes.LayerNode;
+            import com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent;
+            import com.esri.builder.model.ConfigLayer;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.model.RecentlyUsedURLsModel;
+            import com.esri.builder.supportClasses.FieldUtil;
+            import com.esri.builder.views.BuilderAlert;
+            import com.esri.builder.views.popups.ErrorPopUp;
+
+            import modules.IWidgetModel;
+
+            import mx.controls.Alert;
+            import mx.events.CloseEvent;
+            import mx.events.FlexEvent;
+            import mx.managers.PopUpManager;
+            import mx.rpc.AsyncResponder;
+            import mx.rpc.Fault;
+
+            import spark.components.supportClasses.ListBase;
+            import spark.events.GridEvent;
+
+            [Bindable]
+            private var chartMediaInfos:ArrayList = new ArrayList();
+            [Bindable]
+            private var availableFeatureLayers:ArrayList;
+            [Bindable]
+            private var layerFields:ArrayList = new ArrayList();
+            [Bindable]
+            private var isChartSourceValid:Boolean;
+
+            private var previousState:String;
+            private var chartLayerDefinitionToUpdate:ChartLayerDefinition;
+            private var errorPopUp:ErrorPopUp;
+
+            [Bindable]
+            private var chartModel:ChartModel;
+
+            public function get widgetModel():IWidgetModel
+            {
+                return chartModel;
+            }
+
+            public function set widgetModel(widgetModel:IWidgetModel):void
+            {
+                if (widgetModel is ChartModel)
+                {
+                    chartModel = widgetModel as ChartModel;
+                }
+                else
+                {
+                    throw new Error('argument is not an instance of ChartModel');
+                }
+            }
+
+            private var _labelField:String;
+
+            [Bindable]
+            private function get labelField():String
+            {
+                return _labelField;
+            }
+
+            private function set labelField(value:String):void
+            {
+                _labelField = value;
+                validateChartSourceInput();
+            }
+
+            private var _urlLayerLabel:String;
+
+            [Bindable]
+            private function get urlLayerLabel():String
+            {
+                return _urlLayerLabel;
+            }
+
+            private function set urlLayerLabel(value:String):void
+            {
+                _urlLayerLabel = value;
+                validateChartSourceInput();
+            }
+
+            private var _layerURL:String;
+
+            private var lastLoadedURL:String;
+
+            [Bindable]
+            private function get layerURL():String
+            {
+                return _layerURL;
+            }
+
+            private function set layerURL(value:String):void
+            {
+                _layerURL = value;
+                validateChartSourceInput();
+            }
+
+            public function validateChartSourceInput():void
+            {
+                isChartSourceValid = hasValidEdits();
+            }
+
+            public function submit():Boolean
+            {
+                var wasOKClickedDuringCreateOrEditSession:Boolean =
+                    (currentState == "createLayerChartSource"
+                    || currentState == "createURLChartSource"
+                    || currentState == "updateLayerChartSource"
+                    || currentState == "updateURLChartSource");
+
+                if (wasOKClickedDuringCreateOrEditSession)
+                {
+                    commitUnsavedChartSourceEdits();
+                }
+
+                if (chartModel.chartLayerDefinitions.length == 0)
+                {
+                    BuilderAlert.show(resourceManager.getString('BuilderStrings', 'chart.missingChartSources'),
+                                      resourceManager.getString('BuilderStrings', 'widgetsView.widgetConfigurationError'),
+                                      Alert.OK);
+                    return false;
+                }
+
+                return true;
+            }
+
+            private function commitUnsavedChartSourceEdits():void
+            {
+                if (hasValidEdits())
+                {
+                    updateChartModelChartLayerDefinitions();
+                }
+            }
+
+            private function hasValidEdits():Boolean
+            {
+                var hasLayerChartSourceEdits:Boolean = (currentState == "createLayerChartSource" || currentState == "updateLayerChartSource");
+                var hasURLChartSourceEdits:Boolean = (currentState == "createURLChartSource" || currentState == "updateURLChartSource");
+
+                if (hasLayerChartSourceEdits)
+                {
+                    if ((chartMediaInfos.length > 0)
+                        && getChartLayerDefinitionLabel())
+                    {
+                        return true;
+                    }
+                }
+
+                if (hasURLChartSourceEdits)
+                {
+                    if ((chartMediaInfos.length > 0)
+                        && getChartLayerDefinitionLabel()
+                        && getChartLayerDefinitionURL())
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            public function cancel():void
+            {
+            }
+
+            private function chartLayerDefinitionDataGrid_editItemHandler(event:ModifyItemEvent):void
+            {
+                chartLayerDefinitionToUpdate = event.item as ChartLayerDefinition;
+
+                if (chartLayerDefinitionToUpdate.url)
+                {
+                    setEditModeForURLChartSource();
+                }
+                else
+                {
+                    setEditModeForLayerChartSource();
+                }
+            }
+
+            private function setEditModeForURLChartSource():void
+            {
+                currentState = "updateURLChartSource";
+                chartMediaInfos.source = cloneMedias(chartLayerDefinitionToUpdate.mediaInfos);
+                urlLayerLabel = chartLayerDefinitionToUpdate.label;
+                layerURL = chartLayerDefinitionToUpdate.url;
+                lastLoadedURL = layerURL;
+
+                getFieldsFromURL();
+                validateChartSourceInput();
+            }
+
+            private function cloneMedias(medias:Array):Array
+            {
+                var clonedMedias:Array = [];
+
+                for each (var media:PopUpMediaInfo in medias)
+                {
+                    clonedMedias.push(cloneMedia(media));
+                }
+
+                return clonedMedias;
+            }
+
+            private function cloneMedia(media:PopUpMediaInfo):PopUpMediaInfo
+            {
+                var clonedMedia:PopUpMediaInfo = new PopUpMediaInfo();
+
+                clonedMedia.chartFields = media.chartFields.concat();
+                clonedMedia.type = media.type;
+                clonedMedia.title = media.title;
+                clonedMedia.caption = media.caption;
+
+                return clonedMedia;
+            }
+
+            private function setEditModeForLayerChartSource():void
+            {
+                var featureLayerMatch:ConfigLayer = findFeatureLayerByLabel(chartLayerDefinitionToUpdate.label);
+                if (featureLayerMatch)
+                {
+                    currentState = "updateLayerChartSource";
+                    chartMediaInfos.source = cloneMedias(chartLayerDefinitionToUpdate.mediaInfos);
+                    featureLayerSelection.selectedItem = featureLayerMatch;
+
+                    var selectedFeatureLayer:ConfigLayer = featureLayerSelection.selectedItem;
+                    if (selectedFeatureLayer)
+                    {
+                        lastLoadedURL = selectedFeatureLayer.url;
+                    }
+
+                    getFieldsFromLayer();
+                    validateChartSourceInput();
+                }
+                else
+                {
+                    errorPopUp = new ErrorPopUp();
+                    errorPopUp.addEventListener(CloseEvent.CLOSE, errorPopUp_closeHandler, false, 0, true);
+                    errorPopUp.content = resourceManager.getString('BuilderStrings', 'chart.layerNoLongerExists');
+                    PopUpManager.addPopUp(errorPopUp, this, true);
+                    PopUpManager.centerPopUp(errorPopUp);
+                }
+            }
+
+            private function errorPopUp_closeHandler(event:CloseEvent):void
+            {
+                PopUpManager.removePopUp(errorPopUp);
+                errorPopUp = null;
+            }
+
+            private function findFeatureLayerByLabel(label:String):ConfigLayer
+            {
+                var featureLayerMatch:ConfigLayer;
+                var availableFeatureLayersSource:Array = availableFeatureLayers.toArray();
+                for each (var featureLayer:ConfigLayer in availableFeatureLayersSource)
+                {
+                    if (featureLayer.label == label)
+                    {
+                        featureLayerMatch = featureLayer;
+                        break;
+                    }
+                }
+                return featureLayerMatch;
+            }
+
+            private function chartLayerDefinitionDataGrid_removeItemHandler(event:ModifyItemEvent):void
+            {
+                chartModel.chartLayerDefinitions.removeItem(event.item);
+            }
+
+            protected function this_addHandler(event:FlexEvent):void
+            {
+                availableFeatureLayers = getAvailableFeatureLayers();
+            }
+
+            private function getAvailableFeatureLayers():ArrayList
+            {
+                var availableFeatureLayers:ArrayList = new ArrayList();
+                var allOperationalLayers:Array = Model.instance.getOpLayers();
+
+                for each (var configLayer:ConfigLayer in allOperationalLayers)
+                {
+                    if (configLayer.type == ConfigLayer.FEATURE)
+                    {
+                        availableFeatureLayers.addItem(configLayer);
+                    }
+                }
+
+                return availableFeatureLayers;
+            }
+
+            protected function addLayerChartSourceButton_clickHandler(event:MouseEvent):void
+            {
+                currentState = 'createLayerChartSource';
+                resetLayerChartSourceInputFields();
+                resetLayerFieldSelection();
+                chartMediaInfos.removeAll();
+                validateChartSourceInput();
+                lastLoadedURL = "";
+            }
+
+            private function resetLayerFieldSelection():void
+            {
+                fieldSelection.selectedIndex = ListBase.NO_SELECTION;
+                layerFields.removeAll();
+            }
+
+            private function resetLayerChartSourceInputFields():void
+            {
+                featureLayerSelection.selectedIndex = ListBase.NO_SELECTION;
+            }
+
+            protected function addURLChartSourceButton_clickHandler(event:MouseEvent):void
+            {
+                currentState = 'createURLChartSource';
+                resetURLChartSourceInputFields();
+                resetLayerFieldSelection();
+                chartMediaInfos.removeAll();
+                validateChartSourceInput();
+                lastLoadedURL = "";
+            }
+
+            private function resetURLChartSourceInputFields():void
+            {
+                urlLayerLabel = "";
+                layerURL = "";
+            }
+
+            private function getFieldsFromLayer():void
+            {
+                var selectedFeatureLayer:ConfigLayer = featureLayerSelection.selectedItem;
+                if (selectedFeatureLayer)
+                {
+                    var detailsTask:DetailsTask = new DetailsTask();
+                    var endsWithLayerIndex:RegExp = /^\s*(.+)\/(\d+)\s*$/;
+                    var layerURLAndLayerIndex:Array = endsWithLayerIndex.exec(selectedFeatureLayer.url) as Array;
+                    if (layerURLAndLayerIndex)
+                    {
+                        detailsTask.url = layerURLAndLayerIndex[1];
+                        detailsTask.getDetails(Number(layerURLAndLayerIndex[2]), new AsyncResponder(getDetailsResultHandler, getDetailsFaultHandler, selectedFeatureLayer.url));
+                    }
+                }
+            }
+
+            private function getFieldsFromURL():void
+            {
+                //TODO: use regEx validator
+                var urlRE:RegExp = /https?:\/\/([^\s.]+.)+([^\s.]+)/;
+                var layerURL:String = layerURL;
+                if (urlRE.test(layerURL))
+                {
+                    var detailsTask:DetailsTask = new DetailsTask();
+                    var endsWithLayerIndex:RegExp = /^\s*(.+)\/(\d+)\s*$/;
+                    var layerURLAndLayerIndex:Array = endsWithLayerIndex.exec(layerURL) as Array;
+                    if (layerURLAndLayerIndex)
+                    {
+                        detailsTask.url = layerURLAndLayerIndex[1];
+                        detailsTask.getDetails(Number(layerURLAndLayerIndex[2]), new AsyncResponder(getDetailsResultHandler, getDetailsFaultHandler, layerURL));
+                    }
+                }
+            }
+
+            private function getDetailsResultHandler(layerDetails:LayerDetails, url:String):void
+            {
+                if (lastLoadedURL != url)
+                {
+                    lastLoadedURL = url;
+                    chartMediaInfos.removeAll();
+                }
+
+                layerFields.source = FieldUtil.getNumericFields(FieldUtil.getValidFields(layerDetails.fields));
+                labelField = layerDetails.displayField;
+                urlLayerLabel = layerDetails.name;
+                fieldSelection.selectedIndex = 0;
+            }
+
+            private function getDetailsFaultHandler(fault:Fault, token:Object):void
+            {
+                //TODO: log error
+            }
+
+            private function includeSelectedFields():void
+            {
+                const selectedFields:Vector.<Object> = fieldSelection.selectedItems;
+
+                var chartMediaInfo:PopUpMediaInfo;
+                for each (var field:Field in selectedFields)
+                {
+                    chartMediaInfo = new PopUpMediaInfo();
+                    chartMediaInfo.title = field.name;
+                    chartMediaInfo.chartFields = [ field.name ];
+                    chartMediaInfo.type = ChartTypes.BAR_CHART;
+                    chartMediaInfos.addItem(chartMediaInfo);
+                }
+
+                validateChartSourceInput();
+            }
+
+            private function okButton_clickHandler(event:MouseEvent):void
+            {
+                updateChartModelChartLayerDefinitions();
+                changeViewStateToSelectedTab();
+            }
+
+            private function updateChartModelChartLayerDefinitions():void
+            {
+                var chartLayerDefinitionLabel:String = getChartLayerDefinitionLabel();
+                var chartLayerDefinitionURL:String = getChartLayerDefinitionURL();
+                var chartLayerDefinition:ChartLayerDefinition = createChartLayerDefinition(chartLayerDefinitionLabel, chartLayerDefinitionURL);
+
+                var isInCreateMode:Boolean = (currentState == "createLayerChartSource" || currentState == "createURLChartSource");
+                if (isInCreateMode)
+                {
+                    chartModel.chartLayerDefinitions.addItem(chartLayerDefinition);
+                }
+                else
+                {
+                    replaceChartLayerDefinition(chartLayerDefinitionToUpdate, chartLayerDefinition);
+                }
+            }
+
+            private function getChartLayerDefinitionLabel():String
+            {
+                if (currentState == "createLayerChartSource" || currentState == "updateLayerChartSource")
+                {
+                    return featureLayerSelection.selectedItem.label;
+                }
+                else
+                {
+                    return urlLayerLabel;
+                }
+            }
+
+            private function getChartLayerDefinitionURL():String
+            {
+                return (currentState == "createURLChartSource" || currentState == "updateURLChartSource") ? layerURL : "";
+            }
+
+            private function createChartLayerDefinition(label:String, url:String = null):ChartLayerDefinition
+            {
+                var chartLayerDefinition:ChartLayerDefinition = new ChartLayerDefinition();
+                chartLayerDefinition.label = label;
+                chartLayerDefinition.labelField = labelField;
+                chartLayerDefinition.url = url;
+                chartLayerDefinition.fieldInfos = createFieldInfos(labelField, chartMediaInfos.source);
+                chartLayerDefinition.mediaInfos = cloneMedias(chartMediaInfos.source);
+                return chartLayerDefinition;
+            }
+
+            private function createFieldInfos(labelField:String, source:Array):Array
+            {
+                var fieldNames:Array = [];
+                fieldNames.push(labelField);
+                for each (var chartMediaInfo:PopUpMediaInfo in source)
+                {
+                    fieldNames.push(chartMediaInfo.chartFields[0]); //only 1 field is supported
+                }
+
+                var fieldInfos:Array = [];
+                var fieldInfo:PopUpFieldInfo;
+                for each (var fieldName:String in fieldNames)
+                {
+                    fieldInfo = new PopUpFieldInfo();
+                    fieldInfo.fieldName = fieldName;
+                    fieldInfos.push(fieldInfo);
+                }
+
+                return fieldInfos;
+            }
+
+            private function replaceChartLayerDefinition(toBeReplaced:ChartLayerDefinition, toReplaceBy:ChartLayerDefinition):void
+            {
+                var chartLayerDefinitions:ArrayList = chartModel.chartLayerDefinitions;
+                var toBeReplacedIndex:int = chartLayerDefinitions.getItemIndex(toBeReplaced);
+                chartLayerDefinitions.addItemAt(toReplaceBy, toBeReplacedIndex);
+                chartLayerDefinitions.removeItem(toBeReplaced);
+            }
+
+            private function changeViewStateToSelectedTab():void
+            {
+                currentState = viewTabBar.selectedItem.value;
+            }
+
+            private function cancelButton_clickHandler(event:MouseEvent):void
+            {
+                changeViewStateToSelectedTab();
+            }
+
+            protected function serviceBrowser_selectionChangeHandler(event:ServiceBrowserEvent):void
+            {
+                if (event.hasValidSelection)
+                {
+                    const selectedLayer:LayerNode = serviceBrowser.serviceSelection.getItemAt(0) as LayerNode;
+                    layerURL = selectedLayer.url;
+                    getFieldsFromURL();
+                    currentState = previousState;
+                }
+            }
+
+            protected function backButton_clickHandler(event:MouseEvent):void
+            {
+                currentState = previousState;
+            }
+
+            protected function searchLayerURLInput_enterHandler(event:FlexEvent):void
+            {
+                processServiceLayerURL();
+            }
+
+            private function browseForQueryLayers():void
+            {
+                currentState = "browsingQueryLayers";
+                serviceBrowser.browseService();
+            }
+
+            private function hasLayerEndPoint():Boolean
+            {
+                const layerEndPoint:RegExp = / \/ [a-z]* Server \/ [0-9]+ $ /ix;
+                return layerEndPoint.test(layerURL);
+            }
+
+            private function processServiceLayerURL():void
+            {
+                if (hasLayerEndPoint())
+                {
+                    getFieldsFromURL();
+                }
+                else
+                {
+                    browseForQueryLayers();
+                }
+            }
+
+            override public function set currentState(value:String):void
+            {
+                previousState = super.currentState;
+                super.currentState = value;
+            }
+
+            protected function chartMediaDataGrid_removeItemHandler(event:ModifyItemEvent):void
+            {
+                ItemModifierDataGrid.removeItem(event.item, chartMediaInfos);
+                validateChartSourceInput();
+            }
+
+            protected function fieldSelection_gridDoubleClickHandler(event:GridEvent):void
+            {
+                if (event.rowIndex > -1)
+                {
+                    includeSelectedFields();
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="chartSources"/>
+        <s:State name="createLayerChartSource" stateGroups="configureChartSource,configureLayerChartSource,createLayerSource"/>
+        <s:State name="createURLChartSource" stateGroups="configureChartSource,configureURLChartSource,createLayerSource"/>
+        <s:State name="updateLayerChartSource" stateGroups="configureChartSource,configureLayerChartSource,updateLayerSource"/>
+        <s:State name="updateURLChartSource" stateGroups="configureChartSource,configureURLChartSource,updateLayerSource"/>
+        <s:State name="general"/>
+        <s:State name="browsingQueryLayers"/>
+    </s:states>
+
+    <s:TabBar id="viewTabBar"
+              change="changeViewStateToSelectedTab()"
+              excludeFrom="configureChartSource, browsingQueryLayers">
+        <s:layout>
+            <s:HorizontalLayout columnWidth="100" gap="5"/>
+        </s:layout>
+
+        <s:dataProvider>
+            <s:ArrayList>
+                <s:DataItem label="{resourceManager.getString('BuilderStrings', 'chart.chartSources')}" value="chartSources"/>
+                <s:DataItem label="{resourceManager.getString('BuilderStrings', 'chart.general')}" value="general"/>
+            </s:ArrayList>
+        </s:dataProvider>
+    </s:TabBar>
+
+    <s:Group width="100%" height="100%"
+             excludeFrom="configureChartSource, browsingQueryLayers">
+        <s:Rect left="0" right="0" top="-1" bottom="0">
+            <s:stroke>
+                <s:SolidColorStroke/>
+            </s:stroke>
+        </s:Rect>
+
+        <s:VGroup width="100%" height="100%"
+                  includeIn="chartSources"
+                  paddingBottom="10"
+                  paddingLeft="10"
+                  paddingRight="10"
+                  paddingTop="10">
+            <s:HGroup width="100%" horizontalAlign="right">
+                <s:Button id="addLayerChartSourceButton"
+                          click="addLayerChartSourceButton_clickHandler(event)"
+                          enabled="{availableFeatureLayers.length &gt; 0}"
+                          label="{resourceManager.getString('BuilderStrings', 'chart.addLayerChartSource')}"
+                          skinClass="com.esri.builder.skins.GreenAddButtonSkin"/>
+
+                <s:Button id="addURLChartSourceButton"
+                          click="addURLChartSourceButton_clickHandler(event)"
+                          label="{resourceManager.getString('BuilderStrings', 'chart.addURLChartSource')}"
+                          skinClass="com.esri.builder.skins.GreenAddButtonSkin"/>
+            </s:HGroup>
+
+            <components:ItemModifierDataGrid id="chartLayerDefinitionDataGrid"
+                                             width="100%" height="100%"
+                                             dataProvider="{chartModel.chartLayerDefinitions}"
+                                             editItem="chartLayerDefinitionDataGrid_editItemHandler(event)"
+                                             removeItem="chartLayerDefinitionDataGrid_removeItemHandler(event)">
+                <components:columns>
+                    <s:ArrayList>
+                        <s:GridColumn dataField="label"
+                                      editable="false"
+                                      headerText="{resourceManager.getString('BuilderStrings', 'chart.sourceLabel')}"
+                                      sortable="true"/>
+
+                        <s:GridColumn dataField="labelField"
+                                      editable="true"
+                                      headerText="{resourceManager.getString('BuilderStrings', 'chart.categoryField')}"/>
+
+                        <s:GridColumn width="70"
+                                      editable="false"
+                                      headerText="{resourceManager.getString('BuilderStrings', 'chart.action')}"
+                                      itemRenderer="com.esri.builder.renderers.EditableRemovableGridItemRenderer"/>
+                    </s:ArrayList>
+                </components:columns>
+            </components:ItemModifierDataGrid>
+        </s:VGroup>
+
+        <s:Form left="0" right="0"
+                includeIn="general">
+            <s:FormItem label="{resourceManager.getString('BuilderStrings', 'chart.highlightColor')}">
+                <s:layout>
+                    <s:VerticalLayout/>
+                </s:layout>
+
+                <mx:ColorPicker id="highlightColorInput" selectedColor="@{chartModel.highlightColor}"/>
+            </s:FormItem>
+
+            <s:FormItem label="{resourceManager.getString('BuilderStrings', 'chart.layerSelectionLabel')}">
+                <s:TextInput id="layerSelectionLabelInput"
+                             width="50%"
+                             text="@{chartModel.layerSelectionLabel}"/>
+            </s:FormItem>
+
+            <s:FormItem label="{resourceManager.getString('BuilderStrings', 'chart.drawToolMenuLabel')}">
+                <s:TextInput id="drawToolMenuLabelInput"
+                             width="50%"
+                             text="@{chartModel.drawToolMenuLabel}"/>
+            </s:FormItem>
+        </s:Form>
+    </s:Group>
+
+    <components:TitleContainer width="100%" height="100%"
+                               includeIn="configureChartSource"
+                               title.configureLayerChartSource="{resourceManager.getString('BuilderStrings', 'chart.layerChartSource')}"
+                               title.configureURLChartSource="{resourceManager.getString('BuilderStrings', 'chart.urlChartSource')}">
+        <components:layout>
+            <s:VerticalLayout paddingBottom="10"
+                              paddingLeft="10"
+                              paddingRight="10"
+                              paddingTop="10"/>
+        </components:layout>
+
+        <s:HGroup id="configureFromLayerOptions"
+                  width="100%"
+                  includeIn="configureLayerChartSource"
+                  verticalAlign="middle">
+            <s:Label includeInLayout="{configureFromLayerOptions.visible 
+                                        &amp;&amp; availableFeatureLayers.length == 0}"
+                     text="{resourceManager.getString('BuilderStrings', 'chart.noAvailableLayers')}"
+                     visible="{configureFromLayerOptions.visible 
+                                &amp;&amp; availableFeatureLayers.length == 0}"/>
+
+            <s:DropDownList id="featureLayerSelection"
+                            width="225"
+                            dataProvider="{availableFeatureLayers}"
+                            includeInLayout="{configureFromLayerOptions.visible 
+                                                &amp;&amp; availableFeatureLayers.length > 0}"
+                            requireSelection="true"
+                            visible="{configureFromLayerOptions.visible 
+                                        &amp;&amp; availableFeatureLayers.length > 0}"/>
+
+            <s:Button click="getFieldsFromLayer()"
+                      enabled="{configureFromLayerOptions.visible 
+                                &amp;&amp; availableFeatureLayers.length > 0}"
+                      label="{resourceManager.getString('BuilderStrings', 'chart.load')}"
+                      skinClass="com.esri.builder.skins.BlueButtonSkin"/>
+        </s:HGroup>
+
+        <s:HGroup width="100%"
+                  includeIn="configureURLChartSource"
+                  verticalAlign="middle">
+            <s:Label text="{resourceManager.getString('BuilderStrings', 'chart.sourceURL')}"/>
+
+            <components:SearchInput width="100%"
+                                    direction="ltr"
+                                    search="processServiceLayerURL()"
+                                    searchButtonLabel="{resourceManager.getString('BuilderStrings', 'serviceBrowser.browse')}"
+                                    searchButtonToolTip="{resourceManager.getString('BuilderStrings', 'serviceBrowser.browseTooltip')}"
+                                    searchHistory="{RecentlyUsedURLsModel.getInstance().urls}"
+                                    searchTextInputToolTip="{resourceManager.getString('BuilderStrings', 'serviceBrowser.urlTooltip')}"
+                                    text="@{layerURL}"/>
+
+            <s:Label text="{resourceManager.getString('BuilderStrings', 'chart.sourceLabel')}"/>
+
+            <s:TextInput text="@{urlLayerLabel}"/>
+        </s:HGroup>
+
+        <s:HGroup width="100%" height="100%"
+                  verticalAlign="middle">
+            <components:TitleContainer width="25%" height="100%"
+                                       title="{resourceManager.getString('BuilderStrings', 'chart.availableFields')}">
+                <s:DataGrid id="fieldSelection"
+                            left="10" right="10" top="10" bottom="10"
+                            dataProvider="{layerFields}"
+                            doubleClickEnabled="true"
+                            gridDoubleClick="fieldSelection_gridDoubleClickHandler(event)"
+                            selectionMode="multipleRows">
+                    <s:columns>
+                        <s:ArrayList>
+                            <s:GridColumn dataField="name" headerText="{resourceManager.getString('BuilderStrings', 'chart.name')}"/>
+                        </s:ArrayList>
+                    </s:columns>
+                </s:DataGrid>
+            </components:TitleContainer>
+
+            <s:Button click="includeSelectedFields()"
+                      enabled="{(fieldSelection.selectedIndex &gt; -1)}"
+                      label="{resourceManager.getString('BuilderStrings', 'include')}"
+                      skinClass="com.esri.builder.skins.GreenNextButtonSkin"/>
+
+            <components:TitleContainer width="100%" height="100%"
+                                       title="{resourceManager.getString('BuilderStrings', 'chart.charts')}">
+                <components:ItemModifierDataGrid width="100%" height="100%"
+                                                 left="10" right="10" top="10" bottom="10"
+                                                 dataProvider="{chartMediaInfos}"
+                                                 doubleClickEnabled="false"
+                                                 editable="true"
+                                                 removeItem="chartMediaDataGrid_removeItemHandler(event)">
+                    <components:columns>
+                        <s:ArrayList>
+                            <s:GridColumn dataField="chartFields"
+                                          editable="false"
+                                          headerText="{resourceManager.getString('BuilderStrings', 'chart.chartField')}"/>
+
+                            <s:GridColumn dataField="caption" headerText="{resourceManager.getString('BuilderStrings', 'chart.caption')}"/>
+
+                            <s:GridColumn dataField="title" headerText="{resourceManager.getString('BuilderStrings', 'chart.title')}"/>
+
+                            <s:GridColumn width="120"
+                                          editable="false"
+                                          headerText="{resourceManager.getString('BuilderStrings', 'chart.type')}"
+                                          itemRenderer="modules.Chart.ChartTypeGridItemRenderer"/>
+
+                            <s:GridColumn width="60"
+                                          editable="false"
+                                          headerText="{resourceManager.getString('BuilderStrings', 'chart.action')}"
+                                          itemRenderer="com.esri.builder.renderers.RemovableGridItemRenderer"/>
+                        </s:ArrayList>
+                    </components:columns>
+                </components:ItemModifierDataGrid>
+            </components:TitleContainer>
+        </s:HGroup>
+
+        <s:HGroup horizontalAlign="center" verticalAlign="middle">
+            <s:Button id="okButton"
+                      click="okButton_clickHandler(event)"
+                      enabled="{isChartSourceValid}"
+                      label.createLayerSource="{resourceManager.getString('BuilderStrings','chart.addChartSource')}"
+                      label.updateLayerSource="{resourceManager.getString('BuilderStrings','chart.updateChartSource')}"
+                      skinClass="com.esri.builder.skins.BlueButtonSkin"/>
+
+            <s:Button id="cancelButton"
+                      click="cancelButton_clickHandler(event)"
+                      label="{resourceManager.getString('BuilderStrings', 'cancel')}"
+                      skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+        </s:HGroup>
+    </components:TitleContainer>
+
+    <s:VGroup width="100%" height="100%"
+              horizontalAlign="right"
+              includeIn="browsingQueryLayers">
+        <components:ServiceBrowser id="serviceBrowser"
+                                   width="100%" height="100%"
+                                   searchType="querylayers"
+                                   selectionChange="serviceBrowser_selectionChangeHandler(event)"
+                                   serviceURL="{layerURL}"/>
+
+        <s:HGroup width="100%" verticalAlign="middle">
+            <s:Button click="backButton_clickHandler(event)"
+                      label="{resourceManager.getString('BuilderStrings', 'query.goBack')}"
+                      skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+        </s:HGroup>
+    </s:VGroup>
+</s:VGroup>

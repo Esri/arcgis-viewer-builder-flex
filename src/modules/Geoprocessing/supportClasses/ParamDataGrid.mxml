@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<components:ItemModifierDataGrid xmlns:fx="http://ns.adobe.com/mxml/2009"
+                                 xmlns:s="library://ns.adobe.com/flex/spark"
+                                 xmlns:components="com.esri.builder.components.*"
+                                 moveItemDown="outputParamDataGrid_moveItemDownHandler(event)"
+                                 moveItemUp="outputParamDataGrid_moveItemUpHandler(event)">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.builder.components.ModifyItemEvent;
+
+            protected function outputParamDataGrid_moveItemDownHandler(event:ModifyItemEvent):void
+            {
+                ItemModifierDataGrid.moveItemDown(event.item, dataProvider);
+            }
+
+            protected function outputParamDataGrid_moveItemUpHandler(event:ModifyItemEvent):void
+            {
+                ItemModifierDataGrid.moveItemUp(event.item, dataProvider);
+            }
+        ]]>
+    </fx:Script>
+
+    <components:columns>
+        <s:ArrayList>
+            <s:GridColumn dataField="name" headerText="{resourceManager.getString('BuilderStrings', 'geoprocessing.name')}"/>
+            <s:GridColumn dataField="label" headerText="{resourceManager.getString('BuilderStrings', 'geoprocessing.label')}"/>
+            <s:GridColumn dataField="type" headerText="{resourceManager.getString('BuilderStrings', 'geoprocessing.type')}"/>
+            <s:GridColumn dataField="visible" headerText="{resourceManager.getString('BuilderStrings', 'geoprocessing.visible')}"/>
+            <s:GridColumn dataField="required" headerText="{resourceManager.getString('BuilderStrings', 'geoprocessing.required')}"/>
+            <s:GridColumn width="80"
+                          headerText="{resourceManager.getString('BuilderStrings', 'geoprocessing.action')}"
+                          itemRenderer="com.esri.builder.renderers.MovableEditableGridItemRenderer"/>
+        </s:ArrayList>
+    </components:columns>
+</components:ItemModifierDataGrid>

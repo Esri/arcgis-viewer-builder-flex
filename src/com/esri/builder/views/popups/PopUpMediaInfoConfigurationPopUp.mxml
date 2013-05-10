@@ -1,0 +1,531 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:SkinnablePopUpContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                           xmlns:s="library://ns.adobe.com/flex/spark"
+                           xmlns:mx="library://ns.adobe.com/flex/mx"
+                           xmlns:components="com.esri.builder.components.*"
+                           width="100%" height="100%">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.layers.supportClasses.Field;
+            import com.esri.ags.portal.supportClasses.PopUpFieldInfo;
+            import com.esri.ags.portal.supportClasses.PopUpMediaInfo;
+            import com.esri.builder.components.FieldPickerEvent;
+            import com.esri.builder.supportClasses.FieldUtil;
+            import com.esri.builder.supportClasses.LabelUtil;
+            import com.esri.builder.views.supportClasses.*;
+
+            import mx.collections.ArrayList;
+            import mx.collections.IList;
+            import mx.events.CollectionEvent;
+            import mx.events.CollectionEventKind;
+            import mx.events.FlexEvent;
+            import mx.managers.PopUpManager;
+
+            private const mediaTypeOptions:Array = [ PopUpMediaInfo.IMAGE,
+                                                     PopUpMediaInfo.BAR_CHART,
+                                                     PopUpMediaInfo.COLUMN_CHART,
+                                                     PopUpMediaInfo.LINE_CHART,
+                                                     PopUpMediaInfo.PIE_CHART ];
+
+            [Bindable]
+            private var numericPopUpFieldInfos:ArrayList = new ArrayList();
+
+            private var _fields:IList;
+
+            public function get fields():IList
+            {
+                return _fields;
+            }
+
+            public function set fields(value:IList):void
+            {
+                if (!value)
+                {
+                    return;
+                }
+
+                _fields = value;
+                updateNumericPopUpFieldInfos();
+            }
+
+            private function updateNumericPopUpFieldInfos():void
+            {
+                if (!_fields || !_popUpFieldInfos)
+                {
+                    return;
+                }
+
+                var numericFields:Array = FieldUtil.getNumericFields(fields.toArray());
+                var numericFieldInfos:Array = [];
+                for each (var numericField:Field in numericFields)
+                {
+                    for each (var fieldInfo:PopUpFieldInfo in popUpFieldInfos.toArray())
+                    {
+                        if (numericField.name == fieldInfo.fieldName)
+                        {
+                            numericFieldInfos.push(fieldInfo)
+                            break;
+                        }
+                    }
+                }
+
+                numericPopUpFieldInfos.source = numericFieldInfos;
+            }
+
+            private var _popUpFieldInfos:IList;
+
+            [Bindable]
+            public function get popUpFieldInfos():IList
+            {
+                return _popUpFieldInfos;
+            }
+
+            public function set popUpFieldInfos(value:IList):void
+            {
+                if (value)
+                {
+                    _popUpFieldInfos = clonePopUpFieldInfos(value);
+                    _popUpFieldInfos.addEventListener(CollectionEvent.COLLECTION_CHANGE, _popUpFieldInfos_collectionChangeHandler, false, 0, true);
+                    updatePopUpFieldInfoVisibility();
+                    updateNumericPopUpFieldInfos();
+                }
+            }
+
+            private function _popUpFieldInfos_collectionChangeHandler(event:CollectionEvent):void
+            {
+                if (event.kind == CollectionEventKind.UPDATE)
+                {
+                    dispatchEvent(new Event("requiredPropertyChanged"));
+                }
+            }
+
+            //TODO: extract elsewhere?
+            private function clonePopUpFieldInfos(popUpFieldInfos:IList):IList
+            {
+                var popUpFieldInfosSource:Array = popUpFieldInfos.toArray();
+
+                var clonedPopUpFieldInfos:Array = [];
+                var clonedFieldInfo:PopUpFieldInfo;
+
+                for each (var fieldInfo:PopUpFieldInfo in popUpFieldInfosSource)
+                {
+                    clonedFieldInfo = new PopUpFieldInfo();
+                    clonedFieldInfo.fieldName = fieldInfo.fieldName;
+                    clonedFieldInfo.label = fieldInfo.label;
+
+                    clonedPopUpFieldInfos.push(clonedFieldInfo);
+                }
+
+                return new ArrayList(clonedPopUpFieldInfos);
+            }
+
+            private var _mediaType:String = PopUpMediaInfo.IMAGE;
+
+            [Bindable]
+            public function get mediaType():String
+            {
+                return _mediaType;
+            }
+
+            public function set mediaType(value:String):void
+            {
+                _mediaType = value;
+                updateState();
+                dispatchEvent(new Event("requiredPropertyChanged"));
+            }
+
+            private function updateState():void
+            {
+                if (numericPopUpFieldInfos.length > 0)
+                {
+                    currentState = _mediaType == PopUpMediaInfo.IMAGE ?
+                        'configuringImageWithOtherOptions' : 'configuringChart';
+                }
+                else
+                {
+                    currentState = 'configuringImageOnly';
+                }
+            }
+
+            private var _mediaTitle:String = "";
+
+            [Bindable]
+            public function get mediaTitle():String
+            {
+                return _mediaTitle;
+            }
+
+            public function set mediaTitle(value:String):void
+            {
+                _mediaTitle = value;
+                dispatchEvent(new Event("requiredPropertyChanged"));
+            }
+
+            [Bindable(event="requiredPropertyChanged")]
+            private function get isInputValid():Boolean
+            {
+                return Boolean(mediaTitle) && hasRequiredInputForMediaType();
+            }
+
+            private function hasRequiredInputForMediaType():Boolean
+            {
+                return (_mediaType == PopUpMediaInfo.IMAGE) ? Boolean(mediaImageURL) : hasAtLeastOneChartField();
+            }
+
+            private function hasAtLeastOneChartField():Boolean
+            {
+                var visibleChartFieldNames:Array = getVisibleMediaChartFieldNames();
+                return visibleChartFieldNames.length > 0;
+            }
+
+            [Bindable]
+            private var mediaCaption:String = "";
+            private var _mediaImageURL:String = "";
+
+            [Bindable]
+            public function get mediaImageURL():String
+            {
+                return _mediaImageURL;
+            }
+
+            public function set mediaImageURL(value:String):void
+            {
+                _mediaImageURL = value;
+                dispatchEvent(new Event("requiredPropertyChanged"));
+            }
+
+            [Bindable]
+            private var mediaImageLink:String = "";
+            private var mediaChartFieldNames:Array;
+
+            private function updatePopUpFieldInfoVisibility():void
+            {
+                if (!mediaChartFieldNames || !popUpFieldInfos)
+                {
+                    return;
+                }
+
+                var popUpFieldInfosSource:Array = popUpFieldInfos.toArray();
+                for each (var popUpFieldInfo:PopUpFieldInfo in popUpFieldInfosSource)
+                {
+                    if (mediaChartFieldNames.indexOf(popUpFieldInfo.fieldName) > -1)
+                    {
+                        popUpFieldInfo.visible = true;
+                    }
+                }
+            }
+
+            public function importPopUpMediaInfo(popUpMediaInfo:PopUpMediaInfo):void
+            {
+                mediaType = popUpMediaInfo.type;
+                mediaTitle = popUpMediaInfo.title;
+                mediaCaption = popUpMediaInfo.caption;
+                mediaImageURL = popUpMediaInfo.imageSourceURL;
+                mediaImageLink = popUpMediaInfo.imageLinkURL;
+                mediaChartFieldNames = popUpMediaInfo.chartFields;
+                updatePopUpFieldInfoVisibility();
+            }
+
+            private function commitAndClose():void
+            {
+                close(true, createPopUpMediaInfo());
+            }
+
+            private function createPopUpMediaInfo():PopUpMediaInfo
+            {
+                var newPopUpMediaInfo:PopUpMediaInfo = new PopUpMediaInfo();
+                newPopUpMediaInfo.type = mediaType;
+                newPopUpMediaInfo.title = mediaTitle;
+                newPopUpMediaInfo.caption = mediaCaption;
+
+                if (mediaType == PopUpMediaInfo.IMAGE)
+                {
+                    newPopUpMediaInfo.imageSourceURL = mediaImageURL;
+                    newPopUpMediaInfo.imageLinkURL = mediaImageLink;
+                }
+                else
+                {
+                    newPopUpMediaInfo.chartFields = getVisibleMediaChartFieldNames();
+                }
+
+                return newPopUpMediaInfo;
+            }
+
+            private function getVisibleMediaChartFieldNames():Array
+            {
+                var updatedPopUpFieldNames:Array = [];
+
+                var popUpFieldInfosSource:Array = popUpFieldInfos.toArray();
+                for each (var popUpFieldInfo:PopUpFieldInfo in popUpFieldInfosSource)
+                {
+                    if (popUpFieldInfo.visible)
+                    {
+                        updatedPopUpFieldNames.push(popUpFieldInfo.fieldName);
+                    }
+                }
+
+                return updatedPopUpFieldNames;
+            }
+
+            private function titleFieldPicker_fieldSelectedHandler(event:FieldPickerEvent):void
+            {
+                FieldPickerSelectionUtil.insertIntoTextSelectionAndFocus(event.template, mediaTitleInput);
+                mediaTitle = mediaTitleInput.text; //updating text manually since binding does not kick in
+            }
+
+            private function captionFieldPicker_fieldSelectedHandler(event:FieldPickerEvent):void
+            {
+                FieldPickerSelectionUtil.insertIntoTextSelectionAndFocus(event.template, mediaCaptionInput);
+                mediaCaption = mediaCaptionInput.text; //updating text manually since binding does not kick in
+            }
+
+            private function imageURLFieldPicker_fieldSelectedHandler(event:FieldPickerEvent):void
+            {
+                FieldPickerSelectionUtil.insertIntoTextSelectionAndFocus(event.template, mediaImageURLInput);
+                mediaImageURL = mediaImageURLInput.text; //updating text manually since binding does not kick in
+            }
+
+            private function imageLinkFieldPicker_fieldSelectedHandler(event:FieldPickerEvent):void
+            {
+                FieldPickerSelectionUtil.insertIntoTextSelectionAndFocus(event.template, mediaImageLinkInput);
+                mediaImageLink = mediaImageLinkInput.text; //updating text manually since binding does not kick in
+            }
+
+            private function mediaTypeToLabel(type:String):String
+            {
+                var mediaTypeKey:String = 'media.' + type;
+                return resourceManager.getString('BuilderStrings', mediaTypeKey);
+            }
+
+            override public function updatePopUpPosition():void
+            {
+                PopUpManager.centerPopUp(this);
+            }
+
+            override public function open(owner:DisplayObjectContainer, modal:Boolean = false):void
+            {
+                updateState();
+                super.open(owner, modal);
+            }
+
+            protected function mediaSelection_creationCompleteHandler(event:FlexEvent):void
+            {
+                mediaSelection.typicalItem = LabelUtil.findLongestLabelItem(
+                    mediaTypeOptions, null, mediaTypeToLabel);
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="configuringImageOnly" stateGroups="configuringImage"/>
+        <s:State name="configuringImageWithOtherOptions" stateGroups="configuringImage"/>
+        <s:State name="configuringChart"/>
+    </s:states>
+
+    <!--background-->
+    <s:Rect left="0" right="0" top="0" bottom="0">
+        <s:fill>
+            <s:SolidColor color="#FFFFFF"/>
+        </s:fill>
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:Rect height="25"
+            left="2" right="2" top="2">
+        <s:fill>
+            <s:LinearGradient rotation="90">
+                <s:GradientEntry alpha="1"
+                                 color="#FFFFFF"
+                                 ratio="0"/>
+                <s:GradientEntry alpha="1.0"
+                                 color="#CCCCCC"
+                                 ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Rect>
+
+    <s:Line left="0" right="0" top="26">
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Line>
+
+    <!--content-->
+    <s:Label left="10" top="9"
+             color="#000000"
+             fontSize="14"
+             fontWeight="bold"
+             text="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.media.properties')}"
+             textAlign="center"
+             verticalAlign="middle"/>
+
+    <s:Form left="10" top="15" bottom="-15"
+            minWidth="300">
+        <s:layout>
+            <s:FormLayout gap="-10"/>
+        </s:layout>
+
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.media.type')}">
+            <s:Label includeIn="configuringImageOnly" text="{resourceManager.getString('BuilderStrings', 'media.image')}"/>
+
+            <s:DropDownList id="mediaSelection"
+                            creationComplete="mediaSelection_creationCompleteHandler(event)"
+                            excludeFrom="configuringImageOnly"
+                            labelFunction="mediaTypeToLabel"
+                            requireSelection="true"
+                            selectedItem="@{mediaType}">
+                <s:ArrayList source="{mediaTypeOptions}"/>
+            </s:DropDownList>
+        </s:FormItem>
+
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.media.title')}" required="true">
+            <s:layout>
+                <s:HorizontalLayout verticalAlign="middle"/>
+            </s:layout>
+
+            <s:TextInput id="mediaTitleInput"
+                         width="300"
+                         text="@{mediaTitle}"/>
+
+            <components:PopUpFieldPicker fieldSelected="titleFieldPicker_fieldSelectedHandler(event)"
+                                         fields="{popUpFieldInfos}"
+                                         includeInLayout="{popUpFieldInfos.length &gt; 0}"
+                                         visible="{popUpFieldInfos.length &gt; 0}"/>
+        </s:FormItem>
+
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.media.caption')}">
+            <s:layout>
+                <s:HorizontalLayout verticalAlign="middle"/>
+            </s:layout>
+
+            <s:TextInput id="mediaCaptionInput"
+                         width="300"
+                         text="@{mediaCaption}"/>
+
+            <components:PopUpFieldPicker fieldSelected="captionFieldPicker_fieldSelectedHandler(event)"
+                                         fields="{popUpFieldInfos}"
+                                         includeInLayout="{popUpFieldInfos.length &gt; 0}"
+                                         visible="{popUpFieldInfos.length &gt; 0}"/>
+        </s:FormItem>
+
+        <s:FormItem includeIn="configuringImage"
+                    label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.media.url')}"
+                    required="true">
+            <s:layout>
+                <s:HorizontalLayout verticalAlign="middle"/>
+            </s:layout>
+
+            <s:TextInput id="mediaImageURLInput"
+                         width="300"
+                         direction="ltr"
+                         text="@{mediaImageURL}"/>
+
+            <components:PopUpFieldPicker fieldSelected="imageURLFieldPicker_fieldSelectedHandler(event)"
+                                         fields="{popUpFieldInfos}"
+                                         includeInLayout="{popUpFieldInfos.length &gt; 0}"
+                                         visible="{popUpFieldInfos.length &gt; 0}"/>
+        </s:FormItem>
+
+        <s:FormItem includeIn="configuringImage" label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.media.link')}">
+            <s:layout>
+                <s:HorizontalLayout verticalAlign="middle"/>
+            </s:layout>
+
+            <s:TextInput id="mediaImageLinkInput"
+                         width="300"
+                         direction="ltr"
+                         text="@{mediaImageLink}"/>
+
+            <components:PopUpFieldPicker fieldSelected="imageLinkFieldPicker_fieldSelectedHandler(event)"
+                                         fields="{popUpFieldInfos}"
+                                         includeInLayout="{popUpFieldInfos.length &gt; 0}"
+                                         visible="{popUpFieldInfos.length &gt; 0}"/>
+        </s:FormItem>
+
+        <s:FormItem includeIn="configuringChart"
+                    label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.media.chartFields')}"
+                    required="true">
+            <s:Group width="100%" height="100%"
+                     maxHeight="260">
+                <s:Rect left="0" right="0" top="0" bottom="0">
+                    <s:stroke>
+                        <s:SolidColorStroke/>
+                    </s:stroke>
+                </s:Rect>
+
+                <s:Label horizontalCenter="0"
+                         includeInLayout="{popUpFieldInfos.length == 0}"
+                         text="{resourceManager.getString('BuilderStrings', 'noFieldsAvailable')}"
+                         verticalCenter="0"
+                         visible="{popUpFieldInfos.length == 0}"/>
+
+                <s:DataGrid id="popUpFieldsDataGrid"
+                            width="100%" height="100%"
+                            dataProvider="{numericPopUpFieldInfos}"
+                            editable="true"
+                            includeInLayout="{popUpFieldInfos.length &gt; 0}"
+                            maxWidth="550"
+                            visible="{popUpFieldInfos.length &gt; 0}">
+                    <s:columns>
+                        <s:ArrayList>
+                            <s:GridColumn width="60"
+                                          dataField="visible"
+                                          editable="false"
+                                          headerText="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.media.visible')}"
+                                          itemRenderer="com.esri.builder.renderers.CheckBoxGridItemRenderer"/>
+
+                            <s:GridColumn width="100"
+                                          dataField="fieldName"
+                                          editable="false"
+                                          headerText="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.media.name')}"/>
+
+                            <s:GridColumn dataField="label" headerText="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.media.alias')}"/>
+                        </s:ArrayList>
+                    </s:columns>
+                </s:DataGrid>
+            </s:Group>
+        </s:FormItem>
+
+        <s:FormItem>
+            <s:layout>
+                <s:HorizontalLayout horizontalAlign="center" verticalAlign="middle"/>
+            </s:layout>
+
+            <s:Button click="commitAndClose()"
+                      enabled="{isInputValid}"
+                      label="{resourceManager.getString('BuilderStrings', 'ok')}"
+                      skinClass="com.esri.builder.skins.BlueButtonSkin"/>
+
+            <s:Button click="close(false)"
+                      label="{resourceManager.getString('BuilderStrings', 'cancel')}"
+                      skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+        </s:FormItem>
+    </s:Form>
+</s:SkinnablePopUpContainer>

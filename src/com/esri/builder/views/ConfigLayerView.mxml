@@ -1,0 +1,818 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:SkinnablePopUpContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                           xmlns:s="library://ns.adobe.com/flex/spark"
+                           xmlns:mx="library://ns.adobe.com/flex/mx"
+                           xmlns:graphics="assets.graphics.*"
+                           xmlns:components="com.esri.builder.components.*"
+                           xmlns:views="com.esri.builder.views.*"
+                           width="100%" height="100%"
+                           creationComplete="this_creationCompleteHandler(event)">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.geometry.Geometry;
+            import com.esri.ags.layers.ArcGISDynamicMapServiceLayer;
+            import com.esri.ags.layers.ArcGISImageServiceLayer;
+            import com.esri.ags.layers.ArcGISTiledMapServiceLayer;
+            import com.esri.ags.layers.CSVLayer;
+            import com.esri.ags.layers.FeatureLayer;
+            import com.esri.ags.layers.Layer;
+            import com.esri.ags.layers.supportClasses.TimeInfo;
+            import com.esri.builder.model.PopUpConfig;
+            import com.esri.builder.supportClasses.AssetImporter;
+            import com.esri.builder.supportClasses.FileUtil;
+            import com.esri.builder.supportClasses.URLUtil;
+            import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.ClusterSymbol;
+            import com.esri.builder.model.Clustering;
+            import com.esri.builder.model.ConfigLayer;
+            import com.esri.builder.model.Model;
+            import com.esri.builder.supportClasses.FieldUtil;
+            import com.esri.builder.supportClasses.XMLUtil;
+            import com.esri.builder.views.popups.PopUpConfigPopUp;
+            import com.esri.builder.views.supportClasses.TextFlowUtil;
+
+            import mx.core.FlexGlobals;
+            import mx.events.FlexEvent;
+            import mx.logging.ILogger;
+            import mx.logging.Log;
+            import mx.managers.PopUpManager;
+
+            import spark.events.PopUpEvent;
+
+            private const LOG:ILogger = Log.getLogger('com.esri.builder.views.ConfigLayerView');
+
+            private var popUpConfigPopUp:PopUpConfigPopUp;
+
+            [Bindable]
+            public var layer:Layer;
+            //TODO: create separate config layer views for
+            //basemap & op layers instead of having properties set for each
+            [Bindable]
+            public var enableVisibilityOption:Boolean;
+            [Bindable]
+            public var isLayerBasemap:Boolean = false;
+
+            [Bindable]
+            private var configLayerToEdit:ConfigLayer;
+
+            private function this_creationCompleteHandler(event:FlexEvent):void
+            {
+                configLayerToEdit = Model.instance.configLayer;
+                alphaSlider.value = (1 - configLayerToEdit.alpha) * 100;
+
+                if (isLayerBasemap)
+                {
+                    showIconInImageBrowser(configLayerToEdit.icon);
+                }
+
+                preselectImageFormatOption();
+                showSubLayerOptionsIfSupported();
+                showClusteringOptionsIfSupported();
+                showMapTimeOptionsIfSupported();
+                showGDBVersionOptionsIfSupported();
+
+                updatePopUpPosition();
+            }
+
+            private function showIconInImageBrowser(iconPath:String):void
+            {
+                const isURL:RegExp = /^https?:\/\//;
+                if (isURL.test(iconPath))
+                {
+                    imageBrowser.loadImageFromURL(iconPath);
+                }
+                else
+                {
+                    imageBrowser.loadImageFromDirectory(Model.instance.appDir, iconPath);
+                }
+            }
+
+            private function showSubLayerOptionsIfSupported():void
+            {
+                if (configLayerToEdit.type == ConfigLayer.DYNAMIC
+                    || configLayerToEdit.type == ConfigLayer.TILED)
+                {
+                    if (!configLayerToEdit.subLayers)
+                    {
+                        configLayerToEdit.subLayers = [];
+                    }
+                    subLayersFormItem.visible = subLayersFormItem.includeInLayout = subLayersList.visible = subLayersList.includeInLayout = true;
+                    subLayersList.visible = subLayersList.includeInLayout = true;
+                    subLayersList.layer = layer;
+                }
+            }
+
+            private function showGDBVersionOptionsIfSupported():void
+            {
+                var doesLayerSupportVersioning:Boolean;
+
+                if (configLayerToEdit.type == ConfigLayer.DYNAMIC)
+                {
+                    var dynamicLayer:ArcGISDynamicMapServiceLayer = layer as ArcGISDynamicMapServiceLayer;
+                    doesLayerSupportVersioning = dynamicLayer.hasVersionedData && dynamicLayer.supportsDynamicLayers;
+                }
+                else if (configLayerToEdit.type == ConfigLayer.FEATURE)
+                {
+                    doesLayerSupportVersioning = (layer as FeatureLayer).layerDetails.isDataVersioned;
+                }
+
+                gdbVersionOption.visible = doesLayerSupportVersioning;
+                gdbVersionOption.includeInLayout = doesLayerSupportVersioning;
+            }
+
+            private function showClusteringOptionsIfSupported():void
+            {
+                var featureLayer:FeatureLayer;
+                if (layer is FeatureLayer && !(layer is CSVLayer))
+                {
+                    featureLayer = layer as FeatureLayer;
+                }
+                var doesLayerSupportClustering:Boolean = featureLayer ? (featureLayer.layerDetails.geometryType == Geometry.MAPPOINT) : false;
+                clusterCheckBox.visible = doesLayerSupportClustering;
+                clusterCheckBox.includeInLayout = doesLayerSupportClustering;
+            }
+
+            private function showMapTimeOptionsIfSupported():void
+            {
+                var timeInfo:TimeInfo = getLayerTimeInfo();
+                var isLayerTimeAware:Boolean = (timeInfo != null);
+                mapTimeFormItem.visible = isLayerTimeAware;
+                mapTimeFormItem.includeInLayout = isLayerTimeAware;
+            }
+
+            private function getLayerTimeInfo():TimeInfo
+            {
+                var configLayerType:String = configLayerToEdit.type;
+                if (configLayerType == ConfigLayer.DYNAMIC)
+                {
+                    return (layer as ArcGISDynamicMapServiceLayer).timeInfo;
+                }
+                else if (configLayerType == ConfigLayer.TILED)
+                {
+                    return (layer as ArcGISTiledMapServiceLayer).timeInfo;
+                }
+                else if (configLayerType == ConfigLayer.IMAGE)
+                {
+                    return (layer as ArcGISImageServiceLayer).timeInfo;
+                }
+                else if (configLayerType == ConfigLayer.FEATURE)
+                {
+                    return (layer as FeatureLayer).layerDetails.timeInfo;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            protected function okButton_clickHandler(event:MouseEvent):void
+            {
+                Model.instance.config.isDirty = true;
+
+                const editedConfigLayerLabel:String = labelText.text;
+                const didLayerLabelChange:Boolean = editedConfigLayerLabel != configLayerToEdit.label;
+                if (didLayerLabelChange
+                    && isLayerBasemap
+                    && !Model.instance.configBasemapsList.isConfigLayerLabelUnique(editedConfigLayerLabel))
+                {
+                    AppEvent.dispatch(AppEvent.SHOW_ERROR, resourceManager.getString('BuilderStrings',
+                                                                                     'basemapLayerAlreadyExists',
+                                                                                     [ editedConfigLayerLabel ]));
+                    return;
+                }
+
+                if (configLayerToEdit.type == ConfigLayer.CSV
+                    || configLayerToEdit.type == ConfigLayer.KML
+                    || configLayerToEdit.type == ConfigLayer.GEO_RSS
+                    || configLayerToEdit.type == ConfigLayer.WMS
+                    || configLayerToEdit.type == ConfigLayer.WMTS)
+                {
+                    configLayerToEdit.url = URLUtil.encode(layerURL.text);
+                }
+                else if (configLayerToEdit.type == ConfigLayer.WEB_TILED)
+                {
+                    configLayerToEdit.url = decodeTemplates(URLUtil.encode(layerURL.text));
+                }
+
+                configLayerToEdit.label = editedConfigLayerLabel;
+                configLayerToEdit.visible = visibleCheckBox.selected;
+                configLayerToEdit.alpha = 1.0 - (alphaSlider.value / 100.0);
+                configLayerToEdit.autoRefresh = Number(autoRefreshText.text);
+                configLayerToEdit.displayLevels = displayLevelsText.text;
+                configLayerToEdit.bandIds = bandIdsText.text;
+                configLayerToEdit.token = tokenText.text;
+                configLayerToEdit.useMapTime = useMapTime.selected;
+                configLayerToEdit.useProxy = useProxy.selected;
+                configLayerToEdit.gdbVersion = gdbVersionInput.text;
+
+                if (configLayerToEdit.type === ConfigLayer.DYNAMIC)
+                {
+                    configLayerToEdit.imageFormat = imageFormatSelection.selectedItem;
+                }
+
+                if (configLayerToEdit.type === ConfigLayer.FEATURE)
+                {
+                    configLayerToEdit.mode = onDemand.selected ? FeatureLayer.MODE_ON_DEMAND : FeatureLayer.MODE_SNAPSHOT;
+                    configLayerToEdit.definitionExpression = definitionExpression.text;
+                    if (clusterCheckBox.selected)
+                    {
+                        var shouldAddDefaultClustering:Boolean = !configLayerToEdit.clustering;
+                        if (shouldAddDefaultClustering)
+                        {
+                            var clusterSymbol:ClusterSymbol = new ClusterSymbol;
+                            clusterSymbol.type = "flare";
+                            var clustering:Clustering = new Clustering;
+                            clustering.clusterSymbol = clusterSymbol;
+                            configLayerToEdit.clustering = clustering;
+                        }
+                    }
+                    else
+                    {
+                        configLayerToEdit.clustering = null;
+                    }
+                }
+
+                if (configLayerToEdit.type == ConfigLayer.CSV)
+                {
+                    configLayerToEdit.longitudeFieldName = longitudeFieldNameInput.text;
+                    configLayerToEdit.latitudeFieldName = latitudeFieldNameInput.text;
+                    configLayerToEdit.columnDelimiter = columnDelimiterInput.text;
+                }
+
+                if (configLayerToEdit.type == ConfigLayer.WMS)
+                {
+                    configLayerToEdit.visibleLayers = visibleLayersText.text;
+                    configLayerToEdit.skipGetCapabilities = skipGetCapabilitiesCheckBox.selected;
+                }
+
+                if (configLayerToEdit.type == ConfigLayer.WEB_TILED)
+                {
+                    configLayerToEdit.subDomains = subDomainsText.text;
+                }
+
+                if (imageBrowser.selectedImage)
+                {
+                    configLayerToEdit.icon = "assets/images/" + imageBrowser.selectedImage.name;
+                    AssetImporter.importImage(imageBrowser.selectedImage);
+                }
+
+                Model.instance.layersState = 'normal';
+                close(true);
+            }
+
+            private function cancelButton_clickHandler(event:Event):void
+            {
+                Model.instance.layersState = 'normal';
+                close();
+            }
+
+            protected function configurePopUpFeatureLayer_clickHandler(event:MouseEvent):void
+            {
+                var featureLayer:FeatureLayer = layer as FeatureLayer;
+                //TODO: need to check here?
+                if (featureLayer.layerDetails.fields)
+                {
+                    const fields:Array = FieldUtil.getValidFields(featureLayer.layerDetails.fields);
+                }
+
+                const supportsAttachments:Boolean = featureLayer.layerDetails.hasAttachments;
+                const supportsRelatedRecords:Boolean = featureLayer.layerDetails.relationships
+                    && featureLayer.layerDetails.relationships.length > 0;
+
+                popUpConfigPopUp = new PopUpConfigPopUp();
+                popUpConfigPopUp.popUpConfig = getPopUpConfig(fields);
+                popUpConfigPopUp.fields = fields;
+                popUpConfigPopUp.supportsAttachments = supportsAttachments;
+                popUpConfigPopUp.supportsRelatedRecords = supportsRelatedRecords;
+                popUpConfigPopUp.layerName = configLayerToEdit.label;
+                popUpConfigPopUp.addEventListener(PopUpEvent.CLOSE, popUpConfigPopUp_closeHandler, false, 0, true);
+                popUpConfigPopUp.open(FlexGlobals.topLevelApplication as DisplayObjectContainer, true);
+            }
+
+            protected function getPopUpConfig(fields:Array):PopUpConfig
+            {
+                const popUpConfig:PopUpConfig = new PopUpConfig();
+                if (configLayerToEdit.popupConfig)
+                {
+                    const popUpConfigFile:File = Model.instance.appDir.resolvePath(configLayerToEdit.popupConfig);
+                    popUpConfig.importXML(XMLUtil.readXMLFile(popUpConfigFile),
+                                          fields);
+                }
+                else
+                {
+                    popUpConfig.importFields(fields);
+                }
+
+                return popUpConfig;
+            }
+
+            private function popUpConfigPopUp_closeHandler(event:PopUpEvent):void
+            {
+                if (event.commit)
+                {
+                    const popUpConfigPath:String =
+                        (configLayerToEdit && configLayerToEdit.popupConfig) ? configLayerToEdit.popupConfig : FileUtil.generateUniqueRelativePath(Model.instance.appDir,
+                                                                                                                                                   "popups/PopUp.xml");
+
+                    if (writeConfigXML(popUpConfigPopUp.popUpConfig, popUpConfigPath))
+                    {
+                        Model.instance.configLayer.popupConfig = popUpConfigPath;
+                    }
+                }
+
+                popUpConfigPopUp.removeEventListener(PopUpEvent.CLOSE, popUpConfigPopUp_closeHandler);
+                popUpConfigPopUp = null;
+            }
+
+            private function writeConfigXML(popUpConfig:PopUpConfig, popUpConfigFilePath:String):Boolean
+            {
+                var success:Boolean = false;
+
+                const configText:String = "<?xml version=\"1.0\" ?>\n" + popUpConfig.exportXML().toXMLString() + "\n";
+                const file:File = Model.instance.appDir.resolvePath(popUpConfigFilePath);
+                const fileStream:FileStream = new FileStream();
+                try
+                {
+                    fileStream.open(file, FileMode.WRITE);
+                    try
+                    {
+                        fileStream.writeUTFBytes(configText);
+                        success = true;
+                    }
+                    finally
+                    {
+                        fileStream.close();
+                    }
+                }
+                catch (e:Error)
+                {
+                    //TODO: MOVE ELSEWHERE
+                    if (Log.isError())
+                    {
+                        LOG.error('Problem writing config: {0}', e.message);
+                    }
+                    BuilderAlert.show(e.message.toString(), resourceManager.getString('BuilderStrings', 'error'));
+                }
+
+                return success;
+            }
+
+            private function decodeTemplates(serviceURL:String):String
+            {
+                return serviceURL.replace(/%7B/g, '{').replace(/%7D/g, '}');
+            }
+
+            protected function removePopUpFeatureLayer_clickHandler(event:MouseEvent):void
+            {
+                if (configLayerToEdit.popupConfig == null)
+                {
+                    return;
+                }
+
+                const popUpConfigFile:File = Model.instance.appDir.resolvePath(configLayerToEdit.popupConfig);
+                if (popUpConfigFile.exists)
+                {
+                    try
+                    {
+                        popUpConfigFile.deleteFile();
+                    }
+                    catch (error:Error)
+                    {
+                        //ignore error
+                    }
+                }
+
+                configLayerToEdit.popupConfig = null;
+            }
+
+            private function preselectImageFormatOption():void
+            {
+                imageFormatSelection.selectedItem = configLayerToEdit.imageFormat;
+            }
+
+            override public function updatePopUpPosition():void
+            {
+                PopUpManager.centerPopUp(this);
+            }
+        ]]>
+    </fx:Script>
+
+    <fx:Declarations>
+        <s:GlowFilter id="glowFilter"
+                      blurX="5"
+                      blurY="5"
+                      color="0x000000"/>
+    </fx:Declarations>
+
+    <!--background-->
+    <s:Rect left="0" right="0" top="0" bottom="0">
+        <s:fill>
+            <s:SolidColor color="#FFFFFF"/>
+        </s:fill>
+
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:Rect height="25"
+            left="2" right="2" top="2">
+        <s:fill>
+            <s:LinearGradient rotation="90">
+                <s:GradientEntry alpha="1"
+                                 color="#FFFFFF"
+                                 ratio="0"/>
+
+                <s:GradientEntry alpha="1.0"
+                                 color="#CCCCCC"
+                                 ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Rect>
+
+    <s:Line left="0" right="0" top="26">
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Line>
+
+    <!--header-->
+    <s:Label left="10" top="9"
+             color="#000000"
+             fontSize="14"
+             fontWeight="bold"
+             text="{resourceManager.getString('BuilderStrings', 'layerConfigPopUp.configureLayer')}"
+             textAlign="center"
+             verticalAlign="middle"/>
+
+    <!--content-->
+    <s:VGroup left="20" right="20" top="35" bottom="10">
+        <s:Form width="100%">
+            <s:layout>
+                <s:FormLayout gap="-8"
+                              paddingBottom="-10"
+                              paddingLeft="-28"
+                              paddingRight="-28"
+                              paddingTop="-10"/>
+            </s:layout>
+
+            <s:FormItem label="{resourceManager.getString('BuilderStrings', 'configLayerView.label')}">
+                <s:TextInput id="labelText"
+                             width="200"
+                             maxChars="40"
+                             text="{configLayerToEdit.label}"/>
+            </s:FormItem>
+
+            <s:FormItem includeInLayout="{!(configLayerToEdit.type == ConfigLayer.KML  
+                                            || configLayerToEdit.type == ConfigLayer.CSV
+                                            || configLayerToEdit.type == ConfigLayer.GEO_RSS
+                                            || configLayerToEdit.type == ConfigLayer.OSM 
+                                            || configLayerToEdit.type == ConfigLayer.WMS 
+                                            || configLayerToEdit.type == ConfigLayer.WMTS 
+                                            || configLayerToEdit.type == ConfigLayer.WEB_TILED
+                                            || configLayerToEdit.type == ConfigLayer.BING)}"
+                        label="{resourceManager.getString('BuilderStrings', 'mapsView.url')}"
+                        visible="{!(configLayerToEdit.type == ConfigLayer.KML
+                                    || configLayerToEdit.type == ConfigLayer.CSV
+                                    || configLayerToEdit.type == ConfigLayer.GEO_RSS
+                                    || configLayerToEdit.type == ConfigLayer.OSM
+                                    || configLayerToEdit.type == ConfigLayer.WMS 
+                                    || configLayerToEdit.type == ConfigLayer.WMTS 
+                                    || configLayerToEdit.type == ConfigLayer.WEB_TILED
+                                    || configLayerToEdit.type == ConfigLayer.BING)}">
+                <s:RichEditableText width="550"
+                                    direction="ltr"
+                                    editable="false"
+                                    textFlow="{TextFlowUtil.toURLFlow(configLayerToEdit.url)}"/>
+            </s:FormItem>
+
+            <s:FormItem includeInLayout="{(configLayerToEdit.type == ConfigLayer.KML
+                                        || configLayerToEdit.type == ConfigLayer.CSV
+                                        || configLayerToEdit.type == ConfigLayer.GEO_RSS
+                                        || configLayerToEdit.type == ConfigLayer.WMS 
+                                        || configLayerToEdit.type == ConfigLayer.WMTS 
+                                        || configLayerToEdit.type == ConfigLayer.WEB_TILED)}"
+                        label="{resourceManager.getString('BuilderStrings', 'mapsView.url')}"
+                        visible="{(configLayerToEdit.type == ConfigLayer.KML
+                                   || configLayerToEdit.type == ConfigLayer.CSV
+                                   || configLayerToEdit.type == ConfigLayer.GEO_RSS
+                                   || configLayerToEdit.type == ConfigLayer.WMS 
+                                   || configLayerToEdit.type == ConfigLayer.WMTS 
+                                   || configLayerToEdit.type == ConfigLayer.WEB_TILED)}">
+                <s:TextInput id="layerURL"
+                             width="550"
+                             direction="ltr"
+                             text="{configLayerToEdit.url}"/>
+            </s:FormItem>
+
+            <s:FormItem label="{enableVisibilityOption ? 
+                        resourceManager.getString('BuilderStrings', 'configLayerView.visibleAlpha') :
+                        resourceManager.getString('BuilderStrings', 'configLayerView.alpha')}">
+                <s:layout>
+                    <s:HorizontalLayout gap="10" verticalAlign="middle"/>
+                </s:layout>
+
+                <s:CheckBox id="visibleCheckBox"
+                            includeInLayout="{enableVisibilityOption}"
+                            selected="{configLayerToEdit.visible}"
+                            visible="{enableVisibilityOption}"/>
+
+                <s:VGroup gap="0"
+                          paddingTop="10"
+                          verticalAlign="bottom">
+                    <s:Group width="{alphaSlider.width}">
+                        <s:Label left="0" text="{resourceManager.getString('BuilderStrings', 'opaque')}"/>
+                        <s:Label right="0" text="{resourceManager.getString('BuilderStrings', 'transparent')}"/>
+                    </s:Group>
+
+                    <s:HGroup paddingTop="10" verticalAlign="top">
+                        <mx:HSlider id="alphaSlider"
+                                    width="200" height="50"
+                                    dataTipPrecision="0"
+                                    labelOffset="30"
+                                    labels="{['0%','50%','100%']}"
+                                    liveDragging="true"
+                                    maximum="100"
+                                    minimum="0"
+                                    snapInterval="1"/>
+
+                        <s:NumericStepper maximum="100"
+                                          minimum="0"
+                                          value="@{alphaSlider.value}"/>
+                    </s:HGroup>
+                </s:VGroup>
+            </s:FormItem>
+
+            <s:FormItem includeInLayout="{isLayerBasemap}"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.icon')}"
+                        visible="{isLayerBasemap}">
+                <components:ImageBrowser id="imageBrowser" skinClass="com.esri.builder.skins.IconImageBrowserSkin"/>
+            </s:FormItem>
+
+            <s:FormItem includeInLayout="{!(configLayerToEdit.type == ConfigLayer.OSM
+                                            || configLayerToEdit.type == ConfigLayer.BING 
+                                            || configLayerToEdit.type == ConfigLayer.KML
+                                            || configLayerToEdit.type == ConfigLayer.GEO_RSS)}"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.autoRefresh')}"
+                        visible="{!(configLayerToEdit.type == ConfigLayer.OSM
+                                    || configLayerToEdit.type == ConfigLayer.BING
+                                    || configLayerToEdit.type == ConfigLayer.KML
+                                    || configLayerToEdit.type == ConfigLayer.GEO_RSS)}">
+                <s:TextInput id="autoRefreshText"
+                             restrict="0-9"
+                             text="{configLayerToEdit.autoRefresh.toString()}"/>
+            </s:FormItem>
+
+            <s:FormItem includeInLayout="{!(configLayerToEdit.type == ConfigLayer.OSM
+                                            || configLayerToEdit.type == ConfigLayer.BING)}"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.useProxy')}"
+                        visible="{!(configLayerToEdit.type == ConfigLayer.OSM
+                                    || configLayerToEdit.type == ConfigLayer.BING)}">
+                <s:layout>
+                    <s:HorizontalLayout verticalAlign="middle"/>
+                </s:layout>
+
+                <s:CheckBox id="useProxy" selected="{configLayerToEdit.useProxy}"/>
+
+                <graphics:warning width="20" height="20"
+                                  visible="{useProxy.selected 
+                                                  &amp;&amp; !Model.instance.proxyURL}"/>
+
+                <s:Label text="{resourceManager.getString('BuilderStrings', 'httpProxyMissing')}" visible="{useProxy.selected
+                                                                                                 &amp;&amp; !Model.instance.proxyURL}"/>
+            </s:FormItem>
+
+            <s:FormItem includeInLayout="{configLayerToEdit.type === ConfigLayer.TILED 
+                                       || configLayerToEdit.type === ConfigLayer.WEB_TILED}"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.displayLevels')}"
+                        visible="{configLayerToEdit.type === ConfigLayer.TILED
+                               || configLayerToEdit.type === ConfigLayer.WEB_TILED}">
+                <s:TextInput id="displayLevelsText"
+                             width="200"
+                             restrict="0-9,"
+                             text="{configLayerToEdit.displayLevels}"/>
+            </s:FormItem>
+
+            <s:FormItem includeInLayout="{configLayerToEdit.type === ConfigLayer.WMS}"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.visibleLayers')}"
+                        visible="{configLayerToEdit.type === ConfigLayer.WMS}">
+                <s:TextInput id="visibleLayersText"
+                             width="200"
+                             text="{configLayerToEdit.visibleLayers}"/>
+            </s:FormItem>
+
+            <s:FormItem includeInLayout="{configLayerToEdit.type === ConfigLayer.WMS}"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.skipGetCapabilities')}"
+                        visible="{configLayerToEdit.type === ConfigLayer.WMS}">
+                <s:CheckBox id="skipGetCapabilitiesCheckBox" selected="{configLayerToEdit.skipGetCapabilities}"/>
+            </s:FormItem>
+
+            <s:FormItem includeInLayout="{configLayerToEdit.type === ConfigLayer.WEB_TILED}"
+                        label="{resourceManager.getString('BuilderStrings', 'subdomains')}"
+                        visible="{configLayerToEdit.type === ConfigLayer.WEB_TILED}">
+                <s:TextInput id="subDomainsText"
+                             width="200"
+                             text="{configLayerToEdit.subDomains}"/>
+            </s:FormItem>
+
+            <s:FormItem includeInLayout="{configLayerToEdit.type === ConfigLayer.IMAGE}"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.bandIds')}"
+                        visible="{configLayerToEdit.type === ConfigLayer.IMAGE}">
+                <s:TextInput id="bandIdsText"
+                             width="200"
+                             restrict="0-9,"
+                             text="{configLayerToEdit.bandIds}"/>
+            </s:FormItem>
+
+            <s:FormItem width="100%"
+                        includeInLayout="{configLayerToEdit.type == ConfigLayer.TILED  
+                                            || configLayerToEdit.type == ConfigLayer.DYNAMIC
+                                            || configLayerToEdit.type == ConfigLayer.FEATURE
+                                            || configLayerToEdit.type == ConfigLayer.IMAGE}"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.token')}"
+                        visible="{configLayerToEdit.type == ConfigLayer.TILED  
+                                    || configLayerToEdit.type == ConfigLayer.DYNAMIC
+                                    || configLayerToEdit.type == ConfigLayer.FEATURE
+                                    || configLayerToEdit.type == ConfigLayer.IMAGE}">
+                <s:TextInput id="tokenText"
+                             width="100%"
+                             text="{configLayerToEdit.token}"/>
+            </s:FormItem>
+
+            <s:FormItem id="mapTimeFormItem"
+                        width="100%"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.useMapTime')}">
+                <s:CheckBox id="useMapTime" selected="{configLayerToEdit.useMapTime}"/>
+            </s:FormItem>
+
+            <s:FormItem width="100%"
+                        includeInLayout="{configLayerToEdit.type === ConfigLayer.FEATURE}"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.onDemand')}"
+                        visible="{configLayerToEdit.type === ConfigLayer.FEATURE}">
+                <s:CheckBox id="onDemand" selected="{configLayerToEdit.mode === 'onDemand'}"/>
+            </s:FormItem>
+
+            <s:FormItem width="100%"
+                        includeInLayout="{configLayerToEdit.type === ConfigLayer.FEATURE}"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.definitionExpression')}"
+                        visible="{configLayerToEdit.type === ConfigLayer.FEATURE}">
+                <s:TextInput id="definitionExpression"
+                             width="100%"
+                             text="{configLayerToEdit.definitionExpression}"/>
+            </s:FormItem>
+
+            <s:FormItem width="100%"
+                        includeInLayout="{configLayerToEdit.type === ConfigLayer.FEATURE}"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.clustering')}"
+                        visible="{configLayerToEdit.type === ConfigLayer.FEATURE}">
+                <s:CheckBox id="clusterCheckBox" selected="{configLayerToEdit.clustering != null}"/>
+            </s:FormItem>
+
+            <s:FormItem width="100%"
+                        includeInLayout="{configLayerToEdit.type === ConfigLayer.FEATURE}"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.popUp')}"
+                        visible="{configLayerToEdit.type === ConfigLayer.FEATURE}">
+                <s:layout>
+                    <s:HorizontalLayout verticalAlign="middle"/>
+                </s:layout>
+
+                <s:Group id="configurePopUpFeatureLayer"
+                         buttonMode="true"
+                         click="configurePopUpFeatureLayer_clickHandler(event)"
+                         rollOut="{configurePopUpFeatureLayer.filters = []}"
+                         rollOver="{configurePopUpFeatureLayer.filters = [glowFilter]}"
+                         toolTip="{resourceManager.getString('BuilderStrings', 'configLayerView.configurePopUp')}">
+                    <!-- workaround to fix FXG sizing -->
+                    <s:Rect left="0" right="0" top="0" bottom="0">
+                        <s:fill>
+                            <s:SolidColor alpha="0.01" color="0xFFFFFF"/>
+                        </s:fill>
+                    </s:Rect>
+
+                    <graphics:pencil width="20" height="20"/>
+                </s:Group>
+
+                <s:Group id="removePopUpButton"
+                         alpha="{Model.instance.configLayer.popupConfig != null ? 1 : 0.5}"
+                         buttonMode="{Model.instance.configLayer.popupConfig != null}"
+                         click="removePopUpFeatureLayer_clickHandler(event)"
+                         rollOut="{removePopUpButton.filters = []}"
+                         rollOver="{removePopUpButton.filters = [glowFilter]}"
+                         toolTip="{resourceManager.getString('BuilderStrings', 'layerConfigPopUp.removePopUp')}">
+                    <!-- workaround to fix FXG sizing -->
+                    <s:Rect left="0" right="0" top="0" bottom="0">
+                        <s:fill>
+                            <s:SolidColor alpha="0.01" color="0xFFFFFF"/>
+                        </s:fill>
+                    </s:Rect>
+
+                    <graphics:red_x width="20" height="20"/>
+                </s:Group>
+            </s:FormItem>
+
+            <s:FormItem id="gdbVersionOption"
+                        width="100%"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.gdbVersion')}">
+                <s:TextInput id="gdbVersionInput" text="{configLayerToEdit.gdbVersion}"/>
+            </s:FormItem>
+
+            <s:FormItem width="100%"
+                        includeInLayout="{configLayerToEdit.type === ConfigLayer.DYNAMIC}"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.imageFormat')}"
+                        visible="{configLayerToEdit.type === ConfigLayer.DYNAMIC}">
+                <s:DropDownList id="imageFormatSelection" requireSelection="true">
+                    <s:dataProvider>
+                        <s:ArrayList>
+                            <fx:String>png8</fx:String>
+                            <fx:String>png24</fx:String>
+                            <fx:String>png32</fx:String>
+                            <fx:String>jpg</fx:String>
+                            <fx:String>gif</fx:String>
+                        </s:ArrayList>
+                    </s:dataProvider>
+                </s:DropDownList>
+            </s:FormItem>
+
+            <s:FormItem id="subLayersFormItem"
+                        includeInLayout="false"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.subLayers')}"
+                        visible="false">
+                <views:SubLayerList id="subLayersList"
+                                    width="100%" height="92"
+                                    includeInLayout="false"
+                                    itemRenderer="com.esri.builder.renderers.SubLayerRenderer"
+                                    visible="false">
+                    <views:layout>
+                        <s:VerticalLayout gap="0"
+                                          horizontalAlign="justify"
+                                          useVirtualLayout="true"/>
+                    </views:layout>
+                </views:SubLayerList>
+            </s:FormItem>
+
+            <s:FormItem includeInLayout="{configLayerToEdit.type == ConfigLayer.CSV}"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.latitudeFieldName')}"
+                        visible="{configLayerToEdit.type == ConfigLayer.CSV}">
+                <s:TextInput id="latitudeFieldNameInput" text="{configLayerToEdit.latitudeFieldName}"/>
+            </s:FormItem>
+
+            <s:FormItem includeInLayout="{configLayerToEdit.type == ConfigLayer.CSV}"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.longitudeFieldName')}"
+                        visible="{configLayerToEdit.type == ConfigLayer.CSV}">
+                <s:TextInput id="longitudeFieldNameInput" text="{configLayerToEdit.longitudeFieldName}"/>
+            </s:FormItem>
+
+            <s:FormItem includeInLayout="{configLayerToEdit.type == ConfigLayer.CSV}"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.columnDelimiter')}"
+                        visible="{configLayerToEdit.type == ConfigLayer.CSV}">
+                <s:TextInput id="columnDelimiterInput" text="{configLayerToEdit.columnDelimiter}"/>
+            </s:FormItem>
+        </s:Form>
+
+        <s:HGroup width="100%" height="100%"
+                  horizontalAlign="center"
+                  verticalAlign="middle">
+            <s:Button id="okButton"
+                      width="150"
+                      click="okButton_clickHandler(event)"
+                      enabled="{!(configLayerToEdit.type == ConfigLayer.KML
+                                  || configLayerToEdit.type == ConfigLayer.CSV
+                                  || configLayerToEdit.type == ConfigLayer.GEO_RSS
+                                  || configLayerToEdit.type == ConfigLayer.WMS 
+                                  || configLayerToEdit.type == ConfigLayer.WMTS 
+                                  || configLayerToEdit.type == ConfigLayer.WEB_TILED) || layerURL.text}"
+                      label="{resourceManager.getString('BuilderStrings', 'ok')}"
+                      skinClass="com.esri.builder.skins.BlueButtonSkin"/>
+
+            <s:Button id="cancelButton"
+                      click="cancelButton_clickHandler(event)"
+                      label="{resourceManager.getString('BuilderStrings', 'cancel')}"
+                      skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+        </s:HGroup>
+    </s:VGroup>
+</s:SkinnablePopUpContainer>
