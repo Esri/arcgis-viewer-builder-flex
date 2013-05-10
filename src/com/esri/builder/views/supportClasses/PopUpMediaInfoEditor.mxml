@@ -158,6 +158,17 @@
                     popUpMediaInfos.removeItemAt(itemIndex);
                 }
             }
+
+            private function popUpMediaInfoLabelFunction(popUpMediaInfo:PopUpMediaInfo):String
+            {
+                return popUpMediaInfo.title ? popUpMediaInfo.title : mediaTypeToLabel(popUpMediaInfo.type);
+            }
+
+            private function mediaTypeToLabel(type:String):String
+            {
+                var mediaTypeKey:String = 'media.' + type;
+                return resourceManager.getString('BuilderStrings', mediaTypeKey);
+            }
         ]]>
     </fx:Script>
 
@@ -172,7 +183,7 @@
                                  dataProvider="{popUpMediaInfos}"
                                  editItem="popUpMediaInfoList_editItemHandler(event)"
                                  itemRenderer="com.esri.builder.renderers.ModifiableItemRenderer"
-                                 labelField="title"
+                                 labelFunction="popUpMediaInfoLabelFunction"
                                  moveItemDown="popUpMediaInfoList_moveItemDownHandler(event)"
                                  moveItemUp="popUpMediaInfoList_moveItemUpHandler(event)"
                                  removeItem="popUpMediaInfoList_removeItemHandler(event)"/>
