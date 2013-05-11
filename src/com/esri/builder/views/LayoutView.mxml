@@ -30,6 +30,7 @@
             import com.esri.builder.eventbus.AppEvent;
             import com.esri.builder.model.Constraints;
             import com.esri.builder.model.IConstraints;
+            import com.esri.builder.model.LTRConstraints;
             import com.esri.builder.model.Model;
             import com.esri.builder.model.Widget;
             import com.esri.builder.model.WidgetContainer;
@@ -88,9 +89,9 @@
                 layoutWidgetConstraintsMap[SPLASH_WIDGET_NAME] = new Constraints();
                 layoutWidgetConstraintsMap[HEADER_CONTROLLER_WIDGET_NAME] = new Constraints("0", "0");
                 layoutWidgetConstraintsMap[STATIC_IMAGE_WIDGET_NAME] = new Constraints("5", "", "", "62");
-                layoutWidgetConstraintsMap[COORDINATE_WIDGET_NAME] = new Constraints("3", "", "", "1");
+                layoutWidgetConstraintsMap[COORDINATE_WIDGET_NAME] = new LTRConstraints("3", "", "", "1");
                 layoutWidgetConstraintsMap[MAP_SWITCHER_WIDGET_NAME] = new Constraints("", "55", "20");
-                layoutWidgetConstraintsMap[OVERVIEW_MAP_WIDGET_NAME] = new Constraints("", "", "0", "0");
+                layoutWidgetConstraintsMap[OVERVIEW_MAP_WIDGET_NAME] = new LTRConstraints("", "", "0", "0");
                 layoutWidgetConstraintsMap[NAVIGATION_WIDGET_NAME] = new Constraints("10", "50");
             }
 
