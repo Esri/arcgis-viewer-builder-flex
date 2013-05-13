@@ -58,6 +58,7 @@ public class PortalModel extends EventDispatcher
         cleanURL = StringUtil.trim(cleanURL);
         cleanURL = replacePreviousDefaultPortalURL(cleanURL);
         cleanURL = cleanURL.replace(/\/sharing\/content\/items\/?$/i, '');
+        cleanURL = cleanURL.charAt(cleanURL.length - 1) == "/" ? cleanURL : cleanURL + "/";
         cleanURL = URLUtil.encode(cleanURL);
         return cleanURL;
     }
