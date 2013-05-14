@@ -63,6 +63,12 @@ public class PortalModel extends EventDispatcher
         return cleanURL;
     }
 
+    private function replacePreviousDefaultPortalURL(url:String):String
+    {
+        const previousDefaultPortalURL:String = "http://www.arcgis.com/";
+        return url.replace(previousDefaultPortalURL, DEFAULT_PORTAL_URL);
+    }
+
     //--------------------------------------------------------------------------
     //
     //  Constructor
@@ -112,12 +118,6 @@ public class PortalModel extends EventDispatcher
             _portalURL = cleanUpPortalURL(value);
             dispatchEvent(new Event("userDefinedPortalURLChanged"));
         }
-    }
-
-    private function replacePreviousDefaultPortalURL(url:String):String
-    {
-        const previousDefaultPortalURL:String = "http://www.arcgis.com/";
-        return url.replace(previousDefaultPortalURL, DEFAULT_PORTAL_URL);
     }
 }
 }
