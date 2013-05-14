@@ -33,5 +33,10 @@ public class URLUtil
         const nonEncodedPercentCharacters:RegExp = / % (?! [0-9a-fA-F]{2} ) /gx;
         return url ? url.replace(nonEncodedPercentCharacters, "%25") : "";
     }
+
+    public static function ensureTrailingForwardSlash(url:String):String
+    {
+        return url.charAt(url.length - 1) == "/" ? url : url + "/";
+    }
 }
 }
