@@ -95,8 +95,7 @@ public class PortalModel extends EventDispatcher
     //----------------------------------
 
     /**
-     * Stripped value of the _userDefinedPortalURL
-     * (without "/sharing/content/items")
+     * The ArcGIS Portal URL
      */
     private var _portalURL:String;
 
@@ -108,10 +107,9 @@ public class PortalModel extends EventDispatcher
 
     public function set portalURL(value:String):void
     {
-        if (_userDefinedPortalURL != value)
+        if (_portalURL != value)
         {
-            _userDefinedPortalURL = cleanUpPortalURL(value);
-            _portalURL = _userDefinedPortalURL;
+            _portalURL = cleanUpPortalURL(value);
             dispatchEvent(new Event("userDefinedPortalURLChanged"));
         }
     }
@@ -120,20 +118,6 @@ public class PortalModel extends EventDispatcher
     {
         const previousDefaultPortalURL:String = "http://www.arcgis.com/";
         return url.replace(previousDefaultPortalURL, DEFAULT_PORTAL_URL);
-    }
-
-    //----------------------------------
-    //  userDefinedPortalURL
-    //----------------------------------
-    /**
-     * The ArcGIS Portal URL set by the user
-     */
-    private var _userDefinedPortalURL:String;
-
-    [Bindable(event="userDefinedPortalURLChanged")]
-    public function get userDefinedPortalURL():String
-    {
-        return _userDefinedPortalURL;
     }
 }
 }

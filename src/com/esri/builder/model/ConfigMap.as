@@ -249,7 +249,7 @@ public class ConfigMap extends Constraints
         {
             mapXML.@bottom = bottom;
         }
-        if (PortalModel.getInstance().userDefinedPortalURL)
+        if (PortalModel.getInstance().portalURL)
         {
             mapXML.@portalurl = PortalModel.getInstance().portalURL;
         }
