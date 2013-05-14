@@ -32,7 +32,7 @@ public class PortalModel extends EventDispatcher
     //
     //--------------------------------------------------------------------------
 
-    public static const DEFAULT_PORTAL_URL:String = "https://www.arcgis.com";
+    public static const DEFAULT_PORTAL_URL:String = "https://www.arcgis.com/";
 
     private static var instance:PortalModel;
 
@@ -58,8 +58,15 @@ public class PortalModel extends EventDispatcher
         cleanURL = StringUtil.trim(cleanURL);
         cleanURL = replacePreviousDefaultPortalURL(cleanURL);
         cleanURL = cleanURL.replace(/\/sharing\/content\/items\/?$/i, '');
+        cleanURL = URLUtil.ensureTrailingForwardSlash(cleanURL);
         cleanURL = URLUtil.encode(cleanURL);
         return cleanURL;
+    }
+
+    private function replacePreviousDefaultPortalURL(url:String):String
+    {
+        const previousDefaultPortalURL:String = "http://www.arcgis.com/";
+        return url.replace(previousDefaultPortalURL, DEFAULT_PORTAL_URL);
     }
 
     //--------------------------------------------------------------------------
@@ -94,8 +101,7 @@ public class PortalModel extends EventDispatcher
     //----------------------------------
 
     /**
-     * Stripped value of the _userDefinedPortalURL
-     * (without "/sharing/content/items")
+     * The ArcGIS Portal URL
      */
     private var _portalURL:String;
 
@@ -107,32 +113,11 @@ public class PortalModel extends EventDispatcher
 
     public function set portalURL(value:String):void
     {
-        if (_userDefinedPortalURL != value)
+        if (_portalURL != value)
         {
-            _userDefinedPortalURL = cleanUpPortalURL(value);
-            _portalURL = _userDefinedPortalURL;
+            _portalURL = cleanUpPortalURL(value);
             dispatchEvent(new Event("userDefinedPortalURLChanged"));
         }
-    }
-
-    private function replacePreviousDefaultPortalURL(url:String):String
-    {
-        const previousDefaultPortalURL:String = "http://www.arcgis.com/";
-        return url.replace(previousDefaultPortalURL, DEFAULT_PORTAL_URL);
-    }
-
-    //----------------------------------
-    //  userDefinedPortalURL
-    //----------------------------------
-    /**
-     * The ArcGIS Portal URL set by the user
-     */
-    private var _userDefinedPortalURL:String;
-
-    [Bindable(event="userDefinedPortalURLChanged")]
-    public function get userDefinedPortalURL():String
-    {
-        return _userDefinedPortalURL;
     }
 }
 }

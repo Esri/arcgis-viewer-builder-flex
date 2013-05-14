@@ -19,6 +19,7 @@ package com.esri.builder.components
 import com.esri.ags.events.PortalEvent;
 import com.esri.ags.portal.Portal;
 import com.esri.builder.supportClasses.PortalUtil;
+import com.esri.builder.supportClasses.URLUtil;
 
 import mx.rpc.events.FaultEvent;
 import mx.utils.URLUtil;
@@ -109,7 +110,9 @@ public class PortalURLInputChecker extends URLInputCheckerBase
 
     override protected function displayValidURL():void
     {
-        const portalInstanceURL:String = portal.url.replace(/\/sharing\/rest.*/, '');
+        var portalInstanceURL:String =
+            com.esri.builder.supportClasses.URLUtil.ensureTrailingForwardSlash(
+            portal.url.replace(/\/sharing\/rest.*/, ''));
         setTextInternally(portalInstanceURL);
         super.displayValidURL();
     }

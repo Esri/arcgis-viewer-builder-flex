@@ -30,7 +30,7 @@
 
             protected function details_clickHandler(event:MouseEvent):void
             {
-                var webMapDetailsURL:String = StringUtil.substitute('{0}/home/item.html?id={1}',
+                var webMapDetailsURL:String = StringUtil.substitute('{0}home/item.html?id={1}',
                                                                     PortalModel.getInstance().portalURL,
                                                                     Model.instance.webmap.id);
                 navigateToURL(new URLRequest(webMapDetailsURL));
