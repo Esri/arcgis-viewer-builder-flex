@@ -32,7 +32,7 @@ public class PortalModel extends EventDispatcher
     //
     //--------------------------------------------------------------------------
 
-    public static const DEFAULT_PORTAL_URL:String = "https://www.arcgis.com";
+    public static const DEFAULT_PORTAL_URL:String = "https://www.arcgis.com/";
 
     private static var instance:PortalModel;
 
