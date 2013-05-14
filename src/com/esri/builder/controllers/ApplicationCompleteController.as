@@ -118,6 +118,7 @@ public final class ApplicationCompleteController
             LOG.info('Loading user preferences...');
         }
 
+        migratePreviousSettingsFolder();
         const so:SharedObject = SharedObject.getLocal(Model.USER_PREF);
 
         startupSettings = new Settings();
@@ -185,6 +186,53 @@ public final class ApplicationCompleteController
         else
         {
             tryGetHostName();
+        }
+    }
+
+    private function migratePreviousSettingsFolder():void
+    {
+        var previousBuilderSettingsFolder:File =
+            File.applicationStorageDirectory.resolvePath("#SharedObjects/AppBuilder.swf/");
+
+        if (!previousBuilderSettingsFolder.exists)
+        {
+            return;
+        }
+
+        var filesOrFolders:Array = previousBuilderSettingsFolder.getDirectoryListing();
+
+        if (filesOrFolders.length == 0)
+        {
+            return;
+        }
+
+        if (Log.isInfo())
+        {
+            LOG.info('Transferring previous settings folder');
+        }
+
+        var currentBuilderSettingsFolder:File =
+            File.applicationStorageDirectory.resolvePath("#SharedObjects/Builder.swf/");
+
+        try
+        {
+            for each (var fileOrFolder:File in filesOrFolders)
+            {
+                if (Log.isInfo())
+                {
+                    LOG.info('Transferring {0}', fileOrFolder.name);
+                }
+                fileOrFolder.moveTo(currentBuilderSettingsFolder.resolvePath(fileOrFolder.name),
+                                    true);
+            }
+        }
+        catch (error:Error)
+        {
+            if (Log.isInfo())
+            {
+                LOG.info('Could not transfer previous settings folder: {0} - {1}',
+                         error.errorID, error.toString());
+            }
         }
     }
 
