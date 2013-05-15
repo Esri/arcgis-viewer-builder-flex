@@ -21,9 +21,8 @@
                     xmlns:mx="library://ns.adobe.com/flex/mx"
                     xmlns:components="com.esri.builder.components.*"
                     width="100%" height="100%"
-                    add="this_addHandler(event)"
                     creationComplete="this_creationCompleteHandler(event)"
-                    show="this_showHandler(event)">
+                    preinitialize="preinitializeHandler(event)">
     <fx:Script>
         <![CDATA[
             import com.esri.builder.components.LayoutWidgetContainerEvent;
@@ -74,14 +73,29 @@
             private var isAttributeTableOpenOnStartUp:Boolean = true;
             private var isDirectionsOpenOnStartUp:Boolean = true;
 
-            protected function this_creationCompleteHandler(event:FlexEvent):void
-            {
-                AppEvent.addListener(AppEvent.SAVE_CONFIG_XML, onSaveConfigXML, false, 1);
-            }
-
-            protected function this_addHandler(event:FlexEvent):void
+            private function preinitializeHandler(event:FlexEvent):void
             {
                 initLayoutWidgetConstraintsMap();
+            }
+
+            protected function this_creationCompleteHandler(event:FlexEvent):void
+            {
+                AppEvent.addListener(AppEvent.APP_READY_TO_EDIT, appReadyToEditHandler);
+                AppEvent.addListener(AppEvent.SAVE_CONFIG_XML, onSaveConfigXML, false, 1);
+
+                initAppLayoutWidgets();
+            }
+
+            private function appReadyToEditHandler(event:AppEvent):void
+            {
+                initAppLayoutWidgets();
+            }
+
+            private function initAppLayoutWidgets():void
+            {
+                initMapsForDefaultLayoutWidgetAndWidgetTypes();
+                preselectScaleBarStyle();
+                preselectAttributionVisible();
             }
 
             private function initLayoutWidgetConstraintsMap():void
@@ -93,13 +107,6 @@
                 layoutWidgetConstraintsMap[MAP_SWITCHER_WIDGET_NAME] = new Constraints("", "55", "20");
                 layoutWidgetConstraintsMap[OVERVIEW_MAP_WIDGET_NAME] = new LTRConstraints("", "", "0", "0");
                 layoutWidgetConstraintsMap[NAVIGATION_WIDGET_NAME] = new Constraints("10", "50");
-            }
-
-            protected function this_showHandler(event:FlexEvent):void
-            {
-                initMapsForDefaultLayoutWidgetAndWidgetTypes();
-                preselectScaleBarStyle();
-                preselectAttributionVisible();
             }
 
             private function initMapsForDefaultLayoutWidgetAndWidgetTypes():void
