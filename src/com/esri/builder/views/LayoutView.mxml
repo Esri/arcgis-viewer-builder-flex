@@ -21,14 +21,15 @@
                     xmlns:mx="library://ns.adobe.com/flex/mx"
                     xmlns:components="com.esri.builder.components.*"
                     width="100%" height="100%"
-                    add="this_addHandler(event)"
                     creationComplete="this_creationCompleteHandler(event)"
-                    show="this_showHandler(event)">
+                    preinitialize="preinitializeHandler(event)">
     <fx:Script>
         <![CDATA[
             import com.esri.builder.components.LayoutWidgetContainerEvent;
             import com.esri.builder.eventbus.AppEvent;
             import com.esri.builder.model.Constraints;
+            import com.esri.builder.model.IConstraints;
+            import com.esri.builder.model.LTRConstraints;
             import com.esri.builder.model.Model;
             import com.esri.builder.model.Widget;
             import com.esri.builder.model.WidgetContainer;
@@ -72,52 +73,40 @@
             private var isAttributeTableOpenOnStartUp:Boolean = true;
             private var isDirectionsOpenOnStartUp:Boolean = true;
 
-            protected function this_creationCompleteHandler(event:FlexEvent):void
-            {
-                AppEvent.addListener(AppEvent.SAVE_CONFIG_XML, onSaveConfigXML, false, 1);
-            }
-
-            protected function this_addHandler(event:FlexEvent):void
+            private function preinitializeHandler(event:FlexEvent):void
             {
                 initLayoutWidgetConstraintsMap();
             }
 
-            private function initLayoutWidgetConstraintsMap():void
+            protected function this_creationCompleteHandler(event:FlexEvent):void
             {
-                var splashWidgetConstraints:Constraints = new Constraints();
-                var headerControllerWidgetConstraints:Constraints = new Constraints();
-                headerControllerWidgetConstraints.top = "0";
-                headerControllerWidgetConstraints.left = "0";
-                var staticImageWidgetConstraints:Constraints = new Constraints();
-                staticImageWidgetConstraints.bottom = "62";
-                staticImageWidgetConstraints.left = "5";
-                var coordinateWidgetConstraints:Constraints = new Constraints();
-                coordinateWidgetConstraints.bottom = "1";
-                coordinateWidgetConstraints.left = "3"
-                var mapSwitcherWidgetConstraints:Constraints = new Constraints();
-                mapSwitcherWidgetConstraints.top = "55";
-                mapSwitcherWidgetConstraints.right = "20";
-                var overviewWidgetConstraints:Constraints = new Constraints();
-                overviewWidgetConstraints.bottom = "0";
-                overviewWidgetConstraints.right = "0";
-                var navigationWidgetConstraints:Constraints = new Constraints();
-                navigationWidgetConstraints.top = "50";
-                navigationWidgetConstraints.left = "10";
+                AppEvent.addListener(AppEvent.APP_READY_TO_EDIT, appReadyToEditHandler);
+                AppEvent.addListener(AppEvent.SAVE_CONFIG_XML, onSaveConfigXML, false, 1);
 
-                layoutWidgetConstraintsMap[SPLASH_WIDGET_NAME] = splashWidgetConstraints;
-                layoutWidgetConstraintsMap[HEADER_CONTROLLER_WIDGET_NAME] = headerControllerWidgetConstraints;
-                layoutWidgetConstraintsMap[STATIC_IMAGE_WIDGET_NAME] = staticImageWidgetConstraints;
-                layoutWidgetConstraintsMap[COORDINATE_WIDGET_NAME] = coordinateWidgetConstraints;
-                layoutWidgetConstraintsMap[MAP_SWITCHER_WIDGET_NAME] = mapSwitcherWidgetConstraints;
-                layoutWidgetConstraintsMap[OVERVIEW_MAP_WIDGET_NAME] = overviewWidgetConstraints;
-                layoutWidgetConstraintsMap[NAVIGATION_WIDGET_NAME] = navigationWidgetConstraints;
+                initAppLayoutWidgets();
             }
 
-            protected function this_showHandler(event:FlexEvent):void
+            private function appReadyToEditHandler(event:AppEvent):void
+            {
+                initAppLayoutWidgets();
+            }
+
+            private function initAppLayoutWidgets():void
             {
                 initMapsForDefaultLayoutWidgetAndWidgetTypes();
                 preselectScaleBarStyle();
                 preselectAttributionVisible();
+            }
+
+            private function initLayoutWidgetConstraintsMap():void
+            {
+                layoutWidgetConstraintsMap[SPLASH_WIDGET_NAME] = new Constraints();
+                layoutWidgetConstraintsMap[HEADER_CONTROLLER_WIDGET_NAME] = new Constraints("0", "0");
+                layoutWidgetConstraintsMap[STATIC_IMAGE_WIDGET_NAME] = new Constraints("5", "", "", "62");
+                layoutWidgetConstraintsMap[COORDINATE_WIDGET_NAME] = new LTRConstraints("3", "", "", "1");
+                layoutWidgetConstraintsMap[MAP_SWITCHER_WIDGET_NAME] = new Constraints("", "55", "20");
+                layoutWidgetConstraintsMap[OVERVIEW_MAP_WIDGET_NAME] = new LTRConstraints("", "", "0", "0");
+                layoutWidgetConstraintsMap[NAVIGATION_WIDGET_NAME] = new Constraints("10", "50");
             }
 
             private function initMapsForDefaultLayoutWidgetAndWidgetTypes():void
@@ -225,11 +214,7 @@
 
             private function applyPreDefinedConstraints(widget:Widget, widgetName:String):void
             {
-                var constraints:Constraints = layoutWidgetConstraintsMap[widgetName];
-                widget.top = constraints.top;
-                widget.left = constraints.left;
-                widget.right = constraints.right;
-                widget.bottom = constraints.bottom;
+                widget.constraints = layoutWidgetConstraintsMap[widgetName].clone();
             }
 
             protected function saveButton_clickHandler(event:MouseEvent):void
@@ -820,31 +805,6 @@
             </components:layout>
         </components:LayoutWidgetContainer>
 
-        <s:HGroup right="10" bottom="10"
-                  gap="10"
-                  verticalAlign="bottom">
-            <components:LayoutWidgetContainer id="attributionVisibleToggle"
-                                              horizontalCenter="0"
-                                              inclusionChange="updateAttributionVisible()"
-                                              label="{resourceManager.getString('BuilderStrings', 'attributionVisible')}"
-                                              skinClass="com.esri.builder.skins.IncludeOnlyLayoutWidgetWireframeSkin"
-                                              verticalCenter="0">
-                <components:layout>
-                    <s:HorizontalLayout verticalAlign="middle"/>
-                </components:layout>
-            </components:LayoutWidgetContainer>
-
-            <components:LayoutWidgetContainer id="overviewMapContainer"
-                                              editClick="editOverviewMapWidget()"
-                                              inclusionChange="updateOverviewMapWidgetInclusion(event)"
-                                              label="{resourceManager.getString('BuilderStrings', 'overviewMap.widgetLabel')}"
-                                              skinClass="com.esri.builder.skins.LayoutWidgetWireframeSkin">
-                <components:layout>
-                    <s:VerticalLayout horizontalAlign="center"/>
-                </components:layout>
-            </components:LayoutWidgetContainer>
-        </s:HGroup>
-
         <components:LayoutWidgetContainer id="staticImageContainer"
                                           left="10" bottom="115"
                                           editClick="editStaticImageWidget()"
@@ -856,16 +816,70 @@
             </components:layout>
         </components:LayoutWidgetContainer>
 
-        <components:LayoutWidgetContainer id="coordinateContainer"
-                                          left="10" bottom="10"
-                                          editClick="editCoordinateWidget()"
-                                          inclusionChange="updateCoordinateWidgetInclusion(event)"
-                                          label="{resourceManager.getString('BuilderStrings', 'layoutView.coordinates')}"
-                                          skinClass="com.esri.builder.skins.LayoutWidgetWireframeSkin">
-            <components:layout>
-                <s:HorizontalLayout verticalAlign="middle"/>
-            </components:layout>
-        </components:LayoutWidgetContainer>
+        <s:Group left="0" right="0" bottom="0"
+                 layoutDirection="ltr">
+            <s:HGroup right="10" bottom="10"
+                      gap="10"
+                      verticalAlign="bottom">
+                <components:LayoutWidgetContainer id="attributionVisibleToggle"
+                                                  horizontalCenter="0"
+                                                  inclusionChange="updateAttributionVisible()"
+                                                  label="{resourceManager.getString('BuilderStrings', 'attributionVisible')}"
+                                                  skinClass="com.esri.builder.skins.IncludeOnlyLayoutWidgetWireframeSkin"
+                                                  verticalCenter="0">
+                    <components:layout>
+                        <s:HorizontalLayout verticalAlign="middle"/>
+                    </components:layout>
+                </components:LayoutWidgetContainer>
+
+                <components:LayoutWidgetContainer id="overviewMapContainer"
+                                                  editClick="editOverviewMapWidget()"
+                                                  inclusionChange="updateOverviewMapWidgetInclusion(event)"
+                                                  label="{resourceManager.getString('BuilderStrings', 'overviewMap.widgetLabel')}"
+                                                  skinClass="com.esri.builder.skins.LayoutWidgetWireframeSkin">
+                    <components:layout>
+                        <s:VerticalLayout horizontalAlign="center"/>
+                    </components:layout>
+                </components:LayoutWidgetContainer>
+            </s:HGroup>
+
+            <components:LayoutWidgetContainer id="coordinateContainer"
+                                              left="10" bottom="10"
+                                              editClick="editCoordinateWidget()"
+                                              inclusionChange="updateCoordinateWidgetInclusion(event)"
+                                              label="{resourceManager.getString('BuilderStrings', 'layoutView.coordinates')}"
+                                              skinClass="com.esri.builder.skins.LayoutWidgetWireframeSkin">
+                <components:layout>
+                    <s:HorizontalLayout verticalAlign="middle"/>
+                </components:layout>
+            </components:LayoutWidgetContainer>
+
+            <!--SCALE BAR-->
+            <s:Group left="10" bottom="65">
+                <s:Rect left="0" right="0" top="0" bottom="0">
+                    <s:stroke>
+                        <s:SolidColorStroke color="0x007AC2" weight="2"/>
+                    </s:stroke>
+
+                    <s:fill>
+                        <s:SolidColor color="0xFFFFFF"/>
+                    </s:fill>
+                </s:Rect>
+
+                <s:HGroup left="10" right="10" top="10" bottom="10"
+                          verticalAlign="middle">
+                    <s:Label text="{resourceManager.getString('BuilderStrings', 'scaleBar')}"/>
+
+                    <s:DropDownList id="scaleBarStyleSelection" change="updateScaleBarStyle()">
+                        <s:ArrayList id="scaleBarStyleOptions">
+                            <s:DataItem label="{resourceManager.getString('BuilderStrings', 'scaleBar.default')}" value="default"/>
+                            <s:DataItem label="{resourceManager.getString('BuilderStrings', 'scaleBar.metric')}" value="metric"/>
+                            <s:DataItem label="{resourceManager.getString('BuilderStrings', 'scaleBar.us')}" value="us"/>
+                        </s:ArrayList>
+                    </s:DropDownList>
+                </s:HGroup>
+            </s:Group>
+        </s:Group>
 
         <!--HEADER CONTROLLER EDITOR-->
         <s:HGroup id="headerControllerWidgetContainer"
@@ -921,32 +935,6 @@
                 </s:VGroup>
             </s:Group>
         </s:HGroup>
-
-        <!--SCALE BAR-->
-        <s:Group left="10" bottom="65">
-            <s:Rect left="0" right="0" top="0" bottom="0">
-                <s:stroke>
-                    <s:SolidColorStroke color="0x007AC2" weight="2"/>
-                </s:stroke>
-
-                <s:fill>
-                    <s:SolidColor color="0xFFFFFF"/>
-                </s:fill>
-            </s:Rect>
-
-            <s:HGroup left="10" right="10" top="10" bottom="10"
-                      verticalAlign="middle">
-                <s:Label text="{resourceManager.getString('BuilderStrings', 'scaleBar')}"/>
-
-                <s:DropDownList id="scaleBarStyleSelection" change="updateScaleBarStyle()">
-                    <s:ArrayList id="scaleBarStyleOptions">
-                        <s:DataItem label="{resourceManager.getString('BuilderStrings', 'scaleBar.default')}" value="default"/>
-                        <s:DataItem label="{resourceManager.getString('BuilderStrings', 'scaleBar.metric')}" value="metric"/>
-                        <s:DataItem label="{resourceManager.getString('BuilderStrings', 'scaleBar.us')}" value="us"/>
-                    </s:ArrayList>
-                </s:DropDownList>
-            </s:HGroup>
-        </s:Group>
     </s:Group>
 
     <components:LayoutWidgetContainer id="directionsWidgetContainer"

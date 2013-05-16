@@ -20,7 +20,7 @@ import com.esri.ags.SpatialReference;
 import com.esri.ags.geometry.Extent;
 import com.esri.ags.geometry.MapPoint;
 
-public class ConfigMap extends Constraints
+public class ConfigMap implements IConstraints
 {
     public var initExtent:Extent;
     public var fullExtent:Extent;
@@ -43,6 +43,48 @@ public class ConfigMap extends Constraints
     public var lods:Array;
     [Bindable]
     public var addArcGISBasemaps:Boolean;
+
+    private var _constraints:IConstraints = new Constraints();
+
+    public function get left():String
+    {
+        return _constraints.left;
+    }
+
+    public function set left(value:String):void
+    {
+        _constraints.left = value;
+    }
+
+    public function get top():String
+    {
+        return _constraints.top;
+    }
+
+    public function set top(value:String):void
+    {
+        _constraints.top = value;
+    }
+
+    public function get right():String
+    {
+        return _constraints.right;
+    }
+
+    public function set right(value:String):void
+    {
+        _constraints.right = value;
+    }
+
+    public function get bottom():String
+    {
+        return _constraints.bottom;
+    }
+
+    public function set bottom(value:String):void
+    {
+        _constraints.bottom = value;
+    }
 
     public static function decodeXML(mapXML:XML):ConfigMap
     {
