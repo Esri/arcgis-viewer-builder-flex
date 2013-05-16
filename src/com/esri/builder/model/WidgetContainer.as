@@ -18,7 +18,7 @@ package com.esri.builder.model
 
 import flash.utils.Dictionary;
 
-public final class WidgetContainer extends Constraints
+public final class WidgetContainer implements IConstraints
 {
     public var layout:String;
 
@@ -31,6 +31,48 @@ public final class WidgetContainer extends Constraints
     public function WidgetContainer(children:Array)
     {
         this.children = children;
+    }
+
+    private var _constraints:IConstraints = new Constraints();
+
+    public function get left():String
+    {
+        return _constraints.left;
+    }
+
+    public function set left(value:String):void
+    {
+        _constraints.left = value;
+    }
+
+    public function get top():String
+    {
+        return _constraints.top;
+    }
+
+    public function set top(value:String):void
+    {
+        _constraints.top = value;
+    }
+
+    public function get right():String
+    {
+        return _constraints.right;
+    }
+
+    public function set right(value:String):void
+    {
+        _constraints.right = value;
+    }
+
+    public function get bottom():String
+    {
+        return _constraints.bottom;
+    }
+
+    public function set bottom(value:String):void
+    {
+        _constraints.bottom = value;
     }
 
     public static function decodeXML(widgetContainerXML:XML):WidgetContainer

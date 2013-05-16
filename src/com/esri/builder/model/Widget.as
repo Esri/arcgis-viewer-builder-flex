@@ -19,7 +19,7 @@ package com.esri.builder.model
 import flash.filesystem.File;
 
 [Bindable]
-public class Widget extends Constraints implements IXMLEncoder, IWidget
+public class Widget implements IXMLEncoder, IWidget, IConstraints
 {
     public var widgetXML:XML; // The original XML from main config.xml
 
@@ -215,12 +215,63 @@ public class Widget extends Constraints implements IXMLEncoder, IWidget
         widget.config = config;
         widget.url = url;
         widget.preload = preload;
-        widget.left = left;
-        widget.right = right;
-        widget.top = top;
-        widget.bottom = bottom;
+        widget.left = constraints.left;
+        widget.top = constraints.top;
+        widget.right = constraints.right;
+        widget.bottom = constraints.bottom;
         return widget;
     }
-}
 
+    private var _constraints:IConstraints = new Constraints();
+
+    public function get constraints():IConstraints
+    {
+        return _constraints;
+    }
+
+    public function set constraints(constraints:IConstraints):void
+    {
+        _constraints = constraints;
+    }
+
+    public function get left():String
+    {
+        return _constraints.left;
+    }
+
+    public function set left(value:String):void
+    {
+        _constraints.left = value;
+    }
+
+    public function get top():String
+    {
+        return _constraints.top;
+    }
+
+    public function set top(value:String):void
+    {
+        _constraints.top = value;
+    }
+
+    public function get right():String
+    {
+        return _constraints.right;
+    }
+
+    public function set right(value:String):void
+    {
+        _constraints.right = value;
+    }
+
+    public function get bottom():String
+    {
+        return _constraints.bottom;
+    }
+
+    public function set bottom(value:String):void
+    {
+        _constraints.bottom = value;
+    }
+}
 }
