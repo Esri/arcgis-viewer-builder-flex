@@ -37,7 +37,7 @@ public class TextFlowUtil
         }
 
         var urlSource:String =
-            StringUtil.substitute("<a href='{0}'>{1}</a>", URLUtil.encode(url), label);
+            StringUtil.substitute("<a href='{0}'>{1}</a>", URLUtil.decode(url), label);
 
         return TextConverter.importToFlow(urlSource,
                                           TextConverter.TEXT_FIELD_HTML_FORMAT,
