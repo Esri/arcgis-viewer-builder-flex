@@ -24,14 +24,20 @@
          implements="com.esri.builder.views.supportClasses.IIncludeLayerSelection">
     <fx:Script>
         <![CDATA[
+            import com.esri.ags.events.LayerEvent;
+            import com.esri.ags.layers.Layer;
+            import com.esri.ags.layers.WMSLayer;
+            import com.esri.ags.layers.supportClasses.WMSLayerInfo;
             import com.esri.ags.virtualearth.VETiledLayer;
-            import com.esri.builder.supportClasses.URLUtil;
             import com.esri.builder.eventbus.AppEvent;
             import com.esri.builder.model.ConfigLayer;
             import com.esri.builder.model.Model;
+            import com.esri.builder.supportClasses.URLUtil;
             import com.esri.builder.views.supportClasses.IIncludeLayerDispatcher;
 
             import mx.events.FlexEvent;
+            import mx.managers.CursorManager;
+            import mx.rpc.IResponder;
 
             private const ROAD:String = VETiledLayer.MAP_STYLE_ROAD;
             private const AERIAL:String = VETiledLayer.MAP_STYLE_AERIAL;
@@ -61,12 +67,12 @@
                 }
             }
 
-            public function getConfiguredLayer():ConfigLayer
+            public function getConfiguredLayer(responder:IResponder):void
             {
-                var configLayer:ConfigLayer;
-
                 if (serviceURL)
                 {
+                    var configLayer:ConfigLayer;
+
                     if (layerTypeOptionGroup.selectedItem == kmlOption)
                     {
                         configLayer = createKMLConfigLayer();
@@ -95,9 +101,68 @@
                     {
                         configLayer = createBingConfigLayer();
                     }
+
+                    var needsLayerMetadata:Boolean = layerTypeOptionGroup.selectedItem == wmsOption;
+                    if (needsLayerMetadata)
+                    {
+                        CursorManager.setBusyCursor();
+                        var layer:Layer = configLayer.createLayer();
+                        layer.addEventListener(LayerEvent.LOAD, layerToLoad_loadHandler);
+                        layer.addEventListener(LayerEvent.LOAD_ERROR, layerToLoad_loadErrorHandler);
+
+                        function layerToLoad_loadHandler(event:LayerEvent):void
+                        {
+                            layer.removeEventListener(LayerEvent.LOAD, layerToLoad_loadHandler);
+                            layer.removeEventListener(LayerEvent.LOAD_ERROR, layerToLoad_loadErrorHandler);
+
+                            if (configLayer.type == ConfigLayer.WMS)
+                            {
+                                assimilateWMSLayer(event.layer as WMSLayer, configLayer);
+                            }
+
+                            CursorManager.removeBusyCursor();
+                            processResult();
+                        }
+
+                        function layerToLoad_loadErrorHandler(event:LayerEvent):void
+                        {
+                            layer.removeEventListener(LayerEvent.LOAD, layerToLoad_loadHandler);
+                            layer.removeEventListener(LayerEvent.LOAD_ERROR, layerToLoad_loadErrorHandler);
+                            CursorManager.removeBusyCursor();
+                            processFault();
+                        }
+                    }
+                    else
+                    {
+                        processResult();
+                    }
+                }
+                else
+                {
+                    processFault();
                 }
 
-                return configLayer;
+                function processResult():void
+                {
+                    responder.result(configLayer);
+                }
+
+                function processFault():void
+                {
+                    responder.fault("Could not generate config layer.");
+                }
+            }
+
+            private function assimilateWMSLayer(wmsLayer:WMSLayer, configLayer:ConfigLayer):void
+            {
+                var visibleLayerNames:Array = [];
+                for each (var info:WMSLayerInfo in wmsLayer.layerInfos)
+                {
+                    visibleLayerNames.push(info.name);
+                }
+
+                configLayer.label = wmsLayer.title ? wmsLayer.title : findAppropriateLabel(wmsLayer.url);
+                configLayer.visibleLayers = visibleLayerNames.join();
             }
 
             private function createKMLConfigLayer():ConfigLayer

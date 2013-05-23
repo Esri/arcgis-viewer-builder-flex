@@ -137,9 +137,10 @@
                 }
                 else
                 {
-                    const configLayerFromWeb:ConfigLayer =
-                        layersSearch.layerFromWebView.getConfiguredLayer();
-                    if (configLayerFromWeb)
+                    layersSearch.layerFromWebView.getConfiguredLayer(
+                        new mx.rpc.Responder(resultHandler, faultHandler));
+
+                    function resultHandler(configLayerFromWeb:ConfigLayer):void
                     {
                         if (Log.isDebug())
                         {
@@ -155,6 +156,14 @@
                         else
                         {
                             dispatchBasemapLayerAlreadyExistsMessage(configLayerFromWeb.label);
+                        }
+                    }
+
+                    function faultHandler(message:String):void
+                    {
+                        if (Log.isDebug())
+                        {
+                            LOG.debug(message);
                         }
                     }
                 }
