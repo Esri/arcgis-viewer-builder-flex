@@ -175,7 +175,6 @@
             private function selectedOptionRequiresName():Boolean
             {
                 return layerTypeOptionGroup.selectedItem == webTiledOption
-                    || layerTypeOptionGroup.selectedItem == wmsOption
                     || layerTypeOptionGroup.selectedItem == wmtsOption;
             }
 
@@ -248,12 +247,10 @@
         </s:FormItem>
 
         <s:FormItem includeInLayout="{layerTypeOptionGroup.selectedItem == webTiledOption
-                                    || layerTypeOptionGroup.selectedItem == wmsOption
                                     || layerTypeOptionGroup.selectedItem == wmtsOption}"
                     label="{resourceManager.getString('BuilderStrings', 'configLayerView.label')}"
                     skinClass="spark.skins.spark.StackedFormItemSkin"
                     visible="{layerTypeOptionGroup.selectedItem == webTiledOption
-                            || layerTypeOptionGroup.selectedItem == wmsOption
                             || layerTypeOptionGroup.selectedItem == wmtsOption}">
             <s:TextInput width="100%"
                          change="dispatchUpdateLayerSelection()"
