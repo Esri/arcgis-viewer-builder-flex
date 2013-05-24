@@ -242,8 +242,7 @@
 
             private function selectedOptionRequiresName():Boolean
             {
-                return layerTypeOptionGroup.selectedItem == webTiledOption
-                    || layerTypeOptionGroup.selectedItem == wmtsOption;
+                return layerTypeOptionGroup.selectedItem == webTiledOption;
             }
 
             private function dispatchUpdateLayerSelection():void
@@ -314,12 +313,10 @@
                          text="@{serviceURL}"/>
         </s:FormItem>
 
-        <s:FormItem includeInLayout="{layerTypeOptionGroup.selectedItem == webTiledOption
-                                    || layerTypeOptionGroup.selectedItem == wmtsOption}"
+        <s:FormItem includeInLayout="{layerTypeOptionGroup.selectedItem == webTiledOption}"
                     label="{resourceManager.getString('BuilderStrings', 'configLayerView.label')}"
                     skinClass="spark.skins.spark.StackedFormItemSkin"
-                    visible="{layerTypeOptionGroup.selectedItem == webTiledOption
-                            || layerTypeOptionGroup.selectedItem == wmtsOption}">
+                    visible="{layerTypeOptionGroup.selectedItem == webTiledOption}">
             <s:TextInput width="100%"
                          change="dispatchUpdateLayerSelection()"
                          enter="serviceURLInput_enterHandler(event)"
