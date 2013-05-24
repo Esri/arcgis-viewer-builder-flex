@@ -22,7 +22,7 @@
     <versionNumber>3.4</versionNumber>
     <versionLabel>3.4 Beta</versionLabel>
     <description>
-        <text xml:lang="en">ArcGIS Viewer for Flex Application Builder</text>
+        <text xml:lang="en">The ArcGIS Viewer for Flex application builder makes it easy to create and manage ArcGIS Viewer for Flex web mapping applications.</text>
     </description>
     <copyright>Copyright (c) 2013 Esri</copyright>
     <initialWindow>
@@ -30,9 +30,6 @@
         <width>1024</width>
         <height>730</height>
         <minSize>800 400</minSize>
-    <autoOrients>false</autoOrients>
-        <fullScreen>false</fullScreen>
-        <visible>false</visible>
     </initialWindow>
     <supportedProfiles>desktop</supportedProfiles>
     <icon>
@@ -42,5 +39,4 @@
         <image128x128>assets/images/Builder128.png</image128x128>
     </icon>
     <allowBrowserInvocation>true</allowBrowserInvocation>
-<name/>
 </application>
