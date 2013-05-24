@@ -46,6 +46,7 @@
             import mx.logging.Log;
             import mx.rpc.AsyncResponder;
             import mx.rpc.Fault;
+            import mx.rpc.Responder;
 
             import spark.components.List;
 
@@ -114,9 +115,10 @@
                 }
                 else
                 {
-                    const configLayerFromWeb:ConfigLayer =
-                        operationalLayersSearch.layerFromWebView.getConfiguredLayer();
-                    if (configLayerFromWeb)
+                    operationalLayersSearch.layerFromWebView.getConfiguredLayer(
+                        new mx.rpc.Responder(resultHandler, faultHandler));
+
+                    function resultHandler(configLayerFromWeb:ConfigLayer):void
                     {
                         if (Log.isDebug())
                         {
@@ -126,6 +128,16 @@
                         Model.instance.configOpsLayerList.addLayer(configLayerFromWeb);
                         syncConfigMap();
                         Model.instance.config.isDirty = true;
+                    }
+
+                    function faultHandler(message:String):void
+                    {
+                        if (Log.isDebug())
+                        {
+                            LOG.debug(message);
+                        }
+
+                        AppEvent.dispatch(AppEvent.SHOW_ERROR, message);
                     }
                 }
             }
