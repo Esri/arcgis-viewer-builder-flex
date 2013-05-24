@@ -262,6 +262,14 @@
                     configLayerToEdit.skipGetCapabilities = skipGetCapabilitiesCheckBox.selected;
                 }
 
+                if (configLayerToEdit.type == ConfigLayer.WMTS)
+                {
+                    configLayerToEdit.serviceMode = serviceModeInput.text;
+                    configLayerToEdit.layerId = layerIdInput.text;
+                    configLayerToEdit.style = styleInput.text;
+                    configLayerToEdit.tileMatrixSetId = tileMatrixSetIdInput.text;
+                }
+
                 if (configLayerToEdit.type == ConfigLayer.WEB_TILED)
                 {
                     configLayerToEdit.subDomains = subDomainsText.text;
@@ -675,6 +683,38 @@
                         label="{resourceManager.getString('BuilderStrings', 'configLayerView.onDemand')}"
                         visible="{configLayerToEdit.type === ConfigLayer.FEATURE}">
                 <s:CheckBox id="onDemand" selected="{configLayerToEdit.mode === 'onDemand'}"/>
+            </s:FormItem>
+
+            <s:FormItem width="100%"
+                        includeInLayout="{configLayerToEdit.type === ConfigLayer.WMTS}"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.serviceMode')}"
+                        visible="{configLayerToEdit.type === ConfigLayer.WMTS}">
+                <s:TextInput id="serviceModeInput"
+                             text="{configLayerToEdit.serviceMode}"/>
+            </s:FormItem>
+
+            <s:FormItem width="100%"
+                        includeInLayout="{configLayerToEdit.type === ConfigLayer.WMTS}"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.layerId')}"
+                        visible="{configLayerToEdit.type === ConfigLayer.WMTS}">
+                <s:TextInput id="layerIdInput"
+                             text="{configLayerToEdit.layerId}"/>
+            </s:FormItem>
+
+            <s:FormItem width="100%"
+                        includeInLayout="{configLayerToEdit.type === ConfigLayer.WMTS}"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.tileMatrixSetId')}"
+                        visible="{configLayerToEdit.type === ConfigLayer.WMTS}">
+                <s:TextInput id="tileMatrixSetIdInput"
+                             text="{configLayerToEdit.tileMatrixSetId}"/>
+            </s:FormItem>
+
+            <s:FormItem width="100%"
+                        includeInLayout="{configLayerToEdit.type === ConfigLayer.WMTS}"
+                        label="{resourceManager.getString('BuilderStrings', 'configLayerView.style')}"
+                        visible="{configLayerToEdit.type === ConfigLayer.WMTS}">
+                <s:TextInput id="styleInput"
+                             text="{configLayerToEdit.style}"/>
             </s:FormItem>
 
             <s:FormItem width="100%"
