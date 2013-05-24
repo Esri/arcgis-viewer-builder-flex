@@ -322,6 +322,8 @@ public final class ConfigLayer
         configLayer.showInLegend = layerXML.@showinlegend[0];
         configLayer.showInLegendHiddenLayers = layerXML.@showinlegendhiddenlayers[0];
         configLayer.subDomains = layerXML.@subdomains[0];
+        configLayer.layerId = layerXML.@layerid[0];
+        configLayer.serviceMode = layerXML.@servicemode[0];
 
         return configLayer;
     }
@@ -519,7 +521,7 @@ public final class ConfigLayer
         }
         if (serviceMode)
         {
-            layerXML.@mode = serviceMode;
+            layerXML.@servicemode = serviceMode;
         }
         if (style)
         {
