@@ -149,7 +149,10 @@
 
                 function processFault():void
                 {
-                    responder.fault("Could not generate config layer.");
+                    responder.fault(
+                        resourceManager.getString('BuilderStrings',
+                                                  'layerFromWebView.couldNotConfigureLayerFromWeb',
+                                                  [ configLayer.url ]));
                 }
             }
 

@@ -136,6 +136,8 @@
                         {
                             LOG.debug(message);
                         }
+
+                        AppEvent.dispatch(AppEvent.SHOW_ERROR, message);
                     }
                 }
             }
