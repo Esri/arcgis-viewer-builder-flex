@@ -27,6 +27,7 @@
             import com.esri.ags.events.LayerEvent;
             import com.esri.ags.layers.Layer;
             import com.esri.ags.layers.WMSLayer;
+            import com.esri.ags.layers.WMTSLayer;
             import com.esri.ags.layers.supportClasses.WMSLayerInfo;
             import com.esri.ags.virtualearth.VETiledLayer;
             import com.esri.builder.eventbus.AppEvent;
@@ -102,7 +103,10 @@
                         configLayer = createBingConfigLayer();
                     }
 
-                    var needsLayerMetadata:Boolean = layerTypeOptionGroup.selectedItem == wmsOption;
+                    var needsLayerMetadata:Boolean =
+                        layerTypeOptionGroup.selectedItem == wmsOption
+                        || layerTypeOptionGroup.selectedItem == wmtsOption;
+
                     if (needsLayerMetadata)
                     {
                         CursorManager.setBusyCursor();
@@ -118,6 +122,10 @@
                             if (configLayer.type == ConfigLayer.WMS)
                             {
                                 assimilateWMSLayer(event.layer as WMSLayer, configLayer);
+                            }
+                            else if (configLayer.type == ConfigLayer.WMTS)
+                            {
+                                assimilateWMTSLayer(event.layer as WMTSLayer, configLayer);
                             }
 
                             CursorManager.removeBusyCursor();
@@ -166,6 +174,15 @@
 
                 configLayer.label = wmsLayer.title ? wmsLayer.title : findAppropriateLabel(wmsLayer.url);
                 configLayer.visibleLayers = visibleLayerNames.join();
+            }
+
+            private function assimilateWMTSLayer(wmtsLayer:WMTSLayer, configLayer:ConfigLayer):void
+            {
+                configLayer.label = wmtsLayer.title ? wmtsLayer.title : findAppropriateLabel(wmtsLayer.url);
+                configLayer.layerId = wmtsLayer.layerId;
+                configLayer.tileMatrixSetId = wmtsLayer.tileMatrixSetId;
+                configLayer.serviceMode = wmtsLayer.serviceMode;
+                configLayer.style = wmtsLayer.style;
             }
 
             private function createKMLConfigLayer():ConfigLayer
