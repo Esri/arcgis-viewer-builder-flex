@@ -56,7 +56,7 @@
             {
                 if (portal.loaded)
                 {
-                    currentState = portal.user ? "signedintoportal" : "normal";
+                    currentState = portal.user ? "signedIntoPortal" : "normal";
                 }
                 else
                 {
@@ -127,10 +127,10 @@
     <s:states>
         <s:State name="normal"/>
         <s:State name="portalNotLoaded"/>
-        <s:State name="signedintoportal"/>
+        <s:State name="signedIntoPortal"/>
     </s:states>
 
-    <s:HGroup includeIn="signedintoportal">
+    <s:HGroup includeIn="signedIntoPortal">
         <s:Label text="{portal.user.fullname}"/>
 
         <s:Line height="10">
@@ -149,7 +149,7 @@
                                                      [ portal.info.portalName ])}"/>
     </s:HGroup>
 
-    <s:Group excludeFrom="signedintoportal" toolTip.portalNotLoaded="{resourceManager.getString('BuilderStrings',
+    <s:Group excludeFrom="signedIntoPortal" toolTip.portalNotLoaded="{resourceManager.getString('BuilderStrings',
              'agsPortal.requiresPortal')}">
         <s:Label alpha.portalNotLoaded="0.5"
                  buttonMode="true"
