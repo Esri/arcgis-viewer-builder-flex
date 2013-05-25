@@ -135,7 +135,7 @@
 
         <s:Line height="10">
             <s:stroke>
-                <s:SolidColorStroke color="0x000000"/>
+                <s:SolidColorStroke color="0xB6BCCC"/>
             </s:stroke>
         </s:Line>
 
