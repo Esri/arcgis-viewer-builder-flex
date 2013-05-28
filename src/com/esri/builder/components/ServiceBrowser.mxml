@@ -31,17 +31,16 @@
         <![CDATA[
             import com.esri.ags.components.IdentityManager;
             import com.esri.ags.components.supportClasses.Credential;
-            import com.esri.builder.components.SearchInputEvent;
             import com.esri.builder.components.serviceBrowser.filters.INodeFilter;
             import com.esri.builder.components.serviceBrowser.nodes.ServiceDirectoryNode;
             import com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent;
+            import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryBuildRequest;
             import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryBuilder;
             import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryBuilderEvent;
             import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryInfo;
             import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryTreeDataDescriptor;
             import com.esri.builder.eventbus.AppEvent;
             import com.esri.builder.model.RecentlyUsedURLsModel;
-            import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryBuildRequest;
             import com.esri.builder.supportClasses.LogUtil;
 
             import flashx.textLayout.conversion.TextConverter;
@@ -51,8 +50,8 @@
             import mx.events.FlexEvent;
             import mx.logging.ILogger;
             import mx.logging.Log;
-            import mx.rpc.AsyncResponder;
             import mx.rpc.Fault;
+            import mx.rpc.Responder;
             import mx.rpc.events.FaultEvent;
             import mx.utils.StringUtil;
 
@@ -136,7 +135,6 @@
 
             public function browseService():void
             {
-
                 if (serviceDirectoryBuilder)
                 {
                     serviceDirectoryBuilder.removeEventListener(ServiceDirectoryBuilderEvent.COMPLETE, serviceDirectoryBuilder_browseCompleteHandler);
@@ -389,17 +387,20 @@
                 IdentityManager.instance
                     .getCredential(extractServiceRoot(lastUsedURL),
                                    false,
-                                   new AsyncResponder(getCredentialsSuccessHandler,
-                                                      getCredentialsFaultHandler));
+                                   new mx.rpc.Responder(getCredentialsSuccessHandler,
+                                                        getCredentialsFaultHandler));
 
-                function getCredentialsSuccessHandler(credential:Credential, token:Object = null):void {
-                    if (Log.isDebug()) {
+                function getCredentialsSuccessHandler(credential:Credential):void
+                {
+                    if (Log.isDebug())
+                    {
                         LOG.debug("Signing into {0}", credential.server);
                     }
                     refreshServiceBrowse();
                 }
 
-                function getCredentialsFaultHandler(fault:Fault, token:Object = null):void {
+                function getCredentialsFaultHandler(fault:Fault):void
+                {
                     //DO NOTHING
                 }
             }
@@ -423,11 +424,13 @@
                 IdentityManager.instance
                     .getCredential(extractServiceRoot(lastUsedURL),
                                    false,
-                                   new AsyncResponder(getCredentialsSuccessHandler,
-                                                      getCredentialsFaultHandler));
+                                   new mx.rpc.Responder(getCredentialsSuccessHandler,
+                                                        getCredentialsFaultHandler));
 
-                function getCredentialsSuccessHandler(credential:Credential, token:Object = null):void {
-                    if (Log.isDebug()) {
+                function getCredentialsSuccessHandler(credential:Credential):void
+                {
+                    if (Log.isDebug())
+                    {
                         LOG.debug("Signing out of {0}", credential.server);
                     }
 
@@ -435,7 +438,8 @@
                     refreshServiceBrowse();
                 }
 
-                function getCredentialsFaultHandler(fault:Fault, token:Object = null):void {
+                function getCredentialsFaultHandler(fault:Fault):void
+                {
                     //DO NOTHING
                 }
             }
@@ -516,7 +520,7 @@
                       verticalAlign="middle"
                       visible="{isServiceSecure}">
                 <s:Label includeInLayout="{isUserSignedIn}"
-                         text="{resourceManager.getString('BuilderStrings', 'serviceBrowser.signedInAs',[currentCredentials.userId])}"
+                         text="{resourceManager.getString('BuilderStrings', 'serviceBrowser.signedInAs', [ currentCredentials.userId ])}"
                          visible="{isUserSignedIn}"/>
 
                 <s:Button click="signOut()"
