@@ -23,11 +23,11 @@ import com.esri.builder.components.serviceBrowser.filters.GPTaskFilter;
 import com.esri.builder.components.serviceBrowser.filters.GeocoderFilter;
 import com.esri.builder.components.serviceBrowser.filters.INodeFilter;
 import com.esri.builder.components.serviceBrowser.filters.MapLayerFilter;
+import com.esri.builder.components.serviceBrowser.filters.MapServerFilter;
 import com.esri.builder.components.serviceBrowser.filters.QueryableLayerFilter;
 import com.esri.builder.components.serviceBrowser.filters.RouteLayerFilter;
 import com.esri.builder.components.serviceBrowser.nodes.ServiceDirectoryRootNode;
 import com.esri.builder.model.Model;
-import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryBuildRequest;
 import com.esri.builder.supportClasses.LogUtil;
 
 import flash.events.EventDispatcher;
@@ -41,7 +41,6 @@ import mx.rpc.Fault;
 import mx.rpc.events.FaultEvent;
 import mx.rpc.events.ResultEvent;
 import mx.rpc.http.HTTPService;
-import com.esri.builder.components.serviceBrowser.filters.MapServerFilter;
 
 public final class ServiceDirectoryBuilder extends EventDispatcher
 {
