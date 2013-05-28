@@ -191,7 +191,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
                         if (hasSecurityEnabled
                             && !startsWithHTTPS.test(Model.instance.appDir.url))
                         {
-                            securityWarning = ResourceManager.getInstance().getString('BuilderStrings', 'secureTokenServiceWithSecureCrossDomainWarning');
+                            securityWarning = ResourceManager.getInstance().getString('BuilderStrings', 'serviceBrowser.secureTokenServiceWithSecureCrossDomain');
                         }
                     }
                 }
@@ -205,7 +205,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
 
                     tokenServiceCrossDomainRequest.removeEventListener(ResultEvent.RESULT, tokenServiceSecurityRequest_resultHandler);
                     tokenServiceCrossDomainRequest.removeEventListener(FaultEvent.FAULT, tokenServiceSecurityRequest_faultHandler);
-                    securityWarning = ResourceManager.getInstance().getString('BuilderStrings', 'secureTokenServiceMissingCrossDomainWarning');
+                    securityWarning = ResourceManager.getInstance().getString('BuilderStrings', 'serviceBrowser.secureTokenServiceMissingCrossDomain');
                 }
             }
 
