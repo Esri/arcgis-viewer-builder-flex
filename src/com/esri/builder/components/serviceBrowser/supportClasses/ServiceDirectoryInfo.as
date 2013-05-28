@@ -27,7 +27,8 @@ public class ServiceDirectoryInfo
                                          nodeFilter:INodeFilter,
                                          hasCrossDomain:Boolean,
                                          isSecure:Boolean,
-                                         securityWarning:String = null)
+                                         securityWarning:String = null,
+                                         owningSystemURL:String = null)
     {
         _rootNode = rootNode;
         _pathNodes = pathNodes;
@@ -36,6 +37,7 @@ public class ServiceDirectoryInfo
         _hasCrossDomain = hasCrossDomain;
         _isSecure = isSecure;
         _securityWarning = securityWarning;
+        _owningSystemURL = owningSystemURL;
     }
 
     private var _rootNode:ServiceDirectoryRootNode;
@@ -90,6 +92,13 @@ public class ServiceDirectoryInfo
     public function get url():String
     {
         return _endNode.url;
+    }
+
+    private var _owningSystemURL:String;
+
+    public function get owningSystemURL():String
+    {
+        return _owningSystemURL;
     }
 
     public function get hasContent():Boolean

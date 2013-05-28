@@ -59,6 +59,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
     private var currentNodeFilter:INodeFilter;
     private var isServiceSecured:Boolean;
     private var securityWarning:String;
+    private var owningSystemURL:String;
 
     public function buildServiceDirectory(serviceDirectoryBuildRequest:ServiceDirectoryBuildRequest):void
     {
@@ -147,6 +148,8 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
             isServiceSecured = (serverInfo.currentVersion >= 10.01
                 && serverInfo.authInfo
                 && serverInfo.authInfo.isTokenBasedSecurity);
+
+            owningSystemURL = serverInfo.owningSystemUrl;
 
             if (isServiceSecured)
             {
@@ -291,7 +294,8 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
                                                                       currentNodeFilter,
                                                                       hasCrossDomain,
                                                                       isServiceSecured,
-                                                                      securityWarning)));
+                                                                      securityWarning,
+                                                                      owningSystemURL)));
     }
 
     protected function rootNode_faultHandler(event:FaultEvent):void
