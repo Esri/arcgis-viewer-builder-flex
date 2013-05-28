@@ -16,7 +16,10 @@
 package com.esri.builder.model
 {
 
+import com.esri.ags.components.IdentityManager;
+import com.esri.ags.components.supportClasses.Credential;
 import com.esri.ags.portal.Portal;
+import com.esri.builder.supportClasses.PortalUtil;
 import com.esri.builder.supportClasses.URLUtil;
 
 import flash.events.Event;
@@ -67,6 +70,12 @@ public class PortalModel extends EventDispatcher
     {
         const previousDefaultPortalURL:String = "http://www.arcgis.com/";
         return url.replace(previousDefaultPortalURL, DEFAULT_PORTAL_URL);
+    }
+
+    public function canSignOut():Boolean
+    {
+        var credential:Credential = IdentityManager.instance.findCredential(PortalUtil.toPortalSharingURL(portal.url));
+        return portal.signedIn && (credential != null);
     }
 
     //--------------------------------------------------------------------------
