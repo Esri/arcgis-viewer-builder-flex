@@ -72,7 +72,7 @@
             [Bindable]
             private var isUserSignedIn:Boolean;
             [Bindable]
-            private var currentCredentials:Credential;
+            private var userId:String;
             [Bindable]
             private var hasContent:Boolean;
 
@@ -311,8 +311,9 @@
                     isServiceSecure = serviceDirectoryInfo.isSecure;
                     securityWarning = serviceDirectoryInfo.securityWarning;
 
-                    currentCredentials = IdentityManager.instance.findCredential(extractServiceRoot(lastUsedURL));
-                    isUserSignedIn = currentCredentials != null;
+                    var currentCredential:Credential = IdentityManager.instance.findCredential(extractServiceRoot(lastUsedURL));
+                    userId = currentCredential ? currentCredential.userId : "";
+                    isUserSignedIn = currentCredential != null;
 
                     serviceURL = serviceDirectoryInfo.url;
                     AppEvent.dispatch(AppEvent.REGISTER_URL, serviceURL);
@@ -481,7 +482,7 @@
                 servicesDirectory.removeAll();
 
                 isServiceSecure = false;
-                currentCredentials = null;
+                userId = null;
                 isUserSignedIn = false;
                 hasContent = false;
                 showMissingCrossDomainMessage = false;
@@ -520,7 +521,7 @@
                       verticalAlign="middle"
                       visible="{isServiceSecure}">
                 <s:Label includeInLayout="{isUserSignedIn}"
-                         text="{resourceManager.getString('BuilderStrings', 'serviceBrowser.signedInAs', [ currentCredentials.userId ])}"
+                         text="{resourceManager.getString('BuilderStrings', 'serviceBrowser.signedInAs', [ userId ])}"
                          visible="{isUserSignedIn}"/>
 
                 <s:Button click="signOut()"
