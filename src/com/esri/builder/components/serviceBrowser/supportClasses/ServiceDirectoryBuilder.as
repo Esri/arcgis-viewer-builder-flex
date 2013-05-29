@@ -42,7 +42,6 @@ import mx.rpc.Responder;
 import mx.rpc.events.FaultEvent;
 import mx.rpc.events.ResultEvent;
 import mx.rpc.http.HTTPService;
-import mx.utils.URLUtil;
 
 public final class ServiceDirectoryBuilder extends EventDispatcher
 {
@@ -142,7 +141,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
         function serviceInfoRequest_resultHandler(serverInfo:Object):void
         {
             owningSystemURL = serverInfo.owningSystemUrl;
-            if (isOwnedByPortal(owningSystemURL))
+            if (PortalModel.getInstance().hasSameOrigin(owningSystemURL))
             {
                 if (PortalModel.getInstance().portal.signedIn)
                 {
@@ -180,19 +179,6 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
         {
             checkIfServiceIsSecure(null);
         }
-    }
-
-    private function isOwnedByPortal(owningSystemURL:String):Boolean
-    {
-        if (owningSystemURL == null)
-        {
-            owningSystemURL = "";
-        }
-
-        var owningSystemURLServerNameWithPort:String = URLUtil.getServerName(owningSystemURL);
-        var portalServerNameWithPort:String = URLUtil.getServerName(PortalModel.getInstance().portalURL);
-
-        return (owningSystemURLServerNameWithPort == portalServerNameWithPort);
     }
 
     private function checkIfServiceIsSecure(serverInfo:Object):void

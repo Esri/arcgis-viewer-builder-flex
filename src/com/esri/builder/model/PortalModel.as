@@ -78,6 +78,19 @@ public class PortalModel extends EventDispatcher
         return portal.signedIn && (credential != null);
     }
 
+    public function hasSameOrigin(serverURL:String):Boolean
+    {
+        if (serverURL == null)
+        {
+            serverURL = "";
+        }
+
+        var serverURLServerNameWithPort:String = mx.utils.URLUtil.getServerNameWithPort(serverURL);
+        var portalServerNameWithPort:String = mx.utils.URLUtil.getServerNameWithPort(portalURL);
+
+        return (serverURLServerNameWithPort == portalServerNameWithPort);
+    }
+
     //--------------------------------------------------------------------------
     //
     //  Constructor

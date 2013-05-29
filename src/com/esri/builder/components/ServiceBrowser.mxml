@@ -32,7 +32,6 @@
         <![CDATA[
             import com.esri.ags.components.IdentityManager;
             import com.esri.ags.components.supportClasses.Credential;
-            import com.esri.ags.components.supportClasses.ServerInfo;
             import com.esri.builder.components.serviceBrowser.filters.INodeFilter;
             import com.esri.builder.components.serviceBrowser.nodes.ServiceDirectoryNode;
             import com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent;
@@ -45,7 +44,6 @@
             import com.esri.builder.model.PortalModel;
             import com.esri.builder.model.RecentlyUsedURLsModel;
             import com.esri.builder.supportClasses.LogUtil;
-            import com.esri.builder.supportClasses.PortalUtil;
 
             import flashx.textLayout.conversion.TextConverter;
 
@@ -58,7 +56,6 @@
             import mx.rpc.Responder;
             import mx.rpc.events.FaultEvent;
             import mx.utils.StringUtil;
-            import mx.utils.URLUtil;
 
             private static const CROSS_DOMAIN_FILE_HELP_LINK:String = 'http://links.esri.com/help/flex3crossdomain';
 
@@ -149,7 +146,7 @@
             private function portalStatusUpdatedHandler(event:AppEvent):void
             {
                 if (lastServiceDirectoryInfo
-                    && isOwnedByPortal(lastServiceDirectoryInfo.owningSystemURL))
+                    && PortalModel.getInstance().hasSameOrigin(lastServiceDirectoryInfo.owningSystemURL))
                 {
                     browseService();
                 }
@@ -324,26 +321,13 @@
                     AppEvent.dispatch(AppEvent.REGISTER_URL, serviceURL);
                     showMissingCrossDomainMessage = !lastServiceDirectoryInfo.hasCrossDomain;
 
-                    isOwningSystemURLSameAsPortal = isOwnedByPortal(lastServiceDirectoryInfo.owningSystemURL);
+                    isOwningSystemURLSameAsPortal = PortalModel.getInstance().hasSameOrigin(lastServiceDirectoryInfo.owningSystemURL);
                     showServiceDirectory(IdentityManager.instance.findCredential(extractServiceRoot(lastUsedURL)));
                 }
                 else
                 {
                     showMissingCrossDomainMessage = false;
                 }
-            }
-
-            private function isOwnedByPortal(owningSystemURL:String):Boolean
-            {
-                if (owningSystemURL == null)
-                {
-                    owningSystemURL = "";
-                }
-
-                var owningSystemURLServerNameWithPort:String = URLUtil.getServerName(owningSystemURL);
-                var portalServerNameWithPort:String = URLUtil.getServerName(PortalModel.getInstance().portalURL);
-
-                return (owningSystemURLServerNameWithPort == portalServerNameWithPort);
             }
 
             private function showServiceDirectory(credential:Credential = null):void

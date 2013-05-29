@@ -27,7 +27,6 @@ import com.esri.builder.supportClasses.LogUtil;
 import mx.logging.ILogger;
 import mx.logging.Log;
 import mx.rpc.events.FaultEvent;
-import mx.utils.URLUtil;
 
 public class PortalController
 {
@@ -48,24 +47,11 @@ public class PortalController
     private function identityManager_signInSuccessHandler(event:AppEvent):void
     {
         var credential:Credential = event.data as Credential;
-        if (sameAsPortal(credential.server)
+        if (PortalModel.getInstance().hasSameOrigin(credential.server)
             && !PortalModel.getInstance().portal.signedIn)
         {
             AppEvent.dispatch(AppEvent.PORTAL_SIGN_IN);
         }
-    }
-
-    private function sameAsPortal(serverURL:String):Boolean
-    {
-        if (serverURL == null)
-        {
-            serverURL = "";
-        }
-
-        var serverURLServerNameWithPort:String = URLUtil.getServerNameWithPort(serverURL);
-        var portalServerNameWithPort:String = URLUtil.getServerNameWithPort(PortalModel.getInstance().portalURL);
-
-        return (serverURLServerNameWithPort == portalServerNameWithPort);
     }
 
     private function portalSignOutHandler(event:AppEvent):void
