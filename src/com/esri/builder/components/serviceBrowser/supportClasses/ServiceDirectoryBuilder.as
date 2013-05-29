@@ -28,6 +28,7 @@ import com.esri.builder.components.serviceBrowser.filters.QueryableLayerFilter;
 import com.esri.builder.components.serviceBrowser.filters.RouteLayerFilter;
 import com.esri.builder.components.serviceBrowser.nodes.ServiceDirectoryRootNode;
 import com.esri.builder.model.Model;
+import com.esri.builder.model.PortalModel;
 import com.esri.builder.supportClasses.LogUtil;
 
 import flash.events.EventDispatcher;
@@ -36,11 +37,12 @@ import flash.net.URLVariables;
 import mx.logging.ILogger;
 import mx.logging.Log;
 import mx.resources.ResourceManager;
-import mx.rpc.AsyncResponder;
 import mx.rpc.Fault;
+import mx.rpc.Responder;
 import mx.rpc.events.FaultEvent;
 import mx.rpc.events.ResultEvent;
 import mx.rpc.http.HTTPService;
+import mx.utils.URLUtil;
 
 public final class ServiceDirectoryBuilder extends EventDispatcher
 {
@@ -106,7 +108,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
             crossDomainRequest = null;
             hasCrossDomain = true;
 
-            checkIfServiceIsSecure();
+            getServiceInfo();
         }
 
         function crossDomainRequest_faultHandler(event:FaultEvent):void
@@ -121,7 +123,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
             crossDomainRequest = null;
             hasCrossDomain = false;
 
-            checkIfServiceIsSecure();
+            getServiceInfo();
         }
     }
 
@@ -132,26 +134,82 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
         return baseURLMatch[0] + 'crossdomain.xml';
     }
 
-    private function checkIfServiceIsSecure():void
+    private function getServiceInfo():void
+    {
+        var serviceInfoRequest:JSONTask = new JSONTask();
+        serviceInfoRequest.url = extractServiceInfoURL(serviceDirectoryBuildRequest.url);
+        const param:URLVariables = new URLVariables();
+        param.f = 'json';
+        serviceInfoRequest.execute(param, new Responder(serviceInfoRequest_resultHandler, serviceInfoRequest_faultHandler));
+
+        function serviceInfoRequest_resultHandler(serverInfo:Object):void
+        {
+            owningSystemURL = serverInfo.owningSystemUrl;
+            if (isOwnedByPortal(owningSystemURL))
+            {
+                if (PortalModel.getInstance().portal.signedIn)
+                {
+                    IdentityManager.instance.getCredential(
+                        serviceDirectoryBuildRequest.url, false,
+                        new Responder(getCredential_successHandler, getCredential_faultHandler));
+
+                    function getCredential_successHandler(credential:Credential):void
+                    {
+                        checkIfServiceIsSecure(serverInfo);
+                    }
+
+                    function getCredential_faultHandler(fault:Fault):void
+                    {
+                        checkIfServiceIsSecure(serverInfo);
+                    }
+                }
+                else
+                {
+                    var credential:Credential = IdentityManager.instance.findCredential(serviceDirectoryBuildRequest.url);
+                    if (credential)
+                    {
+                        credential.destroy();
+                    }
+                    checkIfServiceIsSecure(serverInfo);
+                }
+            }
+            else
+            {
+                checkIfServiceIsSecure(serverInfo);
+            }
+        }
+
+        function serviceInfoRequest_faultHandler(fault:Fault):void
+        {
+            checkIfServiceIsSecure(null);
+        }
+    }
+
+    private function isOwnedByPortal(owningSystemURL:String):Boolean
+    {
+        if (owningSystemURL == null)
+        {
+            owningSystemURL = "";
+        }
+
+        var owningSystemURLServerNameWithPort:String = URLUtil.getServerName(owningSystemURL);
+        var portalServerNameWithPort:String = URLUtil.getServerName(PortalModel.getInstance().portalURL);
+
+        return (owningSystemURLServerNameWithPort == portalServerNameWithPort);
+    }
+
+    private function checkIfServiceIsSecure(serverInfo:Object):void
     {
         if (Log.isInfo())
         {
             LOG.info("Checking if service is secure");
         }
 
-        var serviceSecurityRequest:JSONTask = new JSONTask();
-        serviceSecurityRequest.url = extractServiceInfoURL(serviceDirectoryBuildRequest.url);
-        const param:URLVariables = new URLVariables();
-        param.f = 'json';
-        serviceSecurityRequest.execute(param, new AsyncResponder(serviceSecurityRequest_resultHandler, serviceSecurityRequest_faultHandler));
-
-        function serviceSecurityRequest_resultHandler(serverInfo:Object, token:Object = null):void
+        if (serverInfo)
         {
             isServiceSecured = (serverInfo.currentVersion >= 10.01
                 && serverInfo.authInfo
                 && serverInfo.authInfo.isTokenBasedSecurity);
-
-            owningSystemURL = serverInfo.owningSystemUrl;
 
             if (isServiceSecured)
             {
@@ -214,8 +272,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
             //continue with building service directory
             startBuildingDirectory();
         }
-
-        function serviceSecurityRequest_faultHandler(fault:Fault, token:Object = null):void
+        else
         {
             //continue with building service directory
             startBuildingDirectory();

@@ -45,6 +45,7 @@
             import com.esri.builder.model.PortalModel;
             import com.esri.builder.model.RecentlyUsedURLsModel;
             import com.esri.builder.supportClasses.LogUtil;
+            import com.esri.builder.supportClasses.PortalUtil;
 
             import flashx.textLayout.conversion.TextConverter;
 
@@ -147,17 +148,8 @@
 
             private function portalStatusUpdatedHandler(event:AppEvent):void
             {
-                var serverInfo:ServerInfo = IdentityManager.instance.findServerInfo(PortalModel.getInstance().portalURL);
-                if (!PortalModel.getInstance().portal.signedIn && serverInfo)
-                {
-                    var credential:Credential = IdentityManager.instance.findCredential(appendMissingServicesDirectoryEndPoints(normalizeURL(serverInfo.server)));
-                    if (credential)
-                    {
-                        credential.destroy();
-                    }
-                }
-
-                if (isOwnedByPortal(lastServiceDirectoryInfo.owningSystemURL))
+                if (lastServiceDirectoryInfo
+                    && isOwnedByPortal(lastServiceDirectoryInfo.owningSystemURL))
                 {
                     browseService();
                 }
@@ -333,29 +325,7 @@
                     showMissingCrossDomainMessage = !lastServiceDirectoryInfo.hasCrossDomain;
 
                     isOwningSystemURLSameAsPortal = isOwnedByPortal(lastServiceDirectoryInfo.owningSystemURL);
-                    if (isOwningSystemURLSameAsPortal && PortalModel.getInstance().portal.signedIn)
-                    {
-                        IdentityManager.instance.getCredential(
-                            lastServiceDirectoryInfo.owningSystemURL,
-                            false,
-                            new mx.rpc.Responder(getCredential_successHandler, getCredential_faultHandler));
-
-                        function getCredential_successHandler(credential:Credential):void
-                        {
-                            showServiceDirectory(credential);
-                        }
-
-                        function getCredential_faultHandler(fault:Fault):void
-                        {
-                            showServiceDirectory();
-                        }
-                    }
-                    else
-                    {
-                        showServiceDirectory(
-                            IdentityManager.instance.findCredential(
-                            extractServiceRoot(lastUsedURL)));
-                    }
+                    showServiceDirectory(IdentityManager.instance.findCredential(extractServiceRoot(lastUsedURL)));
                 }
                 else
                 {
@@ -370,8 +340,8 @@
                     owningSystemURL = "";
                 }
 
-                var owningSystemURLServerNameWithPort:String = URLUtil.getServerNameWithPort(owningSystemURL);
-                var portalServerNameWithPort:String = URLUtil.getServerNameWithPort(PortalModel.getInstance().portalURL);
+                var owningSystemURLServerNameWithPort:String = URLUtil.getServerName(owningSystemURL);
+                var portalServerNameWithPort:String = URLUtil.getServerName(PortalModel.getInstance().portalURL);
 
                 return (owningSystemURLServerNameWithPort == portalServerNameWithPort);
             }
@@ -470,12 +440,6 @@
                     if (Log.isDebug())
                     {
                         LOG.debug("Signing into {0}", credential.server);
-                    }
-
-                    if (isOwnedByPortal(lastServiceDirectoryInfo.owningSystemURL)
-                        && !PortalModel.getInstance().portal.signedIn)
-                    {
-                        AppEvent.dispatch(AppEvent.PORTAL_SIGN_IN);
                     }
 
                     refreshServiceBrowse();
