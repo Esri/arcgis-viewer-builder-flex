@@ -50,9 +50,6 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
 
     private static const DEFAULT_REQUEST_TIMEOUT_IN_SECONDS:Number = 10;
 
-    private var count:int;
-    private var searchType:String;
-
     private var serviceDirectoryBuildRequest:ServiceDirectoryBuildRequest;
     private var hasCrossDomain:Boolean;
     private var crossDomainRequest:HTTPService;
