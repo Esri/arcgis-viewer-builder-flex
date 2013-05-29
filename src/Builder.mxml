@@ -40,7 +40,6 @@
 
     <fx:Script>
         <![CDATA[
-            import com.esri.ags.components.IdentityManager;
             import com.esri.builder.eventbus.AppEvent;
             import com.esri.builder.model.Model;
 
@@ -79,7 +78,6 @@
 
             protected function this_creationCompleteHandler(event:FlexEvent):void
             {
-                IdentityManager.instance.enabled = true;
                 AppEvent.dispatch(AppEvent.CREATION_COMPLETE, this);
             }
         ]]>

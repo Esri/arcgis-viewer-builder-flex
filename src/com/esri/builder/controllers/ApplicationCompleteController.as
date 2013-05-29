@@ -16,6 +16,7 @@
 package com.esri.builder.controllers
 {
 
+import com.esri.ags.components.IdentityManager;
 import com.esri.builder.components.LogFileTarget;
 import com.esri.builder.components.ToolTip;
 import com.esri.builder.controllers.supportClasses.Settings;
@@ -82,6 +83,8 @@ public final class ApplicationCompleteController
         XML.ignoreComments = true;
         XML.ignoreWhitespace = true;
         XML.prettyIndent = 4;
+
+        IdentityManager.instance.enabled = true;
 
         ToolTipManager.toolTipClass = com.esri.builder.components.ToolTip;
 
