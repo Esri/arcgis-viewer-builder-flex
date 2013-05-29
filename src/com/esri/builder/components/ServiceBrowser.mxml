@@ -426,7 +426,12 @@
                         LOG.debug("Signing into {0}", credential.server);
                     }
 
-                    refreshServiceBrowse();
+                    //Signing into a server that shares origin with the Portal
+                    //will refresh by itself. Otherwise, we need to explicitly refresh it.
+                    if (!PortalModel.getInstance().hasSameOrigin(credential.server))
+                    {
+                        refreshServiceBrowse();
+                    }
                 }
 
                 function getCredentialsFaultHandler(fault:Fault):void
