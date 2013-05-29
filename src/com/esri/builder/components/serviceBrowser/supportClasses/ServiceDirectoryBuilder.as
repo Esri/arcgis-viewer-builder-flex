@@ -51,6 +51,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
     private var count:int;
     private var searchType:String;
 
+    private var serviceDirectoryBuildRequest:ServiceDirectoryBuildRequest;
     private var hasCrossDomain:Boolean;
     private var crossDomainRequest:HTTPService;
     private var credential:Credential;
@@ -67,9 +68,11 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
             LOG.info("Building service directory");
         }
 
+        this.serviceDirectoryBuildRequest = serviceDirectoryBuildRequest;
+
         try
         {
-            checkCrossDomainBeforeBuildingDirectory(serviceDirectoryBuildRequest);
+            checkCrossDomainBeforeBuildingDirectory();
         }
         catch (error:Error)
         {
@@ -77,7 +80,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
         }
     }
 
-    private function checkCrossDomainBeforeBuildingDirectory(serviceDirectoryBuildRequest:ServiceDirectoryBuildRequest):void
+    private function checkCrossDomainBeforeBuildingDirectory():void
     {
         if (Log.isDebug())
         {
@@ -103,7 +106,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
             crossDomainRequest = null;
             hasCrossDomain = true;
 
-            checkIfServiceIsSecure(serviceDirectoryBuildRequest);
+            checkIfServiceIsSecure();
         }
 
         function crossDomainRequest_faultHandler(event:FaultEvent):void
@@ -118,7 +121,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
             crossDomainRequest = null;
             hasCrossDomain = false;
 
-            checkIfServiceIsSecure(serviceDirectoryBuildRequest);
+            checkIfServiceIsSecure();
         }
     }
 
@@ -129,7 +132,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
         return baseURLMatch[0] + 'crossdomain.xml';
     }
 
-    private function checkIfServiceIsSecure(serviceDirectoryBuildRequest:ServiceDirectoryBuildRequest):void
+    private function checkIfServiceIsSecure():void
     {
         if (Log.isInfo())
         {
@@ -209,13 +212,13 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
             }
 
             //continue with building service directory
-            startBuildingDirectory(serviceDirectoryBuildRequest);
+            startBuildingDirectory();
         }
 
         function serviceSecurityRequest_faultHandler(fault:Fault, token:Object = null):void
         {
             //continue with building service directory
-            startBuildingDirectory(serviceDirectoryBuildRequest);
+            startBuildingDirectory();
         }
     }
 
@@ -224,7 +227,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
         return url.replace('/rest/services', '/rest/info');
     }
 
-    private function startBuildingDirectory(serviceDirectoryBuildRequest:ServiceDirectoryBuildRequest):void
+    private function startBuildingDirectory():void
     {
         if (Log.isInfo())
         {
