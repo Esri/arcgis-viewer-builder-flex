@@ -159,13 +159,6 @@
                                           Alert.OK);
                         return false;
                     }
-                    else if (!hasValidPrintTask)
-                    {
-                        BuilderAlert.show(resourceManager.getString('BuilderStrings', 'print.invalidPrintTask'),
-                                          resourceManager.getString('BuilderStrings', 'widgetsView.widgetConfigurationError'),
-                                          Alert.OK);
-                        return false;
-                    }
                 }
 
                 return true;
@@ -324,30 +317,40 @@
     <s:FormItem id="defaultFormatInput"
                 excludeFrom="basicPrint,browsingTasks"
                 label="{resourceManager.getString('BuilderStrings', 'print.defaultFormat')}">
+        <s:layout>
+            <s:BasicLayout/>
+        </s:layout>
+
         <s:DropDownList id="defaultFormatSelection"
                         change="updateDefaultFormat()"
-                        includeInLayout="{hasFormatOptions}"
                         requireSelection="true"
+                        verticalCenter="0"
                         visible="{hasFormatOptions}"/>
 
         <s:Label height="{defaultFormatSelection.height}"
                  includeInLayout="{!hasFormatOptions}"
                  text="{resourceManager.getString('BuilderStrings', 'print.noFormatsAvailable')}"
+                 verticalCenter="0"
                  visible="{!hasFormatOptions}"/>
     </s:FormItem>
 
     <s:FormItem id="defaultLayoutTemplateInput"
                 excludeFrom="basicPrint,browsingTasks"
                 label="{resourceManager.getString('BuilderStrings', 'print.defaultLayoutTemplate')}">
+        <s:layout>
+            <s:BasicLayout/>
+        </s:layout>
+
         <s:DropDownList id="defaultLayoutTemplateSelection"
                         change="updateDefaultLayoutTemplate()"
-                        includeInLayout="{hasLayoutTemplateOptions}"
                         requireSelection="true"
+                        verticalCenter="0"
                         visible="{hasLayoutTemplateOptions}"/>
 
         <s:Label height="{defaultLayoutTemplateSelection.height}"
                  includeInLayout="{!hasLayoutTemplateOptions}"
                  text="{resourceManager.getString('BuilderStrings', 'print.noLayoutTemplatesAvailable')}"
+                 verticalCenter="0"
                  visible="{!hasLayoutTemplateOptions}"/>
     </s:FormItem>
 </s:Form>
