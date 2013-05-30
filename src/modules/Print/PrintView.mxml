@@ -159,13 +159,6 @@
                                           Alert.OK);
                         return false;
                     }
-                    else if (!hasValidPrintTask)
-                    {
-                        BuilderAlert.show(resourceManager.getString('BuilderStrings', 'print.invalidPrintTask'),
-                                          resourceManager.getString('BuilderStrings', 'widgetsView.widgetConfigurationError'),
-                                          Alert.OK);
-                        return false;
-                    }
                 }
 
                 return true;
