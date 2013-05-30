@@ -16,6 +16,7 @@
 package com.esri.builder.controllers
 {
 
+import com.esri.ags.components.supportClasses.Credential;
 import com.esri.ags.events.PortalEvent;
 import com.esri.ags.portal.Portal;
 import com.esri.builder.eventbus.AppEvent;
@@ -40,6 +41,17 @@ public class PortalController
         AppEvent.addListener(AppEvent.SETTINGS_SAVED, settingsChangeHandler);
         AppEvent.addListener(AppEvent.PORTAL_SIGN_IN, portalSignInHandler);
         AppEvent.addListener(AppEvent.PORTAL_SIGN_OUT, portalSignOutHandler);
+        AppEvent.addListener(AppEvent.IDENTITY_MANAGER_SIGN_IN_SUCCESS, identityManager_signInSuccessHandler);
+    }
+
+    private function identityManager_signInSuccessHandler(event:AppEvent):void
+    {
+        var credential:Credential = event.data as Credential;
+        if (PortalModel.getInstance().hasSameOrigin(credential.server)
+            && !PortalModel.getInstance().portal.signedIn)
+        {
+            AppEvent.dispatch(AppEvent.PORTAL_SIGN_IN);
+        }
     }
 
     private function portalSignOutHandler(event:AppEvent):void

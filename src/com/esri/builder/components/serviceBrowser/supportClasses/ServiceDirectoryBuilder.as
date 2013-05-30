@@ -23,11 +23,12 @@ import com.esri.builder.components.serviceBrowser.filters.GPTaskFilter;
 import com.esri.builder.components.serviceBrowser.filters.GeocoderFilter;
 import com.esri.builder.components.serviceBrowser.filters.INodeFilter;
 import com.esri.builder.components.serviceBrowser.filters.MapLayerFilter;
+import com.esri.builder.components.serviceBrowser.filters.MapServerFilter;
 import com.esri.builder.components.serviceBrowser.filters.QueryableLayerFilter;
 import com.esri.builder.components.serviceBrowser.filters.RouteLayerFilter;
 import com.esri.builder.components.serviceBrowser.nodes.ServiceDirectoryRootNode;
 import com.esri.builder.model.Model;
-import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryBuildRequest;
+import com.esri.builder.model.PortalModel;
 import com.esri.builder.supportClasses.LogUtil;
 
 import flash.events.EventDispatcher;
@@ -36,12 +37,11 @@ import flash.net.URLVariables;
 import mx.logging.ILogger;
 import mx.logging.Log;
 import mx.resources.ResourceManager;
-import mx.rpc.AsyncResponder;
 import mx.rpc.Fault;
+import mx.rpc.Responder;
 import mx.rpc.events.FaultEvent;
 import mx.rpc.events.ResultEvent;
 import mx.rpc.http.HTTPService;
-import com.esri.builder.components.serviceBrowser.filters.MapServerFilter;
 
 public final class ServiceDirectoryBuilder extends EventDispatcher
 {
@@ -49,9 +49,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
 
     private static const DEFAULT_REQUEST_TIMEOUT_IN_SECONDS:Number = 10;
 
-    private var count:int;
-    private var searchType:String;
-
+    private var serviceDirectoryBuildRequest:ServiceDirectoryBuildRequest;
     private var hasCrossDomain:Boolean;
     private var crossDomainRequest:HTTPService;
     private var credential:Credential;
@@ -59,6 +57,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
     private var currentNodeFilter:INodeFilter;
     private var isServiceSecured:Boolean;
     private var securityWarning:String;
+    private var owningSystemURL:String;
 
     public function buildServiceDirectory(serviceDirectoryBuildRequest:ServiceDirectoryBuildRequest):void
     {
@@ -67,9 +66,11 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
             LOG.info("Building service directory");
         }
 
+        this.serviceDirectoryBuildRequest = serviceDirectoryBuildRequest;
+
         try
         {
-            checkCrossDomainBeforeBuildingDirectory(serviceDirectoryBuildRequest);
+            checkCrossDomainBeforeBuildingDirectory();
         }
         catch (error:Error)
         {
@@ -77,7 +78,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
         }
     }
 
-    private function checkCrossDomainBeforeBuildingDirectory(serviceDirectoryBuildRequest:ServiceDirectoryBuildRequest):void
+    private function checkCrossDomainBeforeBuildingDirectory():void
     {
         if (Log.isDebug())
         {
@@ -103,7 +104,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
             crossDomainRequest = null;
             hasCrossDomain = true;
 
-            checkIfServiceIsSecure(serviceDirectoryBuildRequest);
+            getServiceInfo();
         }
 
         function crossDomainRequest_faultHandler(event:FaultEvent):void
@@ -118,7 +119,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
             crossDomainRequest = null;
             hasCrossDomain = false;
 
-            checkIfServiceIsSecure(serviceDirectoryBuildRequest);
+            getServiceInfo();
         }
     }
 
@@ -129,20 +130,65 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
         return baseURLMatch[0] + 'crossdomain.xml';
     }
 
-    private function checkIfServiceIsSecure(serviceDirectoryBuildRequest:ServiceDirectoryBuildRequest):void
+    private function getServiceInfo():void
+    {
+        var serviceInfoRequest:JSONTask = new JSONTask();
+        serviceInfoRequest.url = extractServiceInfoURL(serviceDirectoryBuildRequest.url);
+        const param:URLVariables = new URLVariables();
+        param.f = 'json';
+        serviceInfoRequest.execute(param, new Responder(serviceInfoRequest_resultHandler, serviceInfoRequest_faultHandler));
+
+        function serviceInfoRequest_resultHandler(serverInfo:Object):void
+        {
+            owningSystemURL = serverInfo.owningSystemUrl;
+            if (PortalModel.getInstance().hasSameOrigin(owningSystemURL))
+            {
+                if (PortalModel.getInstance().portal.signedIn)
+                {
+                    IdentityManager.instance.getCredential(
+                        serviceDirectoryBuildRequest.url, false,
+                        new Responder(getCredential_successHandler, getCredential_faultHandler));
+
+                    function getCredential_successHandler(credential:Credential):void
+                    {
+                        checkIfServiceIsSecure(serverInfo);
+                    }
+
+                    function getCredential_faultHandler(fault:Fault):void
+                    {
+                        checkIfServiceIsSecure(serverInfo);
+                    }
+                }
+                else
+                {
+                    var credential:Credential = IdentityManager.instance.findCredential(serviceDirectoryBuildRequest.url);
+                    if (credential)
+                    {
+                        credential.destroy();
+                    }
+                    checkIfServiceIsSecure(serverInfo);
+                }
+            }
+            else
+            {
+                checkIfServiceIsSecure(serverInfo);
+            }
+        }
+
+        function serviceInfoRequest_faultHandler(fault:Fault):void
+        {
+            checkIfServiceIsSecure(null);
+        }
+    }
+
+    private function checkIfServiceIsSecure(serverInfo:Object):void
     {
         if (Log.isInfo())
         {
             LOG.info("Checking if service is secure");
         }
 
-        var serviceSecurityRequest:JSONTask = new JSONTask();
-        serviceSecurityRequest.url = extractServiceInfoURL(serviceDirectoryBuildRequest.url);
-        const param:URLVariables = new URLVariables();
-        param.f = 'json';
-        serviceSecurityRequest.execute(param, new AsyncResponder(serviceSecurityRequest_resultHandler, serviceSecurityRequest_faultHandler));
-
-        function serviceSecurityRequest_resultHandler(serverInfo:Object, token:Object = null):void
+        if (serverInfo)
         {
             isServiceSecured = (serverInfo.currentVersion >= 10.01
                 && serverInfo.authInfo
@@ -188,7 +234,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
                         if (hasSecurityEnabled
                             && !startsWithHTTPS.test(Model.instance.appDir.url))
                         {
-                            securityWarning = ResourceManager.getInstance().getString('BuilderStrings', 'secureTokenServiceWithSecureCrossDomainWarning');
+                            securityWarning = ResourceManager.getInstance().getString('BuilderStrings', 'serviceBrowser.secureTokenServiceWithSecureCrossDomain');
                         }
                     }
                 }
@@ -202,18 +248,17 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
 
                     tokenServiceCrossDomainRequest.removeEventListener(ResultEvent.RESULT, tokenServiceSecurityRequest_resultHandler);
                     tokenServiceCrossDomainRequest.removeEventListener(FaultEvent.FAULT, tokenServiceSecurityRequest_faultHandler);
-                    securityWarning = ResourceManager.getInstance().getString('BuilderStrings', 'secureTokenServiceMissingCrossDomainWarning');
+                    securityWarning = ResourceManager.getInstance().getString('BuilderStrings', 'serviceBrowser.secureTokenServiceMissingCrossDomain');
                 }
             }
 
             //continue with building service directory
-            startBuildingDirectory(serviceDirectoryBuildRequest);
+            startBuildingDirectory();
         }
-
-        function serviceSecurityRequest_faultHandler(fault:Fault, token:Object = null):void
+        else
         {
             //continue with building service directory
-            startBuildingDirectory(serviceDirectoryBuildRequest);
+            startBuildingDirectory();
         }
     }
 
@@ -222,7 +267,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
         return url.replace('/rest/services', '/rest/info');
     }
 
-    private function startBuildingDirectory(serviceDirectoryBuildRequest:ServiceDirectoryBuildRequest):void
+    private function startBuildingDirectory():void
     {
         if (Log.isInfo())
         {
@@ -291,7 +336,8 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
                                                                       currentNodeFilter,
                                                                       hasCrossDomain,
                                                                       isServiceSecured,
-                                                                      securityWarning)));
+                                                                      securityWarning,
+                                                                      owningSystemURL)));
     }
 
     protected function rootNode_faultHandler(event:FaultEvent):void

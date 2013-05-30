@@ -37,12 +37,15 @@
 
             private function serviceBrowser_selectionChangeHandler(event:ServiceBrowserEvent):void
             {
-                (owner as IIncludeLayerDispatcher).updateLayerSelection();
+                if (owner)
+                {
+                    (owner as IIncludeLayerDispatcher).updateLayerSelection();
+                }
             }
 
             protected function serviceBrowser_itemSelectedHandler(event:ServiceBrowserEvent):void
             {
-                if (event.hasValidSelection)
+                if (owner && event.hasValidSelection)
                 {
                     (owner as IIncludeLayerDispatcher).dispatchIncludeLayer();
                 }

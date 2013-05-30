@@ -21,7 +21,8 @@
          xmlns:mx="library://ns.adobe.com/flex/mx"
          xmlns:graphics="assets.graphics.*"
          xmlns:components="com.esri.builder.components.*"
-         width="100%" height="100%">
+         width="100%" height="100%"
+         creationComplete="this_creationCompleteHandler(event)">
     <fx:Metadata>
         [Event(name="selectionChange", type="com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent")]
         [Event(name="itemSelected", type="com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent")]
@@ -31,17 +32,17 @@
         <![CDATA[
             import com.esri.ags.components.IdentityManager;
             import com.esri.ags.components.supportClasses.Credential;
-            import com.esri.builder.components.SearchInputEvent;
             import com.esri.builder.components.serviceBrowser.filters.INodeFilter;
             import com.esri.builder.components.serviceBrowser.nodes.ServiceDirectoryNode;
             import com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent;
+            import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryBuildRequest;
             import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryBuilder;
             import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryBuilderEvent;
             import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryInfo;
             import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryTreeDataDescriptor;
             import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.PortalModel;
             import com.esri.builder.model.RecentlyUsedURLsModel;
-            import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryBuildRequest;
             import com.esri.builder.supportClasses.LogUtil;
 
             import flashx.textLayout.conversion.TextConverter;
@@ -51,7 +52,6 @@
             import mx.events.FlexEvent;
             import mx.logging.ILogger;
             import mx.logging.Log;
-            import mx.rpc.AsyncResponder;
             import mx.rpc.Fault;
             import mx.rpc.events.FaultEvent;
             import mx.utils.StringUtil;
@@ -73,10 +73,13 @@
             [Bindable]
             private var isUserSignedIn:Boolean;
             [Bindable]
-            private var currentCredentials:Credential;
+            private var isOwningSystemURLSameAsPortal:Boolean;
+            [Bindable]
+            private var userId:String;
             [Bindable]
             private var hasContent:Boolean;
 
+            private var lastServiceDirectoryInfo:ServiceDirectoryInfo;
             private var lastUsedURL:String;
             private var serviceDirectoryBuilder:ServiceDirectoryBuilder;
             private var nodeFilter:INodeFilter;
@@ -134,9 +137,22 @@
                 urlInput.setFocus();
             }
 
+            private function this_creationCompleteHandler(event:FlexEvent):void
+            {
+                AppEvent.addListener(AppEvent.PORTAL_STATUS_UPDATED, portalStatusUpdatedHandler, false, 0, true)
+            }
+
+            private function portalStatusUpdatedHandler(event:AppEvent):void
+            {
+                if (lastServiceDirectoryInfo
+                    && PortalModel.getInstance().hasSameOrigin(lastServiceDirectoryInfo.owningSystemURL))
+                {
+                    browseService();
+                }
+            }
+
             public function browseService():void
             {
-
                 if (serviceDirectoryBuilder)
                 {
                     serviceDirectoryBuilder.removeEventListener(ServiceDirectoryBuilderEvent.COMPLETE, serviceDirectoryBuilder_browseCompleteHandler);
@@ -296,42 +312,52 @@
                 serviceDirectoryBuilder.removeEventListener(FaultEvent.FAULT, serviceDirectoryBuilder_faultHandler);
                 serviceDirectoryBuilder = null;
 
-                servicesDirectory.removeAll();
-                currentState = "loaded";
-
-                const serviceDirectoryInfo:ServiceDirectoryInfo = event.serviceDirectoryInfo;
-                hasContent = serviceDirectoryInfo.hasContent;
+                lastServiceDirectoryInfo = event.serviceDirectoryInfo;
+                hasContent = lastServiceDirectoryInfo.hasContent;
                 if (hasContent)
                 {
-                    servicesDirectory.addItem(serviceDirectoryInfo.rootNode);
-                    serviceDirectoryTree.openItems = serviceDirectoryInfo.pathNodes;
-                    serviceDirectoryTree.validateNow();
-                    nodeFilter = serviceDirectoryInfo.nodeFilter;
-
-                    highlightNode(serviceDirectoryInfo.endNode);
-
-                    isServiceSecure = serviceDirectoryInfo.isSecure;
-                    securityWarning = serviceDirectoryInfo.securityWarning;
-
-                    currentCredentials = IdentityManager.instance.findCredential(extractServiceRoot(lastUsedURL));
-                    isUserSignedIn = currentCredentials != null;
-
-                    serviceURL = serviceDirectoryInfo.url;
+                    serviceURL = lastServiceDirectoryInfo.url;
                     AppEvent.dispatch(AppEvent.REGISTER_URL, serviceURL);
-                    showMissingCrossDomainMessage = !serviceDirectoryInfo.hasCrossDomain;
-                    if (showMissingCrossDomainMessage)
-                    {
-                        crossDomainHelpText.textFlow =
-                            TextConverter.importToFlow(getCrossDomainHelpTextHTML(),
-                                                       TextConverter.TEXT_FIELD_HTML_FORMAT);
-                    }
+                    showMissingCrossDomainMessage = !lastServiceDirectoryInfo.hasCrossDomain;
 
-                    updateSelection();
+                    isOwningSystemURLSameAsPortal = PortalModel.getInstance().hasSameOrigin(lastServiceDirectoryInfo.owningSystemURL);
+                    showServiceDirectory(IdentityManager.instance.findCredential(extractServiceRoot(lastUsedURL)));
                 }
                 else
                 {
                     showMissingCrossDomainMessage = false;
                 }
+            }
+
+            private function showServiceDirectory(credential:Credential = null):void
+            {
+                servicesDirectory.removeAll();
+                currentState = "loaded";
+
+                servicesDirectory.addItem(lastServiceDirectoryInfo.rootNode);
+                serviceDirectoryTree.openItems = lastServiceDirectoryInfo.pathNodes;
+                serviceDirectoryTree.validateNow();
+                nodeFilter = lastServiceDirectoryInfo.nodeFilter;
+
+                highlightNode(lastServiceDirectoryInfo.endNode);
+
+                isServiceSecure = lastServiceDirectoryInfo.isSecure;
+                securityWarning = lastServiceDirectoryInfo.securityWarning;
+
+                isUserSignedIn = credential != null;
+                userId = credential ? credential.userId : "";
+
+                serviceURL = lastServiceDirectoryInfo.url;
+                AppEvent.dispatch(AppEvent.REGISTER_URL, serviceURL);
+                showMissingCrossDomainMessage = !lastServiceDirectoryInfo.hasCrossDomain;
+                if (showMissingCrossDomainMessage)
+                {
+                    crossDomainHelpText.textFlow =
+                        TextConverter.importToFlow(getCrossDomainHelpTextHTML(),
+                                                   TextConverter.TEXT_FIELD_HTML_FORMAT);
+                }
+
+                updateSelection();
             }
 
             private function getCrossDomainHelpTextHTML():String
@@ -389,17 +415,26 @@
                 IdentityManager.instance
                     .getCredential(extractServiceRoot(lastUsedURL),
                                    false,
-                                   new AsyncResponder(getCredentialsSuccessHandler,
-                                                      getCredentialsFaultHandler));
+                                   new mx.rpc.Responder(getCredentialsSuccessHandler,
+                                                        getCredentialsFaultHandler));
 
-                function getCredentialsSuccessHandler(credential:Credential, token:Object = null):void {
-                    if (Log.isDebug()) {
+                function getCredentialsSuccessHandler(credential:Credential):void
+                {
+                    if (Log.isDebug())
+                    {
                         LOG.debug("Signing into {0}", credential.server);
                     }
-                    refreshServiceBrowse();
+
+                    //Signing into a server that shares origin with the Portal
+                    //will refresh by itself. Otherwise, we need to explicitly refresh it.
+                    if (!PortalModel.getInstance().hasSameOrigin(credential.server))
+                    {
+                        refreshServiceBrowse();
+                    }
                 }
 
-                function getCredentialsFaultHandler(fault:Fault, token:Object = null):void {
+                function getCredentialsFaultHandler(fault:Fault):void
+                {
                     //DO NOTHING
                 }
             }
@@ -420,23 +455,11 @@
 
             private function signOut():void
             {
-                IdentityManager.instance
-                    .getCredential(extractServiceRoot(lastUsedURL),
-                                   false,
-                                   new AsyncResponder(getCredentialsSuccessHandler,
-                                                      getCredentialsFaultHandler));
-
-                function getCredentialsSuccessHandler(credential:Credential, token:Object = null):void {
-                    if (Log.isDebug()) {
-                        LOG.debug("Signing out of {0}", credential.server);
-                    }
-
+                var credential:Credential = IdentityManager.instance.findCredential(extractServiceRoot(lastUsedURL));
+                if (credential)
+                {
                     credential.destroy();
                     refreshServiceBrowse();
-                }
-
-                function getCredentialsFaultHandler(fault:Fault, token:Object = null):void {
-                    //DO NOTHING
                 }
             }
 
@@ -477,7 +500,7 @@
                 servicesDirectory.removeAll();
 
                 isServiceSecure = false;
-                currentCredentials = null;
+                userId = null;
                 isUserSignedIn = false;
                 hasContent = false;
                 showMissingCrossDomainMessage = false;
@@ -516,14 +539,14 @@
                       verticalAlign="middle"
                       visible="{isServiceSecure}">
                 <s:Label includeInLayout="{isUserSignedIn}"
-                         text="{resourceManager.getString('BuilderStrings', 'serviceBrowser.signedInAs',[currentCredentials.userId])}"
+                         text="{resourceManager.getString('BuilderStrings', 'serviceBrowser.signedInAs', [ userId ])}"
                          visible="{isUserSignedIn}"/>
 
                 <s:Button click="signOut()"
-                          includeInLayout="{isUserSignedIn}"
+                          includeInLayout="{isUserSignedIn &amp;&amp; !isOwningSystemURLSameAsPortal}"
                           label="{resourceManager.getString('BuilderStrings', 'serviceBrowser.signOut')}"
                           skinClass="com.esri.builder.skins.LinkButtonSkin"
-                          visible="{isUserSignedIn}"/>
+                          visible="{isUserSignedIn &amp;&amp; !isOwningSystemURLSameAsPortal}"/>
 
                 <s:Label includeInLayout="{!isUserSignedIn}"
                          text="{resourceManager.getString('BuilderStrings', 'serviceBrowser.secureService')}"

@@ -56,7 +56,15 @@
             {
                 if (portal.loaded)
                 {
-                    currentState = portal.user ? "signedintoportal" : "normal";
+                    if (portal.user)
+                    {
+                        currentState = PortalModel.getInstance().canSignOut() ?
+                            "signedIntoPortal" : "signedIntoPortalFixed";
+                    }
+                    else
+                    {
+                        currentState = "normal";
+                    }
                 }
                 else
                 {
@@ -127,21 +135,23 @@
     <s:states>
         <s:State name="normal"/>
         <s:State name="portalNotLoaded"/>
-        <s:State name="signedintoportal"/>
+        <s:State name="signedIntoPortal"/>
+        <s:State name="signedIntoPortalFixed"/>
     </s:states>
 
-    <s:HGroup includeIn="signedintoportal">
+    <s:HGroup includeIn="signedIntoPortal, signedIntoPortalFixed">
         <s:Label text="{portal.user.fullname}"/>
 
-        <s:Line height="10">
+        <s:Line height="10" includeIn="signedIntoPortal">
             <s:stroke>
-                <s:SolidColorStroke color="0x000000"/>
+                <s:SolidColorStroke color="0xB6BCCC"/>
             </s:stroke>
         </s:Line>
 
         <s:Label buttonMode="true"
                  click="signOut_clickHandler(event)"
                  color="0x367AD5"
+                 includeIn="signedIntoPortal"
                  text="{resourceManager.getString('BuilderStrings', 'homeView.portalSignOut')}"
                  textDecoration="underline"
                  toolTip="{resourceManager.getString('BuilderStrings',
@@ -149,7 +159,7 @@
                                                      [ portal.info.portalName ])}"/>
     </s:HGroup>
 
-    <s:Group excludeFrom="signedintoportal" toolTip.portalNotLoaded="{resourceManager.getString('BuilderStrings',
+    <s:Group excludeFrom="signedIntoPortal, signedIntoPortalFixed" toolTip.portalNotLoaded="{resourceManager.getString('BuilderStrings',
              'agsPortal.requiresPortal')}">
         <s:Label alpha.portalNotLoaded="0.5"
                  buttonMode="true"

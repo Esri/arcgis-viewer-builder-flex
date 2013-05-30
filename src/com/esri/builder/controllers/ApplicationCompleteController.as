@@ -16,7 +16,9 @@
 package com.esri.builder.controllers
 {
 
+import com.esri.ags.components.IdentityManager;
 import com.esri.builder.components.LogFileTarget;
+import com.esri.builder.components.SignInWindow;
 import com.esri.builder.components.ToolTip;
 import com.esri.builder.controllers.supportClasses.Settings;
 import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
@@ -82,6 +84,9 @@ public final class ApplicationCompleteController
         XML.ignoreComments = true;
         XML.ignoreWhitespace = true;
         XML.prettyIndent = 4;
+
+        IdentityManager.instance.enabled = true;
+        IdentityManager.instance.signInWindowClass = SignInWindow;
 
         ToolTipManager.toolTipClass = com.esri.builder.components.ToolTip;
 
