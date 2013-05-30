@@ -53,7 +53,6 @@
             import mx.logging.ILogger;
             import mx.logging.Log;
             import mx.rpc.Fault;
-            import mx.rpc.Responder;
             import mx.rpc.events.FaultEvent;
             import mx.utils.StringUtil;
 
@@ -456,26 +455,11 @@
 
             private function signOut():void
             {
-                IdentityManager.instance
-                    .getCredential(extractServiceRoot(lastUsedURL),
-                                   false,
-                                   new mx.rpc.Responder(getCredentialsSuccessHandler,
-                                                        getCredentialsFaultHandler));
-
-                function getCredentialsSuccessHandler(credential:Credential):void
+                var credential:Credential = IdentityManager.instance.findCredential(extractServiceRoot(lastUsedURL));
+                if (credential)
                 {
-                    if (Log.isDebug())
-                    {
-                        LOG.debug("Signing out of {0}", credential.server);
-                    }
-
                     credential.destroy();
                     refreshServiceBrowse();
-                }
-
-                function getCredentialsFaultHandler(fault:Fault):void
-                {
-                    //DO NOTHING
                 }
             }
 
