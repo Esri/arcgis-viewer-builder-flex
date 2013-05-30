@@ -32,6 +32,7 @@
         <![CDATA[
             import com.esri.ags.components.IdentityManager;
             import com.esri.ags.components.supportClasses.Credential;
+            import com.esri.ags.components.supportClasses.ServerInfo;
             import com.esri.builder.components.serviceBrowser.filters.INodeFilter;
             import com.esri.builder.components.serviceBrowser.nodes.ServiceDirectoryNode;
             import com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent;
@@ -455,10 +456,19 @@
 
             private function signOut():void
             {
-                var credential:Credential = IdentityManager.instance.findCredential(extractServiceRoot(lastUsedURL));
-                if (credential)
+                var serverCredential:Credential = IdentityManager.instance.findCredential(extractServiceRoot(lastUsedURL));
+                if (serverCredential)
                 {
-                    credential.destroy();
+                    var serverInfo:ServerInfo = IdentityManager.instance.findServerInfo(serverCredential.server);
+                    if (serverInfo && serverInfo.owningSystemURL)
+                    {
+                        var portalCredential:Credential = IdentityManager.instance.findCredential(serverInfo.owningSystemURL);
+                        if (portalCredential)
+                        {
+                            portalCredential.destroy();
+                        }
+                    }
+                    serverCredential.destroy();
                     refreshServiceBrowse();
                 }
             }
