@@ -27,6 +27,7 @@
             import com.esri.builder.components.ConfigureMapExtent;
             import com.esri.builder.model.ImageCache;
             import com.esri.builder.model.Model;
+            import com.esri.builder.supportClasses.PortalUtil;
 
             import mx.events.FlexEvent;
 
@@ -80,7 +81,7 @@
                      width="210" height="200"
                      contentLoader="{ImageCache.getInstance()}"
                      enableLoadingState="true"
-                     source="{Model.instance.webmap.thumbnailURL}"/>
+                     source="{PortalUtil.ensureThumbnailURL(Model.instance.webmap.thumbnailURL)}"/>
         </s:VGroup>
     </components:TitleContainer>
 

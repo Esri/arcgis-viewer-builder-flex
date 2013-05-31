@@ -25,6 +25,7 @@
             import com.esri.builder.model.ImageCache;
             import com.esri.builder.model.Model;
             import com.esri.builder.model.PortalModel;
+            import com.esri.builder.supportClasses.PortalUtil;
 
             import mx.utils.StringUtil;
 
@@ -107,7 +108,7 @@
              left="10" top="65"
              contentLoader="{ImageCache.getInstance()}"
              enableLoadingState="true"
-             source="{Model.instance.webmap.thumbnailURL}"/>
+             source="{PortalUtil.ensureThumbnailURL(Model.instance.webmap.thumbnailURL)}"/>
     <s:Label id="displaySnippet"
              width="100%"
              left="10" right="20" top="225"

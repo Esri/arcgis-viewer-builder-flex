@@ -34,7 +34,7 @@
                 const portalLayer:PortalLayer = value as PortalLayer;
                 if (portalLayer)
                 {
-                    displayImage.source = !portalLayer.thumbnailURL ? "assets/images/portal_no_thumbnail.png" : portalLayer.thumbnailURL;
+                    displayImage.source = portalLayer.thumbnailURL;
                     displayLabel.text = portalLayer.title;
                 }
             }
