@@ -18,13 +18,12 @@
 -->
 <s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
                 xmlns:s="library://ns.adobe.com/flex/spark"
-                xmlns:mx="library://ns.adobe.com/flex/mx"
                 width="220" height="180"
                 autoDrawBackground="false">
     <fx:Script>
         <![CDATA[
-            import com.esri.builder.components.PortalQueryResultItemEvent;
             import com.esri.ags.portal.supportClasses.PortalItem;
+            import com.esri.builder.components.PortalQueryResultItemEvent;
             import com.esri.builder.model.ImageCache;
             import com.esri.builder.supportClasses.PortalUtil;
 
