@@ -265,7 +265,7 @@ public class WidgetTypeLoader extends EventDispatcher
             return !item.isManaged;
         }
 
-        dispatchEvent(new Event(Event.COMPLETE));
+        dispatchEvent(new WidgetTypeLoaderEvent(WidgetTypeLoaderEvent.LOAD_TYPES_COMPLETE));
     }
 
     private function compareWidgetTypes(lhs:WidgetType, rhs:WidgetType):int

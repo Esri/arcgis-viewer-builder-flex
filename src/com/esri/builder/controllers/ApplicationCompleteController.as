@@ -23,6 +23,7 @@ import com.esri.builder.components.ToolTip;
 import com.esri.builder.controllers.supportClasses.Settings;
 import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
 import com.esri.builder.controllers.supportClasses.WidgetTypeLoader;
+import com.esri.builder.controllers.supportClasses.WidgetTypeLoaderEvent;
 import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.controllers.supportClasses.MachineDisplayName;
 import com.esri.builder.model.Model;
@@ -94,7 +95,7 @@ public final class ApplicationCompleteController
         app.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, uncaughtErrorHandler);
 
         widgetTypeLoader = new WidgetTypeLoader();
-        widgetTypeLoader.addEventListener(Event.COMPLETE, widgetTypeLoader_completeHandler);
+        widgetTypeLoader.addEventListener(WidgetTypeLoaderEvent.LOAD_TYPES_COMPLETE, widgetTypeLoader_completeHandler);
         widgetTypeLoader.loadWidgetTypes();
     }
 
@@ -328,9 +329,9 @@ public final class ApplicationCompleteController
         BuilderAlert.show(text, ResourceManager.getInstance().getString('BuilderStrings', 'error'));
     }
 
-    protected function widgetTypeLoader_completeHandler(event:Event):void
+    protected function widgetTypeLoader_completeHandler(event:WidgetTypeLoaderEvent):void
     {
-        (event.currentTarget as WidgetTypeLoader).removeEventListener(Event.COMPLETE, widgetTypeLoader_completeHandler);
+        (event.currentTarget as WidgetTypeLoader).removeEventListener(WidgetTypeLoaderEvent.LOAD_TYPES_COMPLETE, widgetTypeLoader_completeHandler);
         validateSettings();
     }
 
