@@ -56,7 +56,7 @@
 
     <s:Group left="0" top="0">
         <s:Image id="displayImage"
-                 width="212.5" height="145"
+                 width="222" height="145"
                  left="0" top="0"
                  contentLoader="{ImageCache.getInstance()}"
                  enableLoadingState="true"
