@@ -22,7 +22,6 @@ import com.esri.builder.model.WidgetTypeRegistryModel;
 import com.esri.builder.supportClasses.LogUtil;
 import com.esri.builder.views.BuilderAlert;
 
-import flash.events.Event;
 import flash.events.EventDispatcher;
 import flash.filesystem.File;
 import flash.filesystem.FileMode;
@@ -58,12 +57,8 @@ public class WidgetTypeLoader extends EventDispatcher
         const modulesDirectory:File = WellKnownDirectories.getInstance().bundledModules;
         loadCustomWidgetTypes(WellKnownDirectories.getInstance().customModules);
 
-        // Find all swf files under the modules folder.
-        const swfList:Array = [];
-        if (modulesDirectory.isDirectory)
-        {
-            getSWFList(modulesDirectory, swfList);
-        }
+        const swfList:Array = getModuleSWFs(modulesDirectory);
+
         // Load the found modules.
         swfList.forEach(function(file:File, index:int, source:Array):void
         {
@@ -173,25 +168,26 @@ public class WidgetTypeLoader extends EventDispatcher
         return widgetIconPath;
     }
 
-    /**
-     * This will go through all sub folders in 'modules' looking for .swf files.
-     */
-    private function getSWFList(parentFile:File, arr:Array):void
+    /* Finds module SWF files at the parent-directory level */
+    private function getModuleSWFs(directory:File):Array
     {
-        const moduleFileName:RegExp = /^.*Module\.swf$/;
-        const list:Array = parentFile.getDirectoryListing();
-        list.forEach(function(file:File, index:int, source:Array):void
+        var swfFiles:Array = [];
+
+        if (directory.isDirectory)
         {
-            if (file.isDirectory)
+            const moduleFileName:RegExp = /^.*Module\.swf$/;
+            const files:Array = directory.getDirectoryListing();
+
+            for each (var file:File in files)
             {
-                getSWFList(file, arr);
-            }
-            else if (moduleFileName.test(file.name))
-            {
-                arr.push(file);
+                if (!file.isDirectory && moduleFileName.test(file.name))
+                {
+                    swfFiles.push(file);
+                }
             }
         }
-        );
+
+        return swfFiles;
     }
 
     private function moduleInfo_readyHandler(event:ModuleEvent):void
