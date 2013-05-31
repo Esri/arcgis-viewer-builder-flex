@@ -43,5 +43,10 @@ public final class PortalUtil
 
         return portalSharingURL;
     }
+
+    public static function ensureThumbnailURL(url:String):String
+    {
+        return url ? url : "assets/images/portal_no_thumbnail.png";
+    }
 }
 }

@@ -18,7 +18,6 @@
 -->
 <s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
          xmlns:s="library://ns.adobe.com/flex/spark"
-         xmlns:mx="library://ns.adobe.com/flex/mx"
          xmlns:components="com.esri.builder.components.*"
          width="100%" height="100%"
          add="this_addHandler(event)">
@@ -27,6 +26,7 @@
             import com.esri.builder.components.ConfigureMapExtent;
             import com.esri.builder.model.ImageCache;
             import com.esri.builder.model.Model;
+            import com.esri.builder.supportClasses.PortalUtil;
 
             import mx.events.FlexEvent;
 
@@ -80,7 +80,7 @@
                      width="210" height="200"
                      contentLoader="{ImageCache.getInstance()}"
                      enableLoadingState="true"
-                     source="{Model.instance.webmap.thumbnailURL}"/>
+                     source="{PortalUtil.ensureThumbnailURL(Model.instance.webmap.thumbnailURL)}"/>
         </s:VGroup>
     </components:TitleContainer>
 
