@@ -28,6 +28,7 @@ import flash.filesystem.File;
 import flash.filesystem.FileMode;
 import flash.filesystem.FileStream;
 import flash.system.ApplicationDomain;
+import flash.utils.ByteArray;
 
 import modules.IBuilderModule;
 import modules.supportClasses.CustomXMLModule;
@@ -70,11 +71,18 @@ public class WidgetTypeLoader extends EventDispatcher
             {
                 LOG.debug('loading module {0}', file.url);
             }
+
+            var fileBytes:ByteArray = new ByteArray();
+            var fileStream:FileStream = new FileStream();
+            fileStream.open(file, FileMode.READ);
+            fileStream.readBytes(fileBytes);
+            fileStream.close();
+
             const moduleInfo:IModuleInfo = ModuleManager.getModule(file.url);
             _moduleInfoArr.push(moduleInfo);
             moduleInfo.addEventListener(ModuleEvent.READY, moduleInfo_readyHandler);
             moduleInfo.addEventListener(ModuleEvent.ERROR, moduleInfo_errorHandler);
-            moduleInfo.load(ApplicationDomain.currentDomain, null, null, FlexGlobals.topLevelApplication.moduleFactory);
+            moduleInfo.load(ApplicationDomain.currentDomain, null, fileBytes, FlexGlobals.topLevelApplication.moduleFactory);
         });
 
         checkIfNoMoreModuleInfosLeft();
