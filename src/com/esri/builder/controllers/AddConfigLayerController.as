@@ -35,7 +35,6 @@ import mx.resources.ResourceManager;
 import mx.rpc.AsyncResponder;
 import mx.rpc.Fault;
 
-
 public final class AddConfigLayerController
 {
     private const LOG:ILogger = LogUtil.createLogger(AddConfigLayerController);

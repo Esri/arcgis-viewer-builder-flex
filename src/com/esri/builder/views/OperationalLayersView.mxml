@@ -173,27 +173,35 @@
                         jsonTask.requestTimeout = Model.REQUEST_TIMEOUT;
                         jsonTask.showBusyCursor = true;
                         jsonTask.execute(param, new AsyncResponder(jsonTask_resultHandler, jsonTask_faultHandler, configLayer1));
-                        function jsonTask_resultHandler(resultObject:Object, token:Object = null):void {
-                            if (Log.isDebug()) {
+                        function jsonTask_resultHandler(resultObject:Object, token:Object = null):void
+                        {
+                            if (Log.isDebug())
+                            {
                                 LOG.debug("Map service fetch success");
                             }
 
-                            if (resultObject.bandCount) {
+                            if (resultObject.bandCount)
+                            {
                                 ConfigLayer(token).type = ConfigLayer.IMAGE;
                             }
-                            else if (resultObject.singleFusedMapCache) {
+                            else if (resultObject.singleFusedMapCache)
+                            {
                                 ConfigLayer(token).type = ConfigLayer.TILED;
                             }
-                            else {
-                                if (!isNaN(Number(layer.serviceURL.charAt(layer.serviceURL.length)))) {
+                            else
+                            {
+                                if (!isNaN(Number(layer.serviceURL.charAt(layer.serviceURL.length))))
+                                {
                                     ConfigLayer(token).type = ConfigLayer.DYNAMIC;
                                 }
-                                else {
+                                else
+                                {
                                     ConfigLayer(token).type = ConfigLayer.FEATURE;
                                 }
                             }
 
-                            if (Log.isDebug()) {
+                            if (Log.isDebug())
+                            {
                                 LOG.debug("Add portal config layer - type: {0}, url: {1}", configLayer1.type, configLayer1.url);
                             }
 
@@ -201,9 +209,12 @@
                             updateConfigLayerList();
                         }
 
-                        function jsonTask_faultHandler(fault:Fault, token:Object = null):void {
-                            if (fault.faultString != "Sign in aborted") {
-                                if (Log.isDebug()) {
+                        function jsonTask_faultHandler(fault:Fault, token:Object = null):void
+                        {
+                            if (fault.faultString != "Sign in aborted")
+                            {
+                                if (Log.isDebug())
+                                {
                                     LOG.debug("Map service fetch fault");
                                 }
 
@@ -212,8 +223,10 @@
                                                                                       [ layer.title, ErrorMessageUtil.getKnownErrorCauseMessage(fault)]);
                                 AppEvent.dispatch(AppEvent.SHOW_ERROR, errorMessage);
                             }
-                            else {
-                                if (Log.isDebug()) {
+                            else
+                            {
+                                if (Log.isDebug())
+                                {
                                     LOG.debug("Sign in aborded for layer ", layer.title);
                                 }
                             }
@@ -241,15 +254,19 @@
                                     jsonTask1.requestTimeout = Model.REQUEST_TIMEOUT;
                                     jsonTask1.showBusyCursor = true;
                                     jsonTask1.execute(param1, new AsyncResponder(jsonTask1_resultHandler, jsonTask1_faultHandler));
-                                    function jsonTask1_resultHandler(resultObject:Object, token:Object = null):void {
-                                        if (Log.isDebug()) {
+                                    function jsonTask1_resultHandler(resultObject:Object, token:Object = null):void
+                                    {
+                                        if (Log.isDebug())
+                                        {
                                             LOG.debug("Feature service item fetch success");
                                         }
 
                                         const layers:Array = resultObject.layers;
-                                        if (layers && layers.length) {
+                                        if (layers && layers.length)
+                                        {
                                             const totalLayers:uint = layers.length - 1;
-                                            for (var i:int = totalLayers; i >= 0; i--) {
+                                            for (var i:int = totalLayers; i >= 0; i--)
+                                            {
                                                 const configLayer:ConfigLayer = new ConfigLayer();
                                                 configLayer.visible = true;
                                                 configLayer.label = layers[i].name;
@@ -262,12 +279,16 @@
                                         }
                                     }
 
-                                    function jsonTask1_faultHandler(fault:Fault, token:Object = null):void {
-                                        if (fault.faultString != "Sign in aborted") {
-                                            if (Log.isDebug()) {
+                                    function jsonTask1_faultHandler(fault:Fault, token:Object = null):void
+                                    {
+                                        if (fault.faultString != "Sign in aborted")
+                                        {
+                                            if (Log.isDebug())
+                                            {
                                                 LOG.debug("Add portal config layer - type: {0}, url: {1}", configLayer1.type, configLayer1.url);
                                             }
-                                            if (Log.isDebug()) {
+                                            if (Log.isDebug())
+                                            {
                                                 LOG.debug("Feature service item fetch fault");
                                             }
 
@@ -276,8 +297,10 @@
                                                                                                   [ layer.title, fault.faultString ]);
                                             AppEvent.dispatch(AppEvent.SHOW_ERROR, errorMessage);
                                         }
-                                        else {
-                                            if (Log.isDebug()) {
+                                        else
+                                        {
+                                            if (Log.isDebug())
+                                            {
                                                 LOG.debug("Sign in aborded for layer ", layer.title);
                                             }
                                         }
