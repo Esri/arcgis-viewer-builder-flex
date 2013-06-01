@@ -238,13 +238,13 @@ public final class AddConfigLayerController
     {
         const configLayer:ConfigLayer = new ConfigLayer();
 
-        if (mapServer.metadata.singleFusedMapCache)
-        {
-            configLayer.type = ConfigLayer.TILED;
-        }
-        else if (mapServer.metadata.bandCount)
+        if (mapServer.metadata.bandCount)
         {
             configLayer.type = ConfigLayer.IMAGE;
+        }
+        else if (mapServer.metadata.singleFusedMapCache)
+        {
+            configLayer.type = ConfigLayer.TILED;
         }
         else
         {

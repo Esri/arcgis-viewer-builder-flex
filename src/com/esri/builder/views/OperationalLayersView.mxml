@@ -178,11 +178,11 @@
                                 LOG.debug("Map service fetch success");
                             }
 
-                            if (resultObject.singleFusedMapCache) {
-                                ConfigLayer(token).type = ConfigLayer.TILED;
-                            }
-                            else if (resultObject.bandCount) {
+                            if (resultObject.bandCount) {
                                 ConfigLayer(token).type = ConfigLayer.IMAGE;
+                            }
+                            else if (resultObject.singleFusedMapCache) {
+                                ConfigLayer(token).type = ConfigLayer.TILED;
                             }
                             else {
                                 if (!isNaN(Number(layer.serviceURL.charAt(layer.serviceURL.length)))) {
