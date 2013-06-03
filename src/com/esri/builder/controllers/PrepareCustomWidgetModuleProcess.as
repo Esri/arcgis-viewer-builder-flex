@@ -18,8 +18,13 @@ package com.esri.builder.controllers
 
 import com.esri.builder.controllers.supportClasses.SharedImportWidgetData;
 import com.esri.builder.controllers.supportClasses.processes.ImportWidgetProcess;
+import com.esri.builder.model.CustomWidgetType;
+import com.esri.builder.model.WidgetType;
+import com.esri.builder.model.WidgetTypeRegistryModel;
 
 import flash.filesystem.File;
+
+import mx.resources.ResourceManager;
 
 public class PrepareCustomWidgetModuleProcess extends ImportWidgetProcess
 {
@@ -32,6 +37,15 @@ public class PrepareCustomWidgetModuleProcess extends ImportWidgetProcess
     {
         try
         {
+            if (willClashWithCoreWidget(sharedData.customWidgetName))
+            {
+                var errorMessage:String = ResourceManager.getInstance().getString('BuilderStrings',
+                                                                                  'importWidgetProcess.customWidgetNameConflict',
+                                                                                  [ sharedData.customWidgetName ]);
+                dispatchFailure(errorMessage);
+                return;
+            }
+
             var foundWidgetFiles:Array = [];
             findModuleSWFFile(sharedData.unzipWidgetWorkspace, foundWidgetFiles);
 
@@ -48,6 +62,34 @@ public class PrepareCustomWidgetModuleProcess extends ImportWidgetProcess
         catch (error:Error)
         {
             dispatchSuccess("Did not find custom widget module");
+        }
+    }
+
+    private function willClashWithCoreWidget(widgetName:String):Boolean
+    {
+        var coreWidget:WidgetType = WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.findWidgetTypeByName(widgetName);
+        var coreLayoutWidget:WidgetType = WidgetTypeRegistryModel.getInstance().layoutWidgetTypeRegistry.findWidgetTypeByName(widgetName);
+
+        return (coreWidget && !(coreWidget is CustomWidgetType)
+            || (coreLayoutWidget && !(coreLayoutWidget is CustomWidgetType)));
+    }
+
+    //TODO: refactor to not require results array
+    private function findWidgetSWFFile(parentDirectory:File, foundFiles:Array):void
+    {
+        var widgetSWFFileName:RegExp = /.*widget\.swf/i;
+        var list:Array = parentDirectory.getDirectoryListing();
+        for each (var file:File in list)
+        {
+            if (widgetSWFFileName.test(file.name))
+            {
+                foundFiles.push(file);
+                return;
+            }
+            else if (file.isDirectory)
+            {
+                findWidgetSWFFile(file, foundFiles);
+            }
         }
     }
 
