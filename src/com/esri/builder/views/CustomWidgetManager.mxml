@@ -50,11 +50,11 @@
                 var availableWidgets:Array = WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.widgetTypes.toArray();
                 var customWidgets:Array = [];
 
-                for each (var widgeType:WidgetType in availableWidgets)
+                for each (var widgetType:WidgetType in availableWidgets)
                 {
-                    if (widgeType is CustomWidgetType)
+                    if (widgetType is CustomWidgetType)
                     {
-                        customWidgets.push(widgeType);
+                        customWidgets.push(widgetType);
                     }
                 }
 
