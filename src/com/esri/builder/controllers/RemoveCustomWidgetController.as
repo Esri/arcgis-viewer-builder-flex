@@ -16,10 +16,10 @@
 package com.esri.builder.controllers
 {
 
+import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
 import com.esri.builder.controllers.supportClasses.processes.CleanUpProcess;
 import com.esri.builder.controllers.supportClasses.processes.ProcessArbiter;
 import com.esri.builder.controllers.supportClasses.processes.ProcessArbiterEvent;
-import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
 import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.model.WidgetType;
 import com.esri.builder.model.WidgetTypeRegistryModel;
