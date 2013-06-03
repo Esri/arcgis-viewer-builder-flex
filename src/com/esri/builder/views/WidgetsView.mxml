@@ -360,20 +360,17 @@
 
                 var defaultConfigFilePath:String = createDefaultWidgetConfigURL(activeWidgetType.name);
 
-                var iconFile:File;
                 var configFile:File;
                 if (activeWidgetType is CustomWidgetType)
                 {
-                    iconFile = WellKnownDirectories.getInstance().customFlexViewer.resolvePath(widgetToEdit.icon);
                     configFile = WellKnownDirectories.getInstance().customFlexViewer.resolvePath(defaultConfigFilePath);
                 }
                 else
                 {
-                    iconFile = Model.instance.appDir.resolvePath(widgetToEdit.icon);
                     configFile = Model.instance.appDir.resolvePath(defaultConfigFilePath);
                 }
 
-                widgetToEdit.iconFile = iconFile;
+                widgetToEdit.iconFile = activeWidgetType.getIconFile();
 
                 const widgetModel:IWidgetModel = activeWidgetType.createWidgetModel();
                 if (configFile.exists)

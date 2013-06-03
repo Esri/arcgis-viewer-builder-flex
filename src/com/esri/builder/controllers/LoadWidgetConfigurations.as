@@ -94,7 +94,7 @@ public final class LoadWidgetConfigurations
                 widget.name = name.length ? name : widgetType.name;
                 widget.label = getLabel(file, widget.name);
                 widget.icon = widgetType.iconLocation;
-                widget.iconFile = Model.instance.appDir.resolvePath(widget.icon);
+                widget.iconFile = widgetType.getIconFile();
                 widget.url = widgetType.url;
                 widget.config = 'widgets/' + widgetType.name + '/' + file.name;
                 widgetType.widgetList.addItem(widget);

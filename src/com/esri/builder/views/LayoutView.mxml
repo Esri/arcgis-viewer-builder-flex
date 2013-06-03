@@ -185,7 +185,7 @@
                 defaultWidget.name = widgetType.name;
                 defaultWidget.label = widgetType.label;
                 defaultWidget.icon = widgetType.iconLocation;
-                defaultWidget.iconFile = Model.instance.appDir.resolvePath(defaultWidget.icon);
+                defaultWidget.iconFile = widgetType.getIconFile();
                 defaultWidget.url = widgetType.url;
                 defaultWidget.config = buildDefaultConfigURL(widgetType.name);
                 return defaultWidget;

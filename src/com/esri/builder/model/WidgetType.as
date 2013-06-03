@@ -16,6 +16,10 @@
 package com.esri.builder.model
 {
 
+import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
+
+import flash.filesystem.File;
+
 import modules.IBuilderModule;
 import modules.IWidgetModel;
 import modules.IWidgetView;
@@ -93,6 +97,16 @@ public class WidgetType
     public function toString():String
     {
         return "WidgetType{builderModule:" + builderModule ? builderModule.widgetName : 'UNK' + "}";
+    }
+
+    public function getIconFile():File
+    {
+        var iconFile:File = WellKnownDirectories.getInstance().customFlexViewer.resolvePath(iconLocation);
+        if (!iconFile.exists)
+        {
+            iconFile = WellKnownDirectories.getInstance().bundledFlexViewer.resolvePath(iconLocation);
+        }
+        return iconFile;
     }
 }
 }
