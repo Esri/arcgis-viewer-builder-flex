@@ -171,7 +171,6 @@ public class WidgetTypeLoader extends EventDispatcher
         return widgetIconPath;
     }
 
-    /* Finds module files at the parent-directory level */
     private function getModuleFiles(directory:File):Array
     {
         var moduleFiles:Array = [];
@@ -182,7 +181,11 @@ public class WidgetTypeLoader extends EventDispatcher
 
             for each (var file:File in files)
             {
-                if (isModuleFile(file))
+                if(file.isDirectory)
+                {
+                    moduleFiles = moduleFiles.concat(getModuleFiles(file));
+                }
+                else if (isModuleFile(file))
                 {
                     moduleFiles.push(file);
                 }
