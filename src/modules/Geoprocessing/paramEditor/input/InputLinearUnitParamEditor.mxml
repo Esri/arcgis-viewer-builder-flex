@@ -18,6 +18,7 @@
 -->
 <s:Form xmlns:fx="http://ns.adobe.com/mxml/2009"
         xmlns:s="library://ns.adobe.com/flex/spark"
+        xmlns:fieldClasses="com.esri.ags.skins.fieldClasses.*"
         xmlns:mx="library://ns.adobe.com/flex/mx"
         width="100%"
         creationComplete="init()">
@@ -164,11 +165,18 @@
 
                 return longestLabel;
             }
+
+            private function updateDefaultValue():void
+            {
+                param.defaultValue.distance = distanceInput.data;
+            }
         ]]>
     </fx:Script>
 
     <s:FormItem label="{resourceManager.getString('BuilderStrings', 'geoprocessing.defaultDistance')}">
-        <s:TextInput text="@{param.defaultValue.distance}"/>
+        <fieldClasses:DoubleField id="distanceInput"
+                                  change="updateDefaultValue()"
+                                  text="{param.defaultValue.distance}"/>
     </s:FormItem>
 
     <s:FormItem label="{resourceManager.getString('BuilderStrings', 'geoprocessing.defaultUnit')}">

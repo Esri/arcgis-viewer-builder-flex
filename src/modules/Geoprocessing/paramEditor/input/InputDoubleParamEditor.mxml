@@ -19,7 +19,7 @@
 <s:Form xmlns:fx="http://ns.adobe.com/mxml/2009"
         xmlns:s="library://ns.adobe.com/flex/spark"
         xmlns:mx="library://ns.adobe.com/flex/mx"
-        xmlns:esri="http://www.esri.com/2008/ags"
+        xmlns:fieldClasses="com.esri.ags.skins.fieldClasses.*"
         width="100%">
     <fx:Script>
         <![CDATA[
@@ -46,9 +46,9 @@
     </fx:Script>
 
     <s:FormItem label="{resourceManager.getString('BuilderStrings', 'geoprocessing.defaultValue')}">
-        <esri:DoubleField id="numberInput"
-                          left="2" right="2" top="2" bottom="2"
-                          change="updateDefaultValue()"
-                          text="{param.defaultValue}"/>
+        <fieldClasses:DoubleField id="numberInput"
+                                  left="2" right="2" top="2" bottom="2"
+                                  change="updateDefaultValue()"
+                                  text="{param.defaultValue}"/>
     </s:FormItem>
 </s:Form>
