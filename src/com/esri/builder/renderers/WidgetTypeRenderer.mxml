@@ -25,7 +25,6 @@
     <fx:Script>
         <![CDATA[
             import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
-            import com.esri.builder.model.CustomWidgetType;
             import com.esri.builder.model.WidgetType;
 
             private var widgetType:WidgetType;
@@ -62,25 +61,16 @@
 
             private function setWidgetTypeIcon():void
             {
-                //TODO: REFACTOR
-                if (widgetType is CustomWidgetType)
+                //Look for icon in custom viewer, then in bundled viewer
+                var customWidgetIcon:File = WellKnownDirectories.getInstance().customFlexViewer.resolvePath(widgetType.iconLocation);
+                if (customWidgetIcon.exists)
                 {
-                    //TODO: improve this
-                    //Look for icon in custom viewer, then in bundled viewer
-                    var customWidgetIcon:File = WellKnownDirectories.getInstance().customFlexViewer.resolvePath(widgetType.iconLocation);
-                    if (customWidgetIcon.exists)
-                    {
-                        widgetTypeIcon.source = customWidgetIcon.url;
-                    }
-                    else
-                    {
-                        customWidgetIcon = WellKnownDirectories.getInstance().bundledFlexViewer.resolvePath(widgetType.iconLocation);
-                        widgetTypeIcon.source = customWidgetIcon.url;
-                    }
+                    widgetTypeIcon.source = customWidgetIcon.url;
                 }
                 else
                 {
-                    widgetTypeIcon.source = WellKnownDirectories.getInstance().bundledFlexViewer.resolvePath(widgetType.iconLocation).url;
+                    customWidgetIcon = WellKnownDirectories.getInstance().bundledFlexViewer.resolvePath(widgetType.iconLocation);
+                    widgetTypeIcon.source = customWidgetIcon.url;
                 }
             }
         ]]>
