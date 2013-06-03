@@ -29,6 +29,7 @@ import flash.filesystem.FileMode;
 import flash.filesystem.FileStream;
 import flash.system.ApplicationDomain;
 import flash.utils.ByteArray;
+import flash.utils.Dictionary;
 
 import modules.IBuilderModule;
 import modules.supportClasses.CustomXMLModule;
@@ -59,6 +60,8 @@ public class WidgetTypeLoader extends EventDispatcher
         var moduleFiles:Array = getModuleFiles(WellKnownDirectories.getInstance().bundledModules)
             .concat(getModuleFiles(WellKnownDirectories.getInstance().customModules));
 
+        moduleFiles = getUniqueModuleFiles(moduleFiles);
+
         //TODO: remove XML files from found SWF files
         modulesToLoad = moduleFiles.length;
 
@@ -82,6 +85,49 @@ public class WidgetTypeLoader extends EventDispatcher
         }
 
         checkIfNoMoreModuleInfosLeft();
+    }
+
+    //TODO: optimize
+    private function getUniqueModuleFiles(moduleFiles:Array):Array
+    {
+        var uniqueFileNameToFile:Dictionary = new Dictionary();
+
+        //swfs have precedence over xml files
+
+        //so we store all SWF files
+        for each (var swfPassFile:File in moduleFiles)
+        {
+            if (swfPassFile.extension == "swf")
+            {
+                uniqueFileNameToFile[getFilename(swfPassFile)] = swfPassFile;
+            }
+        }
+
+        //then we store XML files that do not have overlapping names
+        for each (var xmlPassFile:File in moduleFiles)
+        {
+            if (xmlPassFile.extension == "xml")
+            {
+                var xmlFileName:String = getFilename(xmlPassFile);
+                if (!uniqueFileNameToFile[xmlFileName])
+                {
+                    uniqueFileNameToFile[xmlFileName] = xmlPassFile;
+                }
+            }
+        }
+
+        var uniqueModuleFiles:Array = [];
+        for (var key:String in uniqueFileNameToFile)
+        {
+            uniqueModuleFiles.push(uniqueFileNameToFile[key]);
+        }
+
+        return uniqueModuleFiles;
+    }
+
+    private function getFilename(file:File):String
+    {
+        return file.name.replace("." + file.extension, "");
     }
 
     private function loadModule(moduleFile:File):void
