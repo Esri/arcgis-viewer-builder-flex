@@ -52,9 +52,11 @@ public class RemoveCustomWidgetController
         removeWidgetArbiter.addEventListener(ProcessArbiterEvent.COMPLETE, importArbiter_completeHandler);
         removeWidgetArbiter.addEventListener(ProcessArbiterEvent.FAILURE, importArbiter_failureHandler);
 
+        var customWidgetModule:File = WellKnownDirectories.getInstance().customModules.resolvePath(widgetTypeToRemove.name + "Module.swf");
         var customWidgetConfig:File = WellKnownDirectories.getInstance().customModules.resolvePath(widgetTypeToRemove.name + "Module.xml");
         var customWidgetFolder:File = WellKnownDirectories.getInstance().customFlexViewer.resolvePath("widgets/" + widgetType.name);
 
+        removeWidgetArbiter.addProcess(new CleanUpProcess(customWidgetModule));
         removeWidgetArbiter.addProcess(new CleanUpProcess(customWidgetConfig));
         removeWidgetArbiter.addProcess(new CleanUpProcess(customWidgetFolder));
 
