@@ -77,6 +77,7 @@ public class ImportCustomWidgetController
         importWidgetArbiter.addProcess(new CleanUpProcess(unzipWidgetWorkspace));
         importWidgetArbiter.addProcess(new UnzipProcess(sharedImportWidgetData, new FileStream(), new Zip()));
         importWidgetArbiter.addProcess(new PrepareCustomWidgetFolderProcess(sharedImportWidgetData));
+        importWidgetArbiter.addProcess(new PrepareCustomWidgetModuleProcess(sharedImportWidgetData));
         importWidgetArbiter.addProcess(new PrepareMetaFileProcess(sharedImportWidgetData,
                                                                   new XMLFileReader(new FileStream())));
         importWidgetArbiter.addProcess(new TransferCustomWidgetContentsProcess(sharedImportWidgetData));

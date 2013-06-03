@@ -18,8 +18,6 @@ package com.esri.builder.controllers.supportClasses.processes
 
 import com.esri.builder.controllers.supportClasses.*;
 import com.esri.builder.model.CustomWidgetType;
-
-import com.esri.builder.model.WidgetType;
 import com.esri.builder.model.WidgetTypeRegistryModel;
 import com.esri.builder.views.BuilderAlert;
 
@@ -91,6 +89,7 @@ public class TransferCustomWidgetContentsProcess extends ImportWidgetProcess
         try
         {
             moveMetaToModulesFolder();
+            moveCustomWidgetModuleToModulesFolder();
             moveCustomWidgetFolderToWidgetsFolder();
             dispatchSuccess("Custom widget contents transferred");
         }
@@ -105,16 +104,24 @@ public class TransferCustomWidgetContentsProcess extends ImportWidgetProcess
 
     private function moveMetaToModulesFolder():void
     {
-        var customModuleConfigDestination:File = getCustomModuleConfigDestination();
+        var customModuleConfigName:String = sharedData.customWidgetName + "Module.xml";
+        var customModuleConfigDestination:File = sharedData.customModulesDirectory.resolvePath(customModuleConfigName);
         sharedData.customWidgetModuleConfigFile = customModuleConfigDestination;
         sharedData.metaFile.moveTo(customModuleConfigDestination, true);
     }
 
-    private function getCustomModuleConfigDestination():File
+    private function moveCustomWidgetModuleToModulesFolder():void
     {
-        var customModuleConfigName:String = sharedData.customWidgetName + "Module.xml";
-        var customModuleConfigDestination:File = sharedData.customModulesDirectory.resolvePath(customModuleConfigName);
-        return customModuleConfigDestination;
+        try
+        {
+            var customModuleFilename:String = sharedData.customWidgetName + "Module.swf";
+            var customModuleDestination:File = sharedData.customModulesDirectory.resolvePath(customModuleFilename);
+            sharedData.customWidgetModuleFile.moveTo(customModuleDestination, true);
+        }
+        catch (error:Error)
+        {
+            //fail silently
+        }
     }
 
     private function moveCustomWidgetFolderToWidgetsFolder():void
