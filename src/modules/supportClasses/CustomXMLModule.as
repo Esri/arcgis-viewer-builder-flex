@@ -22,9 +22,6 @@ import modules.IWidgetView;
 
 public class CustomXMLModule implements IBuilderModule
 {
-    public var configXML:String;
-    public var widgetVersion:String;
-
     public function get isManaged():Boolean
     {
         return true;
@@ -109,12 +106,7 @@ public class CustomXMLModule implements IBuilderModule
 
     public function createWidgetModel():IWidgetModel
     {
-        var xmlModel:XMLWidgetModel = new XMLWidgetModel();
-        if (configXML)
-        {
-            xmlModel.configXML = configXML;
-        }
-        return xmlModel;
+        return new XMLWidgetModel();
     }
 }
 }

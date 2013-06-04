@@ -17,6 +17,7 @@ package com.esri.builder.controllers.supportClasses.processes
 {
 
 import com.esri.builder.controllers.supportClasses.*;
+import com.esri.builder.model.CustomWidgetType;
 
 import com.esri.builder.model.WidgetType;
 import com.esri.builder.model.WidgetTypeRegistryModel;
@@ -37,7 +38,7 @@ public class TransferCustomWidgetContentsProcess extends ImportWidgetProcess
 
     override public function execute():void
     {
-        var existingWidgetType:WidgetType = WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.findWidgetTypeByName(sharedData.customWidgetName);
+        var existingWidgetType:CustomWidgetType = WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.findWidgetTypeByName(sharedData.customWidgetName) as CustomWidgetType;
         if (existingWidgetType)
         {
             var overwriteWidgetWarningTitle:String = ResourceManager.getInstance().getString('BuilderStrings',

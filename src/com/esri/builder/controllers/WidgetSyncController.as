@@ -18,6 +18,7 @@ package com.esri.builder.controllers
 
 import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
 import com.esri.builder.eventbus.AppEvent;
+import com.esri.builder.model.CustomWidgetType;
 import com.esri.builder.model.Model;
 import com.esri.builder.model.WidgetType;
 import com.esri.builder.supportClasses.LogUtil;
@@ -46,7 +47,7 @@ public class WidgetSyncController
 
     private function getWidgetDirectory():File
     {
-        return addedWidgetType.isCustom ?
+        return (addedWidgetType is CustomWidgetType) ?
             WellKnownDirectories.getInstance().customFlexViewer.resolvePath("widgets/" + addedWidgetType.name) :
             WellKnownDirectories.getInstance().bundledFlexViewer.resolvePath("widgets/" + addedWidgetType.name);
     }
@@ -106,7 +107,7 @@ public class WidgetSyncController
 
     private function getRelativePathToWidgetDirectory(fileOrFolder:File):String
     {
-        return addedWidgetType.isCustom ?
+        return (addedWidgetType is CustomWidgetType) ?
             WellKnownDirectories.getInstance().customFlexViewer.getRelativePath(fileOrFolder) :
             WellKnownDirectories.getInstance().bundledFlexViewer.getRelativePath(fileOrFolder);
     }

@@ -27,7 +27,8 @@
                     hide="this_hideHandler(event)">
     <fx:Script>
         <![CDATA[
-            import com.esri.builder.supportClasses.AssetImporter;
+        import com.esri.builder.model.CustomWidgetType;
+        import com.esri.builder.supportClasses.AssetImporter;
             import com.esri.builder.supportClasses.FileUtil;
             import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
             import com.esri.builder.eventbus.AppEvent;
@@ -361,7 +362,7 @@
 
                 var iconFile:File;
                 var configFile:File;
-                if (activeWidgetType.isCustom)
+                if (activeWidgetType is CustomWidgetType)
                 {
                     iconFile = WellKnownDirectories.getInstance().customFlexViewer.resolvePath(widgetToEdit.icon);
                     configFile = WellKnownDirectories.getInstance().customFlexViewer.resolvePath(defaultConfigFilePath);

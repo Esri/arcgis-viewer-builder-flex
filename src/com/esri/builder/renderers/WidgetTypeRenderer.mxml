@@ -25,6 +25,7 @@
     <fx:Script>
         <![CDATA[
             import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
+            import com.esri.builder.model.CustomWidgetType;
             import com.esri.builder.model.WidgetType;
 
             private var widgetType:WidgetType;
@@ -62,7 +63,7 @@
             private function setWidgetTypeIcon():void
             {
                 //TODO: REFACTOR
-                if (widgetType.isCustom)
+                if (widgetType is CustomWidgetType)
                 {
                     //TODO: improve this
                     //Look for icon in custom viewer, then in bundled viewer

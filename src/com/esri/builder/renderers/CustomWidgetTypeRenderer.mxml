@@ -18,17 +18,16 @@
 -->
 <s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
                 xmlns:s="library://ns.adobe.com/flex/spark"
-                xmlns:mx="library://ns.adobe.com/flex/mx"
                 xmlns:graphics="assets.graphics.*"
                 width="100%" height="50"
                 autoDrawBackground="false">
     <fx:Script>
         <![CDATA[
             import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
-            import com.esri.builder.model.WidgetType;
+            import com.esri.builder.model.CustomWidgetType;
             import com.esri.builder.views.supportClasses.CustomWidgetCatalog;
 
-            private var widgetType:WidgetType;
+            private var widgetType:CustomWidgetType;
 
             [Bindable]
             private var hasWidgetVersion:Boolean;
@@ -51,33 +50,25 @@
             {
                 super.data = value;
 
-                widgetType = value as WidgetType;
+                widgetType = value as CustomWidgetType;
                 if (widgetType)
                 {
-                    if (widgetType.isCustom)
+                    //Look for icon in custom viewer, then in bundled viewer
+                    var customWidgetIcon:File = WellKnownDirectories.getInstance().customFlexViewer.resolvePath(widgetType.iconLocation);
+                    if (customWidgetIcon.exists)
                     {
-                        //TODO: REFACTOR
-                        //Look for icon in custom viewer, then in bundled viewer
-                        var customWidgetIcon:File = WellKnownDirectories.getInstance().customFlexViewer.resolvePath(widgetType.iconLocation);
-                        if (customWidgetIcon.exists)
-                        {
-                            displayImage.source = customWidgetIcon.url;
-                        }
-                        else
-                        {
-                            customWidgetIcon = WellKnownDirectories.getInstance().bundledFlexViewer.resolvePath(widgetType.iconLocation);
-                            displayImage.source = customWidgetIcon.url;
-                        }
+                        displayImage.source = customWidgetIcon.url;
                     }
                     else
                     {
-                        displayImage.source = WellKnownDirectories.getInstance().bundledFlexViewer.resolvePath(widgetType.iconLocation).url;
+                        customWidgetIcon = WellKnownDirectories.getInstance().bundledFlexViewer.resolvePath(widgetType.iconLocation);
+                        displayImage.source = customWidgetIcon.url;
                     }
-                    displayImage.toolTip = widgetType.description;
-                    displayLabel.text = widgetType.label;
-                    displayLabel.toolTip = widgetType.description;
-                    widgetVersion = widgetType.version;
                 }
+                displayImage.toolTip = widgetType.description;
+                displayLabel.text = widgetType.label;
+                displayLabel.toolTip = widgetType.description;
+                widgetVersion = widgetType.version;
             }
 
             private function dispatchDeleteWidget():void

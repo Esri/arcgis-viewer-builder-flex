@@ -16,6 +16,7 @@
 package com.esri.builder.controllers.supportClasses
 {
 
+import com.esri.builder.model.CustomWidgetType;
 import com.esri.builder.model.Model;
 import com.esri.builder.model.WidgetType;
 import com.esri.builder.model.WidgetTypeRegistryModel;
@@ -97,23 +98,23 @@ public class WidgetTypeLoader extends EventDispatcher
         const customModuleFileName:RegExp = /^.*Module\.xml$/;
         if (!configFile.isDirectory && customModuleFileName.test(configFile.name))
         {
-            var customModule:IBuilderModule = createCustomModuleFromConfig(configFile);
-            if (customModule)
+            var customWidgetType:CustomWidgetType = createCustomWidgetTypeFromConfig(configFile);
+            if (customWidgetType)
             {
-                WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.addWidgetType(new WidgetType(customModule));
+                WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.addWidgetType(customWidgetType);
             }
         }
     }
 
-    private function createCustomModuleFromConfig(configFile:File):IBuilderModule
+    private function createCustomWidgetTypeFromConfig(configFile:File):CustomWidgetType
     {
         var fileStream:FileStream = new FileStream();
-        var customModule:CustomXMLModule;
+        var customWidgetType:CustomWidgetType;
         try
         {
             fileStream.open(configFile, FileMode.READ);
             const configXML:XML = XML(fileStream.readUTFBytes(fileStream.bytesAvailable));
-            customModule = parseCustomModule(configXML);
+            customWidgetType = parseCustomWidgetType(configXML);
         }
         catch (e:Error)
         {
@@ -127,10 +128,10 @@ public class WidgetTypeLoader extends EventDispatcher
             fileStream.close();
         }
 
-        return customModule;
+        return customWidgetType;
     }
 
-    private function parseCustomModule(configXML:XML):CustomXMLModule
+    private function parseCustomWidgetType(configXML:XML):CustomWidgetType
     {
         var customModule:CustomXMLModule = new CustomXMLModule();
         customModule.widgetName = configXML.name;
@@ -139,17 +140,15 @@ public class WidgetTypeLoader extends EventDispatcher
         var widgetLabel:String = configXML.label[0];
         var widgetDescription:String = configXML.description[0];
         var widgetHelpURL:String = configXML.helpurl[0];
-        var widgetConfiguration:String = configXML.configuration[0];
+        var widgetConfiguration:XML = configXML.configuration[0] ? configXML.configuration[0] : <configuration/>;
         var widgetVersion:String = configXML.widgetversion[0];
 
         customModule.widgetIconLocation = createWidgetIconPath(configXML.icon[0], customModule.widgetName);
         customModule.widgetLabel = widgetLabel ? widgetLabel : customModule.widgetName;
-        customModule.widgetVersion = widgetVersion;
         customModule.widgetDescription = widgetDescription ? widgetDescription : "";
         customModule.widgetHelpURL = widgetHelpURL ? widgetHelpURL : "";
-        customModule.configXML = widgetConfiguration ? widgetConfiguration : "<configuration></configuration>";
 
-        return customModule;
+        return new CustomWidgetType(customModule, widgetVersion, widgetConfiguration);
     }
 
     private function createWidgetIconPath(iconPath:String, widgetName:String):String

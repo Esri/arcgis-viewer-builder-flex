@@ -25,7 +25,12 @@ public final class XMLWidgetModel implements IWidgetModel
 
     public function importXML(doc:XML):void
     {
-        configXML = doc.toXMLString();
+        configXML = ensureFriendlyEmptyConfigXML(doc.toXMLString());
+    }
+
+    private function ensureFriendlyEmptyConfigXML(xmlText:String):String
+    {
+        return (xmlText == "<configuration/>") ? "<configuration></configuration>" : xmlText;
     }
 
     public function exportXML():XML
