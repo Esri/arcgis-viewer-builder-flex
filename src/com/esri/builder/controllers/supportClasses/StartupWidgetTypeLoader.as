@@ -154,25 +154,16 @@ public class StartupWidgetTypeLoader extends EventDispatcher
             LOG.info('All modules resolved');
         }
 
-        var widgetTypes:Array = widgetTypeArr.filter(widgetTypeFilter);
-        for each (var widgetType:WidgetType in widgetTypes)
+        for each (var widgetType:WidgetType in widgetTypeArr)
         {
-            WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.addWidgetType(widgetType);
-        }
-
-        var layoutWidgetTypes:Array = widgetTypeArr.filter(layoutWidgetTypeFilter);
-        for each (var layoutWidgetType:WidgetType in layoutWidgetTypes)
-        {
-            WidgetTypeRegistryModel.getInstance().layoutWidgetTypeRegistry.addWidgetType(layoutWidgetType);
-        }
-
-        function widgetTypeFilter(item:WidgetType, index:int, source:Array):Boolean
-        {
-            return item.isManaged;
-        }
-        function layoutWidgetTypeFilter(item:WidgetType, index:int, source:Array):Boolean
-        {
-            return !item.isManaged;
+            if (widgetType.isManaged)
+            {
+                WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.addWidgetType(widgetType);
+            }
+            else
+            {
+                WidgetTypeRegistryModel.getInstance().layoutWidgetTypeRegistry.addWidgetType(widgetType);
+            }
         }
 
         WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.sort();
