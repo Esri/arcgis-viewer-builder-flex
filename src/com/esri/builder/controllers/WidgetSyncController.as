@@ -46,18 +46,10 @@ public class WidgetSyncController
 
     private function getWidgetDirectory():File
     {
-        var widgetDirectory:File;
-        if (addedWidgetType.isCustom)
-        {
-            widgetDirectory = WellKnownDirectories.getInstance().customFlexViewer.resolvePath("widgets/" + addedWidgetType.name);
-        }
-        else
-        {
-            widgetDirectory = WellKnownDirectories.getInstance().bundledFlexViewer.resolvePath("widgets/" + addedWidgetType.name);
-        }
-        return widgetDirectory;
+        return addedWidgetType.isCustom ?
+            WellKnownDirectories.getInstance().customFlexViewer.resolvePath("widgets/" + addedWidgetType.name) :
+            WellKnownDirectories.getInstance().bundledFlexViewer.resolvePath("widgets/" + addedWidgetType.name);
     }
-
 
     private function copyMissingFilesToApp(widgetDirectory:File):void
     {
@@ -114,14 +106,9 @@ public class WidgetSyncController
 
     private function getRelativePathToWidgetDirectory(fileOrFolder:File):String
     {
-        if (addedWidgetType.isCustom)
-        {
-            return WellKnownDirectories.getInstance().customFlexViewer.getRelativePath(fileOrFolder);
-        }
-        else
-        {
-            return WellKnownDirectories.getInstance().bundledFlexViewer.getRelativePath(fileOrFolder);
-        }
+        return addedWidgetType.isCustom ?
+            WellKnownDirectories.getInstance().customFlexViewer.getRelativePath(fileOrFolder) :
+            WellKnownDirectories.getInstance().bundledFlexViewer.getRelativePath(fileOrFolder);
     }
 }
 }
