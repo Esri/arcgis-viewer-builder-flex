@@ -21,6 +21,7 @@ import com.esri.builder.controllers.supportClasses.processes.ImportWidgetProcess
 import com.esri.builder.model.CustomWidgetType;
 import com.esri.builder.model.WidgetType;
 import com.esri.builder.model.WidgetTypeRegistryModel;
+import com.esri.builder.supportClasses.FileUtil;
 
 import flash.filesystem.File;
 
@@ -46,12 +47,10 @@ public class PrepareCustomWidgetModuleProcess extends ImportWidgetProcess
                 return;
             }
 
-            var foundWidgetFiles:Array = [];
-            findModuleSWFFile(sharedData.unzipWidgetWorkspace, foundWidgetFiles);
-
-            if (foundWidgetFiles.length > 0)
+            var foundWidgetFile:File = findModuleSWFFile(sharedData.unzipWidgetWorkspace);
+            if (foundWidgetFile)
             {
-                sharedData.customWidgetModuleFile = foundWidgetFiles[0];
+                sharedData.customWidgetModuleFile = foundWidgetFile;
                 dispatchSuccess("Found custom widget module");
             }
             else
@@ -74,42 +73,10 @@ public class PrepareCustomWidgetModuleProcess extends ImportWidgetProcess
             || (coreLayoutWidget && !(coreLayoutWidget is CustomWidgetType)));
     }
 
-    //TODO: refactor to not require results array
-    private function findWidgetSWFFile(parentDirectory:File, foundFiles:Array):void
+    private function findModuleSWFFile(parentDirectory:File):File
     {
-        var widgetSWFFileName:RegExp = /.*widget\.swf/i;
-        var list:Array = parentDirectory.getDirectoryListing();
-        for each (var file:File in list)
-        {
-            if (widgetSWFFileName.test(file.name))
-            {
-                foundFiles.push(file);
-                return;
-            }
-            else if (file.isDirectory)
-            {
-                findWidgetSWFFile(file, foundFiles);
-            }
-        }
-    }
-
-    //TODO: refactor to not require results array
-    private function findModuleSWFFile(parentDirectory:File, foundFiles:Array):void
-    {
-        var widgetModuleFileName:RegExp = /.*Module\.swf/i;
-        var files:Array = parentDirectory.getDirectoryListing();
-        for each (var file:File in files)
-        {
-            if (widgetModuleFileName.test(file.name))
-            {
-                foundFiles.push(file);
-                return;
-            }
-            else if (file.isDirectory)
-            {
-                findModuleSWFFile(file, foundFiles);
-            }
-        }
+        const widgetModuleFileName:RegExp = /.*Module\.swf/i;
+        return FileUtil.findMatchingFile(parentDirectory, widgetModuleFileName);
     }
 }
 }

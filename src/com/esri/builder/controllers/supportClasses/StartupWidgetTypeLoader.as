@@ -103,32 +103,8 @@ public class StartupWidgetTypeLoader extends EventDispatcher
 
     private function getModuleFiles(directory:File):Array
     {
-        var moduleFiles:Array = [];
-
-        if (directory.isDirectory)
-        {
-            const files:Array = directory.getDirectoryListing();
-
-            for each (var file:File in files)
-            {
-                if (file.isDirectory)
-                {
-                    moduleFiles = moduleFiles.concat(getModuleFiles(file));
-                }
-                else if (isModuleFile(file))
-                {
-                    moduleFiles.push(file);
-                }
-            }
-        }
-
-        return moduleFiles;
-    }
-
-    private function isModuleFile(file:File):Boolean
-    {
         const moduleFileName:RegExp = /^.*Module\.(swf|xml)$/;
-        return !file.isDirectory && (moduleFileName.test(file.name));
+        return FileUtil.findMatchingFiles(directory, moduleFileName);
     }
 
     private function checkIfWidgetTypeLoadersComplete():void

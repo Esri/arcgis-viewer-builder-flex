@@ -59,5 +59,61 @@ public class FileUtil
     {
         return file.name.replace("." + file.extension, "");
     }
+
+    public static function findMatchingFiles(directory:File, pattern:RegExp):Array
+    {
+        var moduleFiles:Array = [];
+
+        if (directory.isDirectory)
+        {
+            const files:Array = directory.getDirectoryListing();
+
+            for each (var file:File in files)
+            {
+                if (file.isDirectory)
+                {
+                    moduleFiles = moduleFiles.concat(findMatchingFiles(file, pattern));
+                }
+                else if (pattern.test(file.name))
+                {
+                    moduleFiles.push(file);
+                }
+            }
+        }
+
+        return moduleFiles;
+    }
+
+    public static function findMatchingFile(directory:File, pattern:RegExp):File
+    {
+        var matchingFile:File;
+
+        if (directory.isDirectory)
+        {
+            const files:Array = directory.getDirectoryListing();
+
+            //sort files first to reduce unnecessary directory listing calls.
+            files.sortOn("isDirectory");
+
+            for each (var file:File in files)
+            {
+                if (file.isDirectory)
+                {
+                    matchingFile = findMatchingFile(file, pattern);
+                }
+                else if (pattern.test(file.name))
+                {
+                    matchingFile = file;
+                }
+
+                if (matchingFile)
+                {
+                    break;
+                }
+            }
+        }
+
+        return matchingFile;
+    }
 }
 }
