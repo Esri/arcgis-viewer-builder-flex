@@ -108,6 +108,7 @@ public class TransferCustomWidgetContentsProcess extends ImportWidgetProcess
         var customModuleConfigDestination:File = sharedData.customModulesDirectory.resolvePath(customModuleConfigName);
         sharedData.customWidgetModuleConfigFile = customModuleConfigDestination;
         sharedData.metaFile.moveTo(customModuleConfigDestination, true);
+        sharedData.metaFile = customModuleConfigDestination;
     }
 
     private function moveCustomWidgetModuleToModulesFolder():void
@@ -117,6 +118,7 @@ public class TransferCustomWidgetContentsProcess extends ImportWidgetProcess
             var customModuleFilename:String = sharedData.customWidgetName + "Module.swf";
             var customModuleDestination:File = sharedData.customModulesDirectory.resolvePath(customModuleFilename);
             sharedData.customWidgetModuleFile.moveTo(customModuleDestination, true);
+            sharedData.customWidgetModuleFile = customModuleDestination;
         }
         catch (error:Error)
         {
