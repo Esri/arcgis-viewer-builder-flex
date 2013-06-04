@@ -22,6 +22,7 @@ import com.esri.builder.supportClasses.FileUtil;
 import com.esri.builder.supportClasses.LogUtil;
 import com.esri.builder.views.BuilderAlert;
 
+import flash.events.Event;
 import flash.events.EventDispatcher;
 import flash.filesystem.File;
 import flash.utils.Dictionary;
@@ -169,7 +170,7 @@ public class StartupWidgetTypeLoader extends EventDispatcher
         WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.sort();
         WidgetTypeRegistryModel.getInstance().layoutWidgetTypeRegistry.sort();
 
-        dispatchEvent(new WidgetTypeLoaderEvent(WidgetTypeLoaderEvent.LOAD_TYPES_COMPLETE));
+        dispatchEvent(new Event(Event.COMPLETE));
     }
 
     private function loader_loadCompleteHandler(event:WidgetTypeLoaderEvent):void

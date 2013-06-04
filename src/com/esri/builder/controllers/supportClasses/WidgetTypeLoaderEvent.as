@@ -22,7 +22,6 @@ import flash.events.Event;
 
 public class WidgetTypeLoaderEvent extends Event
 {
-    public static const LOAD_TYPES_COMPLETE:String = "loadTypesComplete";
     public static const LOAD_COMPLETE:String = "loadComplete";
     public static const LOAD_ERROR:String = "loadError";
 
