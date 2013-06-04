@@ -54,10 +54,12 @@ public class LoadWidgetTypesProcess extends ImportWidgetProcess
         if (event.widgetType.isManaged)
         {
             WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.addWidgetType(event.widgetType);
+            WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.sort();
         }
         else
         {
             WidgetTypeRegistryModel.getInstance().layoutWidgetTypeRegistry.addWidgetType(event.widgetType);
+            WidgetTypeRegistryModel.getInstance().layoutWidgetTypeRegistry.sort();
         }
 
         dispatchSuccess("Widget types loaded");

@@ -154,8 +154,6 @@ public class StartupWidgetTypeLoader extends EventDispatcher
             LOG.info('All modules resolved');
         }
 
-        widgetTypeArr.sort(compareWidgetTypes);
-
         var widgetTypes:Array = widgetTypeArr.filter(widgetTypeFilter);
         for each (var widgetType:WidgetType in widgetTypes)
         {
@@ -177,22 +175,10 @@ public class StartupWidgetTypeLoader extends EventDispatcher
             return !item.isManaged;
         }
 
-        dispatchEvent(new WidgetTypeLoaderEvent(WidgetTypeLoaderEvent.LOAD_TYPES_COMPLETE));
-    }
+        WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.sort();
+        WidgetTypeRegistryModel.getInstance().layoutWidgetTypeRegistry.sort();
 
-    private function compareWidgetTypes(lhs:WidgetType, rhs:WidgetType):int
-    {
-        const lhsLabel:String = lhs.label.toLowerCase();
-        const rhsLabel:String = rhs.label.toLowerCase();
-        if (lhsLabel < rhsLabel)
-        {
-            return -1;
-        }
-        if (lhsLabel > rhsLabel)
-        {
-            return 1;
-        }
-        return 0;
+        dispatchEvent(new WidgetTypeLoaderEvent(WidgetTypeLoaderEvent.LOAD_TYPES_COMPLETE));
     }
 
     private function loader_loadCompleteHandler(event:WidgetTypeLoaderEvent):void
