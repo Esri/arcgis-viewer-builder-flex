@@ -199,7 +199,6 @@ public class StartupWidgetTypeLoader extends EventDispatcher
         var errorMessage:String = ResourceManager.getInstance().getString('BuilderStrings',
                                                                           'importWidgetProcess.couldNotLoadCustomWidgets',
                                                                           [ loader.name ]);
-
         if (Log.isDebug())
         {
             LOG.debug(errorMessage);
