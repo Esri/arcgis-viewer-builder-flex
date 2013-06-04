@@ -108,5 +108,10 @@ public class WidgetType
         }
         return iconFile;
     }
+
+    public function release():void
+    {
+        builderModule = null;
+    }
 }
 }

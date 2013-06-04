@@ -17,7 +17,7 @@ package com.esri.builder.controllers.supportClasses.processes
 {
 
 import com.esri.builder.controllers.supportClasses.*;
-
+import com.esri.builder.model.WidgetTypeRegistryModel;
 
 import mx.resources.ResourceManager;
 
@@ -25,18 +25,20 @@ public class LoadWidgetTypesProcess extends ImportWidgetProcess
 {
     private var widgetTypeLoader:WidgetTypeLoader;
 
-    public function LoadWidgetTypesProcess(sharedData:SharedImportWidgetData, widgetTypeLoader:WidgetTypeLoader)
+    public function LoadWidgetTypesProcess(sharedData:SharedImportWidgetData)
     {
         super(sharedData);
-        this.widgetTypeLoader = widgetTypeLoader;
     }
 
     override public function execute():void
     {
         try
         {
-            widgetTypeLoader.loadCustomWidgetTypeConfig(sharedData.customWidgetModuleConfigFile);
-            dispatchSuccess("Widget types loaded");
+            widgetTypeLoader = new WidgetTypeLoader(sharedData.customWidgetModuleFile,
+                                                    sharedData.customWidgetModuleConfigFile);
+            widgetTypeLoader.addEventListener(WidgetTypeLoaderEvent.LOAD_COMPLETE, widgetTypeLoader_loadCompleteHandler);
+            widgetTypeLoader.addEventListener(WidgetTypeLoaderEvent.LOAD_ERROR, widgetTypeLoader_loadErrorHandler);
+            widgetTypeLoader.load();
         }
         catch (error:Error)
         {
@@ -45,6 +47,25 @@ public class LoadWidgetTypesProcess extends ImportWidgetProcess
                                                                               [ error.message ]);
             dispatchFailure(errorMessage);
         }
+    }
+
+    private function widgetTypeLoader_loadCompleteHandler(event:WidgetTypeLoaderEvent):void
+    {
+        if (event.widgetType.isManaged)
+        {
+            WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.addWidgetType(event.widgetType);
+        }
+        else
+        {
+            WidgetTypeRegistryModel.getInstance().layoutWidgetTypeRegistry.addWidgetType(event.widgetType);
+        }
+
+        dispatchSuccess("Widget types loaded");
+    }
+
+    private function widgetTypeLoader_loadErrorHandler(event:WidgetTypeLoaderEvent):void
+    {
+        dispatchFailure("Could not load module");
     }
 }
 }

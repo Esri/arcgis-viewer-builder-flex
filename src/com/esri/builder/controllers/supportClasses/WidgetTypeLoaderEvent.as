@@ -16,20 +16,32 @@
 package com.esri.builder.controllers.supportClasses
 {
 
+import com.esri.builder.model.WidgetType;
+
 import flash.events.Event;
 
 public class WidgetTypeLoaderEvent extends Event
 {
     public static const LOAD_TYPES_COMPLETE:String = "loadTypesComplete";
+    public static const LOAD_COMPLETE:String = "loadComplete";
+    public static const LOAD_ERROR:String = "loadError";
 
-    public function WidgetTypeLoaderEvent(type:String)
+    public function WidgetTypeLoaderEvent(type:String, widgetType:WidgetType = null)
     {
         super(type);
+        _widgetType = widgetType;
+    }
+
+    private var _widgetType:WidgetType;
+
+    public function get widgetType():WidgetType
+    {
+        return _widgetType;
     }
 
     override public function clone():Event
     {
-        return new WidgetTypeLoaderEvent(type);
+        return new WidgetTypeLoaderEvent(type, _widgetType);
     }
 }
 }

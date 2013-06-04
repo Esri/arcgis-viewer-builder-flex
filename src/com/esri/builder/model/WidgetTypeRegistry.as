@@ -16,6 +16,8 @@
 package com.esri.builder.model
 {
 
+import com.esri.builder.model.WidgetType;
+
 import mx.collections.ArrayList;
 
 public class WidgetTypeRegistry
@@ -48,7 +50,11 @@ public class WidgetTypeRegistry
 
     public function removeWidgetType(widgetType:WidgetType):void
     {
-        widgetTypes.removeItem(widgetType);
+        if(widgetType)
+        {
+            widgetTypes.removeItem(widgetType);
+            widgetType.release();
+        }
     }
 
     public function findWidgetTypeByURL(url:String):WidgetType
