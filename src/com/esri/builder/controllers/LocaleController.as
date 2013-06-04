@@ -19,6 +19,7 @@ package com.esri.builder.controllers
 import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.model.LocaleModel;
 import com.esri.builder.model.Model;
+import com.esri.builder.model.WidgetTypeRegistryModel;
 import com.esri.builder.supportClasses.LogUtil;
 
 import mx.core.FlexGlobals;
@@ -77,6 +78,7 @@ public class LocaleController
         if (selectedLocale != currentLocale)
         {
             FlexGlobals.topLevelApplication.setStyle('locale', selectedLocale);
+            WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.sort();
         }
     }
 
