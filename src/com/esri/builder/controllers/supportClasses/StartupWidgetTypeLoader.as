@@ -18,6 +18,7 @@ package com.esri.builder.controllers.supportClasses
 
 import com.esri.builder.model.WidgetType;
 import com.esri.builder.model.WidgetTypeRegistryModel;
+import com.esri.builder.supportClasses.FileUtil;
 import com.esri.builder.supportClasses.LogUtil;
 import com.esri.builder.views.BuilderAlert;
 
@@ -53,7 +54,7 @@ public class StartupWidgetTypeLoader extends EventDispatcher
 
         for each (var moduleFile:File in moduleFiles)
         {
-            var fileName:String = getFileName(moduleFile);
+            var fileName:String = FileUtil.getFileName(moduleFile);
 
             if (Log.isDebug())
             {
@@ -88,21 +89,15 @@ public class StartupWidgetTypeLoader extends EventDispatcher
         {
             if (file.extension == "swf")
             {
-                uniqueFileNameToSWF[getFileName(file)] = file;
+                uniqueFileNameToSWF[FileUtil.getFileName(file)] = file;
             }
             else if (file.extension == "xml")
             {
-                uniqueFileNameToXML[getFileName(file)] = file;
+                uniqueFileNameToXML[FileUtil.getFileName(file)] = file;
             }
         }
 
         return [ uniqueFileNameToSWF, uniqueFileNameToXML ];
-    }
-
-    //TODO: move to FileUtil
-    private function getFileName(file:File):String
-    {
-        return file.name.replace("." + file.extension, "");
     }
 
     private function getModuleFiles(directory:File):Array
@@ -225,8 +220,8 @@ public class StartupWidgetTypeLoader extends EventDispatcher
         loader.removeEventListener(WidgetTypeLoaderEvent.LOAD_ERROR, loader_loadErrorHandler);
 
         var errorMessage:String = ResourceManager.getInstance().getString('BuilderStrings',
-                'importWidgetProcess.couldNotLoadCustomWidgets',
-                [ loader.name ]);
+                                                                          'importWidgetProcess.couldNotLoadCustomWidgets',
+                                                                          [ loader.name ]);
 
         if (Log.isDebug())
         {

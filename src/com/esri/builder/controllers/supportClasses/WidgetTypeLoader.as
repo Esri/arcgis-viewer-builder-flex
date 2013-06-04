@@ -18,12 +18,12 @@ package com.esri.builder.controllers.supportClasses
 
 import com.esri.builder.model.CustomWidgetType;
 import com.esri.builder.model.WidgetType;
+import com.esri.builder.supportClasses.FileUtil;
 
 import flash.events.EventDispatcher;
 import flash.filesystem.File;
 import flash.filesystem.FileMode;
 import flash.filesystem.FileStream;
-import flash.system.ApplicationDomain;
 import flash.utils.ByteArray;
 
 import modules.IBuilderModule;
@@ -57,11 +57,11 @@ public class WidgetTypeLoader extends EventDispatcher
 
         if (swf && swf.exists)
         {
-            fileName = swf.name;
+            fileName = FileUtil.getFileName(swf);
         }
         else if (config && config.exists)
         {
-            fileName = config.name;
+            fileName = FileUtil.getFileName(config);
         }
 
         return fileName;

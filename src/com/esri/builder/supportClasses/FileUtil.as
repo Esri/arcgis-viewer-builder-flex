@@ -54,5 +54,10 @@ public class FileUtil
         var fileToCheck:File = baseDirectory.resolvePath(relativeFilePath);
         return fileToCheck.exists;
     }
+
+    public static function getFileName(file:File):String
+    {
+        return file.name.replace("." + file.extension, "");
+    }
 }
 }
