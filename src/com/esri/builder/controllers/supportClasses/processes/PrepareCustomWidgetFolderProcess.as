@@ -17,6 +17,7 @@ package com.esri.builder.controllers.supportClasses.processes
 {
 
 import com.esri.builder.controllers.supportClasses.*;
+import com.esri.builder.supportClasses.FileUtil;
 
 import flash.filesystem.File;
 
@@ -33,16 +34,13 @@ public class PrepareCustomWidgetFolderProcess extends ImportWidgetProcess
     {
         try
         {
-            var foundWidgetFiles:Array = [];
-            findWidgetSWFFile(sharedData.unzipWidgetWorkspace, foundWidgetFiles);
-
-            if (foundWidgetFiles.length == 0)
+            var foundWidget:File = findWidgetSWFFile(sharedData.unzipWidgetWorkspace);
+            if (!foundWidget)
             {
                 dispatchErrorMessage();
                 return;
             }
 
-            var foundWidget:File = foundWidgetFiles[0];
             var widgetName:String = foundWidget.name.replace(/Widget.swf$/i, '');
 
             sharedData.customWidgetName = widgetName;
@@ -56,23 +54,10 @@ public class PrepareCustomWidgetFolderProcess extends ImportWidgetProcess
         }
     }
 
-    //TODO: refactor to not require results array
-    private function findWidgetSWFFile(parentDirectory:File, foundFiles:Array):void
+    private function findWidgetSWFFile(parentDirectory:File):File
     {
-        var widgetSWFFileName:RegExp = /.*widget\.swf/i;
-        var list:Array = parentDirectory.getDirectoryListing();
-        for each (var file:File in list)
-        {
-            if (widgetSWFFileName.test(file.name))
-            {
-                foundFiles.push(file);
-                return;
-            }
-            else if (file.isDirectory)
-            {
-                findWidgetSWFFile(file, foundFiles);
-            }
-        }
+        const widgetSWFFileName:RegExp = /.*widget\.swf/i;
+        return FileUtil.findMatchingFile(parentDirectory, widgetSWFFileName);
     }
 
     private function dispatchErrorMessage():void

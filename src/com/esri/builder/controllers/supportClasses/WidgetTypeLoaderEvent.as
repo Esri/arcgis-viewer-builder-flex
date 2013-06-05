@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2008-2013 Esri. All Rights Reserved.
+// Copyright (c) 2008-2016 Esri. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,29 +13,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////
-package modules.supportClasses
+package com.esri.builder.controllers.supportClasses
 {
 
-import modules.IWidgetModel;
+import com.esri.builder.model.WidgetType;
 
-public final class XMLWidgetModel implements IWidgetModel
+import flash.events.Event;
+
+public class WidgetTypeLoaderEvent extends Event
 {
-    [Bindable]
-    public var configXML:String = "";
+    public static const LOAD_COMPLETE:String = "loadComplete";
+    public static const LOAD_ERROR:String = "loadError";
 
-    public function importXML(doc:XML):void
+    public function WidgetTypeLoaderEvent(type:String, widgetType:WidgetType = null)
     {
-        configXML = ensureFriendlyEmptyConfigXML(doc.toXMLString());
+        super(type);
+        _widgetType = widgetType;
     }
 
-    private function ensureFriendlyEmptyConfigXML(xmlText:String):String
+    private var _widgetType:WidgetType;
+
+    public function get widgetType():WidgetType
     {
-        return (xmlText == "<configuration/>") ? "<configuration></configuration>" : xmlText;
+        return _widgetType;
     }
 
-    public function exportXML():XML
+    override public function clone():Event
     {
-        return new XML(configXML);
+        return new WidgetTypeLoaderEvent(type, _widgetType);
     }
 }
 }

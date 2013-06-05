@@ -18,6 +18,7 @@ package com.esri.builder.controllers
 
 import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
 import com.esri.builder.eventbus.AppEvent;
+import com.esri.builder.model.CustomWidgetType;
 import com.esri.builder.model.Model;
 import com.esri.builder.model.WidgetType;
 import com.esri.builder.supportClasses.LogUtil;
@@ -46,18 +47,10 @@ public class WidgetSyncController
 
     private function getWidgetDirectory():File
     {
-        var widgetDirectory:File;
-        if (addedWidgetType.isCustom)
-        {
-            widgetDirectory = WellKnownDirectories.getInstance().customFlexViewer.resolvePath("widgets/" + addedWidgetType.name);
-        }
-        else
-        {
-            widgetDirectory = WellKnownDirectories.getInstance().bundledFlexViewer.resolvePath("widgets/" + addedWidgetType.name);
-        }
-        return widgetDirectory;
+        return (addedWidgetType is CustomWidgetType) ?
+            WellKnownDirectories.getInstance().customFlexViewer.resolvePath("widgets/" + addedWidgetType.name) :
+            WellKnownDirectories.getInstance().bundledFlexViewer.resolvePath("widgets/" + addedWidgetType.name);
     }
-
 
     private function copyMissingFilesToApp(widgetDirectory:File):void
     {
@@ -114,14 +107,9 @@ public class WidgetSyncController
 
     private function getRelativePathToWidgetDirectory(fileOrFolder:File):String
     {
-        if (addedWidgetType.isCustom)
-        {
-            return WellKnownDirectories.getInstance().customFlexViewer.getRelativePath(fileOrFolder);
-        }
-        else
-        {
-            return WellKnownDirectories.getInstance().bundledFlexViewer.getRelativePath(fileOrFolder);
-        }
+        return (addedWidgetType is CustomWidgetType) ?
+            WellKnownDirectories.getInstance().customFlexViewer.getRelativePath(fileOrFolder) :
+            WellKnownDirectories.getInstance().bundledFlexViewer.getRelativePath(fileOrFolder);
     }
 }
 }

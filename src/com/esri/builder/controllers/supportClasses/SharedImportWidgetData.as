@@ -104,6 +104,18 @@ public class SharedImportWidgetData
         _customWidgetModuleConfigFile = value;
     }
 
+    private var _customWidgetModuleFile:File;
+
+    public function get customWidgetModuleFile():File
+    {
+        return _customWidgetModuleFile;
+    }
+
+    public function set customWidgetModuleFile(value:File):void
+    {
+        _customWidgetModuleFile = value;
+    }
+
     private var _metaFile:File;
 
     public function get metaFile():File

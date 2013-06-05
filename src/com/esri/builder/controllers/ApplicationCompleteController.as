@@ -20,11 +20,11 @@ import com.esri.ags.components.IdentityManager;
 import com.esri.builder.components.LogFileTarget;
 import com.esri.builder.components.SignInWindow;
 import com.esri.builder.components.ToolTip;
-import com.esri.builder.controllers.supportClasses.Settings;
-import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
-import com.esri.builder.controllers.supportClasses.WidgetTypeLoader;
-import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.controllers.supportClasses.MachineDisplayName;
+import com.esri.builder.controllers.supportClasses.Settings;
+import com.esri.builder.controllers.supportClasses.StartupWidgetTypeLoader;
+import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
+import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.model.Model;
 import com.esri.builder.model.PortalModel;
 import com.esri.builder.supportClasses.LogUtil;
@@ -52,7 +52,7 @@ public final class ApplicationCompleteController
 {
     private static const LOG:ILogger = LogUtil.createLogger(ApplicationCompleteController);
 
-    private var widgetTypeLoader:WidgetTypeLoader;
+    private var widgetTypeLoader:StartupWidgetTypeLoader;
 
     private var startupSettings:Settings;
 
@@ -93,7 +93,7 @@ public final class ApplicationCompleteController
         // Can only have access to 'loaderInfo' when the app is complete.
         app.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, uncaughtErrorHandler);
 
-        widgetTypeLoader = new WidgetTypeLoader();
+        widgetTypeLoader = new StartupWidgetTypeLoader();
         widgetTypeLoader.addEventListener(Event.COMPLETE, widgetTypeLoader_completeHandler);
         widgetTypeLoader.loadWidgetTypes();
     }
@@ -330,7 +330,7 @@ public final class ApplicationCompleteController
 
     protected function widgetTypeLoader_completeHandler(event:Event):void
     {
-        (event.currentTarget as WidgetTypeLoader).removeEventListener(Event.COMPLETE, widgetTypeLoader_completeHandler);
+        (event.currentTarget as StartupWidgetTypeLoader).removeEventListener(Event.COMPLETE, widgetTypeLoader_completeHandler);
         validateSettings();
     }
 

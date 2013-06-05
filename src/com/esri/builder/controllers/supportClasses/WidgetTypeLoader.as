@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2008-2013 Esri. All Rights Reserved.
+// Copyright (c) 2008-2016 Esri. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,18 +16,16 @@
 package com.esri.builder.controllers.supportClasses
 {
 
-import com.esri.builder.model.Model;
+import com.esri.builder.model.CustomWidgetType;
 import com.esri.builder.model.WidgetType;
-import com.esri.builder.model.WidgetTypeRegistryModel;
+import com.esri.builder.supportClasses.FileUtil;
 import com.esri.builder.supportClasses.LogUtil;
-import com.esri.builder.views.BuilderAlert;
 
-import flash.events.Event;
 import flash.events.EventDispatcher;
 import flash.filesystem.File;
 import flash.filesystem.FileMode;
 import flash.filesystem.FileStream;
-import flash.system.ApplicationDomain;
+import flash.utils.ByteArray;
 
 import modules.IBuilderModule;
 import modules.supportClasses.CustomXMLModule;
@@ -38,85 +36,213 @@ import mx.logging.ILogger;
 import mx.logging.Log;
 import mx.modules.IModuleInfo;
 import mx.modules.ModuleManager;
-import mx.resources.ResourceManager;
 
 public class WidgetTypeLoader extends EventDispatcher
 {
     private static const LOG:ILogger = LogUtil.createLogger(WidgetTypeLoader);
 
-    private var _moduleInfoArr:Array = [];
-    private var _widgetTypeArr:Array = [];
+    internal static var loadedModuleInfos:Array = [];
 
-    public function loadWidgetTypes():void
+    private var swf:File;
+    private var config:File;
+
+    //need reference when loading to avoid being garbage collected before load completes
+    private var moduleInfo:IModuleInfo;
+
+    //requires either swf or config
+    public function WidgetTypeLoader(swf:File = null, config:File = null)
+    {
+        this.swf = swf;
+        this.config = config;
+    }
+
+    public function get name():String
+    {
+        var fileName:String;
+
+        if (swf && swf.exists)
+        {
+            fileName = FileUtil.getFileName(swf);
+        }
+        else if (config && config.exists)
+        {
+            fileName = FileUtil.getFileName(config);
+        }
+
+        return fileName;
+    }
+
+    public function load():void
+    {
+        if (swf && swf.exists)
+        {
+            loadModule();
+        }
+        else if (!swf.exists && config.exists)
+        {
+            loadConfigModule();
+        }
+        else
+        {
+            dispatchError();
+        }
+    }
+
+    private function loadConfigModule():void
     {
         if (Log.isInfo())
         {
-            LOG.info('Loading modules...');
+            LOG.info('Loading XML module: {0}', config.url);
         }
 
-        const modulesDirectory:File = WellKnownDirectories.getInstance().bundledModules;
-        loadCustomWidgetTypes(WellKnownDirectories.getInstance().customModules);
-
-        // Find all swf files under the modules folder.
-        const swfList:Array = [];
-        if (modulesDirectory.isDirectory)
+        var moduleConfig:XML = readModuleConfig(config);
+        if (moduleConfig)
         {
-            getSWFList(modulesDirectory, swfList);
-        }
-        // Load the found modules.
-        swfList.forEach(function(file:File, index:int, source:Array):void
-        {
-            if (Log.isDebug())
+            var customWidgetType:CustomWidgetType = parseCustomWidgetType(moduleConfig);
+            if (customWidgetType)
             {
-                LOG.debug('loading module {0}', file.url);
+                dispatchComplete(customWidgetType);
+                return;
             }
-            const moduleInfo:IModuleInfo = ModuleManager.getModule(file.url);
-            _moduleInfoArr.push(moduleInfo);
+        }
+
+        dispatchError();
+    }
+
+    private function loadModule():void
+    {
+        if (Log.isInfo())
+        {
+            LOG.info('Loading SWF module: {0}', swf.url);
+        }
+
+        moduleInfo = ModuleManager.getModule(swf.url);
+
+        if (moduleInfo.ready)
+        {
+            if (Log.isInfo())
+            {
+                LOG.info('Unloading module: {0}', swf.url);
+            }
+
+            moduleInfo.addEventListener(ModuleEvent.UNLOAD, moduleInfo_unloadHandler);
+            moduleInfo.release();
+            moduleInfo.unload();
+        }
+        else
+        {
+            if (Log.isInfo())
+            {
+                LOG.info('Loading module: {0}', swf.url);
+            }
+
+            var fileBytes:ByteArray = new ByteArray();
+            var fileStream:FileStream = new FileStream();
+            fileStream.open(swf, FileMode.READ);
+            fileStream.readBytes(fileBytes);
+            fileStream.close();
+
             moduleInfo.addEventListener(ModuleEvent.READY, moduleInfo_readyHandler);
             moduleInfo.addEventListener(ModuleEvent.ERROR, moduleInfo_errorHandler);
-            moduleInfo.load(ApplicationDomain.currentDomain, null, null, FlexGlobals.topLevelApplication.moduleFactory);
-        });
-
-        checkIfNoMoreModuleInfosLeft();
-    }
-
-    private function loadCustomWidgetTypes(modulesDirectory:File):void
-    {
-        var moduleDirectoryContents:Array = modulesDirectory.getDirectoryListing();
-        for each (var fileOrFolder:File in moduleDirectoryContents)
-        {
-            loadCustomWidgetTypeConfig(fileOrFolder);
+            moduleInfo.load(null, null, fileBytes, FlexGlobals.topLevelApplication.moduleFactory);
         }
     }
 
-    public function loadCustomWidgetTypeConfig(configFile:File):void
+    private function moduleInfo_unloadHandler(event:ModuleEvent):void
     {
-        const customModuleFileName:RegExp = /^.*Module\.xml$/;
-        if (!configFile.isDirectory && customModuleFileName.test(configFile.name))
+        if (Log.isInfo())
         {
-            var customModule:IBuilderModule = createCustomModuleFromConfig(configFile);
-            if (customModule)
+            LOG.info('Module unloaded: {0}', swf.url);
+        }
+
+        var moduleInfo:IModuleInfo = event.module;
+        moduleInfo.removeEventListener(ModuleEvent.UNLOAD, moduleInfo_unloadHandler);
+        var moduleInfoIndex:int = loadedModuleInfos.indexOf(moduleInfo);
+        if (moduleInfoIndex > -1)
+        {
+            loadedModuleInfos.splice(moduleInfoIndex, 1);
+        }
+        this.moduleInfo = null;
+        FlexGlobals.topLevelApplication.callLater(loadModule);
+    }
+
+    private function moduleInfo_readyHandler(event:ModuleEvent):void
+    {
+        if (Log.isInfo())
+        {
+            LOG.info('Module loaded: {0}', swf.url);
+        }
+
+        var moduleInfo:IModuleInfo = event.currentTarget as IModuleInfo;
+        moduleInfo.removeEventListener(ModuleEvent.READY, moduleInfo_readyHandler);
+        moduleInfo.removeEventListener(ModuleEvent.ERROR, moduleInfo_errorHandler);
+
+        if (config && config.exists)
+        {
+            if (Log.isInfo())
             {
-                WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.addWidgetType(new WidgetType(customModule));
+                LOG.info('Reading module config: {0}', config.url);
             }
+            var moduleConfig:XML = readModuleConfig(config);
         }
+
+
+        const builderModule:IBuilderModule = event.module.factory.create() as IBuilderModule;
+        if (builderModule)
+        {
+            if (Log.isInfo())
+            {
+                LOG.info('Widget type created for module: {0}', swf.url);
+            }
+            var widgetType:WidgetType = getWidgetType(moduleInfo, builderModule, moduleConfig);
+        }
+
+        loadedModuleInfos.push(moduleInfo);
+        this.moduleInfo = null;
+        dispatchComplete(widgetType);
     }
 
-    private function createCustomModuleFromConfig(configFile:File):IBuilderModule
+    private function dispatchComplete(widgetType:WidgetType):void
     {
+        if (Log.isInfo())
+        {
+            LOG.info('Module load complete: {0}', name);
+        }
+
+        dispatchEvent(new WidgetTypeLoaderEvent(WidgetTypeLoaderEvent.LOAD_COMPLETE, widgetType));
+    }
+
+    private function getWidgetType(moduleInfo:IModuleInfo, builderModule:IBuilderModule, moduleConfig:XML):WidgetType
+    {
+        var customModulesDirectoryURL:String = WellKnownDirectories.getInstance().customModules.url;
+        var isCustomModule:Boolean = (moduleInfo.url.indexOf(customModulesDirectoryURL) > -1);
+        if (moduleConfig)
+        {
+            var configXML:XML = moduleConfig.configuration[0];
+            var version:String = moduleConfig.widgetversion[0];
+        }
+
+        return isCustomModule ?
+            new CustomWidgetType(builderModule, version, configXML) :
+            new WidgetType(builderModule);
+    }
+
+    private function readModuleConfig(configFile:File):XML
+    {
+        var configXML:XML;
+
         var fileStream:FileStream = new FileStream();
-        var customModule:CustomXMLModule;
         try
         {
             fileStream.open(configFile, FileMode.READ);
-            const configXML:XML = XML(fileStream.readUTFBytes(fileStream.bytesAvailable));
-            customModule = parseCustomModule(configXML);
+            configXML = XML(fileStream.readUTFBytes(fileStream.bytesAvailable));
         }
         catch (e:Error)
         {
-            if (Log.isWarn())
+            //ignore
+            if (Log.isInfo())
             {
-                LOG.warn('Error creating custom module {0}', configFile.nativePath);
+                LOG.info('Could not read module config: {0}', e.toString());
             }
         }
         finally
@@ -124,11 +250,35 @@ public class WidgetTypeLoader extends EventDispatcher
             fileStream.close();
         }
 
-        return customModule;
+        return configXML;
     }
 
-    private function parseCustomModule(configXML:XML):CustomXMLModule
+    private function moduleInfo_errorHandler(event:ModuleEvent):void
     {
+        var moduleInfo:IModuleInfo = event.module;
+        moduleInfo.removeEventListener(ModuleEvent.ERROR, moduleInfo_errorHandler);
+        moduleInfo.removeEventListener(ModuleEvent.READY, moduleInfo_readyHandler);
+        this.moduleInfo = null;
+        dispatchError();
+    }
+
+    private function dispatchError():void
+    {
+        if (Log.isInfo())
+        {
+            LOG.info('Module load failed: {0}', name);
+        }
+
+        dispatchEvent(new WidgetTypeLoaderEvent(WidgetTypeLoaderEvent.LOAD_ERROR));
+    }
+
+    private function parseCustomWidgetType(configXML:XML):CustomWidgetType
+    {
+        if (Log.isInfo())
+        {
+            LOG.info('Creating widget type from XML: {0}', configXML);
+        }
+
         var customModule:CustomXMLModule = new CustomXMLModule();
         customModule.widgetName = configXML.name;
         customModule.isOpenByDefault = (configXML.openbydefault == 'true');
@@ -136,17 +286,15 @@ public class WidgetTypeLoader extends EventDispatcher
         var widgetLabel:String = configXML.label[0];
         var widgetDescription:String = configXML.description[0];
         var widgetHelpURL:String = configXML.helpurl[0];
-        var widgetConfiguration:String = configXML.configuration[0];
+        var widgetConfiguration:XML = configXML.configuration[0] ? configXML.configuration[0] : <configuration/>;
         var widgetVersion:String = configXML.widgetversion[0];
 
         customModule.widgetIconLocation = createWidgetIconPath(configXML.icon[0], customModule.widgetName);
         customModule.widgetLabel = widgetLabel ? widgetLabel : customModule.widgetName;
-        customModule.widgetVersion = widgetVersion;
         customModule.widgetDescription = widgetDescription ? widgetDescription : "";
         customModule.widgetHelpURL = widgetHelpURL ? widgetHelpURL : "";
-        customModule.configXML = widgetConfiguration ? widgetConfiguration : "<configuration></configuration>";
 
-        return customModule;
+        return new CustomWidgetType(customModule, widgetVersion, widgetConfiguration);
     }
 
     private function createWidgetIconPath(iconPath:String, widgetName:String):String
@@ -163,133 +311,6 @@ public class WidgetTypeLoader extends EventDispatcher
         }
 
         return widgetIconPath;
-    }
-
-    /**
-     * This will go through all sub folders in 'modules' looking for .swf files.
-     */
-    private function getSWFList(parentFile:File, arr:Array):void
-    {
-        const moduleFileName:RegExp = /^.*Module\.swf$/;
-        const list:Array = parentFile.getDirectoryListing();
-        list.forEach(function(file:File, index:int, source:Array):void
-        {
-            if (file.isDirectory)
-            {
-                getSWFList(file, arr);
-            }
-            else if (moduleFileName.test(file.name))
-            {
-                arr.push(file);
-            }
-        }
-        );
-    }
-
-    private function moduleInfo_readyHandler(event:ModuleEvent):void
-    {
-        var moduleInfo:IModuleInfo = event.currentTarget as IModuleInfo;
-        moduleInfo.removeEventListener(ModuleEvent.READY, moduleInfo_readyHandler);
-        moduleInfo.removeEventListener(ModuleEvent.ERROR, moduleInfo_errorHandler);
-
-        const builderModule:IBuilderModule = event.module.factory.create() as IBuilderModule;
-        if (builderModule)
-        {
-            const widgetType:WidgetType = new WidgetType(builderModule);
-            _widgetTypeArr.push(widgetType);
-
-            // Resolve the object
-            //            FlexGlobals.topLevelApplication.registry.resolve(builderModule, ApplicationDomain.currentDomain);
-            if (Log.isDebug())
-            {
-                LOG.debug('Module {0} is resolved', widgetType.name);
-            }
-
-            removeModuleInfo(event.module);
-        }
-    }
-
-    private function removeModuleInfo(moduleInfo:IModuleInfo):void
-    {
-        const index:int = _moduleInfoArr.indexOf(moduleInfo);
-        if (index > -1)
-        {
-            _moduleInfoArr.splice(index, 1);
-            checkIfNoMoreModuleInfosLeft();
-        }
-    }
-
-    private function checkIfNoMoreModuleInfosLeft():void
-    {
-        if (_moduleInfoArr.length === 0)
-        {
-            sortAndAssignWidgetTypes();
-        }
-    }
-
-    private function sortAndAssignWidgetTypes():void
-    {
-        if (Log.isInfo())
-        {
-            LOG.info('All modules resolved');
-        }
-
-        _widgetTypeArr.sort(compareWidgetTypes);
-
-        var widgetTypes:Array = _widgetTypeArr.filter(widgetTypeFilter);
-        for each (var widgetType:WidgetType in widgetTypes)
-        {
-            WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.addWidgetType(widgetType);
-        }
-
-        var layoutWidgetTypes:Array = _widgetTypeArr.filter(layoutWidgetTypeFilter);
-        for each (var layoutWidgetType:WidgetType in layoutWidgetTypes)
-        {
-            WidgetTypeRegistryModel.getInstance().layoutWidgetTypeRegistry.addWidgetType(layoutWidgetType);
-        }
-
-        function widgetTypeFilter(item:WidgetType, index:int, source:Array):Boolean
-        {
-            return item.isManaged;
-        }
-        function layoutWidgetTypeFilter(item:WidgetType, index:int, source:Array):Boolean
-        {
-            return !item.isManaged;
-        }
-
-        dispatchEvent(new Event(Event.COMPLETE));
-    }
-
-    private function compareWidgetTypes(lhs:WidgetType, rhs:WidgetType):int
-    {
-        const lhsLabel:String = lhs.label.toLowerCase();
-        const rhsLabel:String = rhs.label.toLowerCase();
-        if (lhsLabel < rhsLabel)
-        {
-            return -1;
-        }
-        if (lhsLabel > rhsLabel)
-        {
-            return 1;
-        }
-        return 0;
-    }
-
-    private function moduleInfo_errorHandler(event:ModuleEvent):void
-    {
-        if (Log.isWarn())
-        {
-            LOG.warn('Module error: {0}', event.errorText);
-        }
-
-        var moduleInfo:IModuleInfo = event.currentTarget as IModuleInfo;
-        moduleInfo.removeEventListener(ModuleEvent.ERROR, moduleInfo_errorHandler);
-        moduleInfo.removeEventListener(ModuleEvent.READY, moduleInfo_readyHandler);
-
-        removeModuleInfo(event.module);
-        Model.instance.status = event.errorText;
-        BuilderAlert.show(event.errorText,
-                          ResourceManager.getInstance().getString('BuilderStrings', 'error'));
     }
 }
 }

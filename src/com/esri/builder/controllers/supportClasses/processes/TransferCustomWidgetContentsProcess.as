@@ -17,8 +17,7 @@ package com.esri.builder.controllers.supportClasses.processes
 {
 
 import com.esri.builder.controllers.supportClasses.*;
-
-import com.esri.builder.model.WidgetType;
+import com.esri.builder.model.CustomWidgetType;
 import com.esri.builder.model.WidgetTypeRegistryModel;
 import com.esri.builder.views.BuilderAlert;
 
@@ -37,7 +36,7 @@ public class TransferCustomWidgetContentsProcess extends ImportWidgetProcess
 
     override public function execute():void
     {
-        var existingWidgetType:WidgetType = WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.findWidgetTypeByName(sharedData.customWidgetName);
+        var existingWidgetType:CustomWidgetType = WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.findWidgetTypeByName(sharedData.customWidgetName) as CustomWidgetType;
         if (existingWidgetType)
         {
             var overwriteWidgetWarningTitle:String = ResourceManager.getInstance().getString('BuilderStrings',
@@ -90,6 +89,7 @@ public class TransferCustomWidgetContentsProcess extends ImportWidgetProcess
         try
         {
             moveMetaToModulesFolder();
+            moveCustomWidgetModuleToModulesFolder();
             moveCustomWidgetFolderToWidgetsFolder();
             dispatchSuccess("Custom widget contents transferred");
         }
@@ -104,16 +104,26 @@ public class TransferCustomWidgetContentsProcess extends ImportWidgetProcess
 
     private function moveMetaToModulesFolder():void
     {
-        var customModuleConfigDestination:File = getCustomModuleConfigDestination();
-        sharedData.customWidgetModuleConfigFile = customModuleConfigDestination;
-        sharedData.metaFile.moveTo(customModuleConfigDestination, true);
-    }
-
-    private function getCustomModuleConfigDestination():File
-    {
         var customModuleConfigName:String = sharedData.customWidgetName + "Module.xml";
         var customModuleConfigDestination:File = sharedData.customModulesDirectory.resolvePath(customModuleConfigName);
-        return customModuleConfigDestination;
+        sharedData.customWidgetModuleConfigFile = customModuleConfigDestination;
+        sharedData.metaFile.moveTo(customModuleConfigDestination, true);
+        sharedData.metaFile = customModuleConfigDestination;
+    }
+
+    private function moveCustomWidgetModuleToModulesFolder():void
+    {
+        try
+        {
+            var customModuleFilename:String = sharedData.customWidgetName + "Module.swf";
+            var customModuleDestination:File = sharedData.customModulesDirectory.resolvePath(customModuleFilename);
+            sharedData.customWidgetModuleFile.moveTo(customModuleDestination, true);
+            sharedData.customWidgetModuleFile = customModuleDestination;
+        }
+        catch (error:Error)
+        {
+            //fail silently
+        }
     }
 
     private function moveCustomWidgetFolderToWidgetsFolder():void

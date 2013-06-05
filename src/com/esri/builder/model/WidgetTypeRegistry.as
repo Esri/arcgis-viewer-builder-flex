@@ -17,6 +17,8 @@ package com.esri.builder.model
 {
 
 import mx.collections.ArrayList;
+import mx.events.CollectionEvent;
+import mx.events.CollectionEventKind;
 
 public class WidgetTypeRegistry
 {
@@ -48,7 +50,11 @@ public class WidgetTypeRegistry
 
     public function removeWidgetType(widgetType:WidgetType):void
     {
-        widgetTypes.removeItem(widgetType);
+        if (widgetType)
+        {
+            widgetTypes.removeItem(widgetType);
+            widgetType.release();
+        }
     }
 
     public function findWidgetTypeByURL(url:String):WidgetType
@@ -71,6 +77,12 @@ public class WidgetTypeRegistry
     public function clearWidgetTypes():void
     {
         widgetTypes.source = [];
+    }
+
+    public function sort():void
+    {
+        widgetTypes.source.sortOn("label", Array.CASEINSENSITIVE);
+        widgetTypes.dispatchEvent(new CollectionEvent(CollectionEvent.COLLECTION_CHANGE, false, false, CollectionEventKind.RESET));
     }
 }
 }

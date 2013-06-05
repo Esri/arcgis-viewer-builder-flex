@@ -16,22 +16,19 @@
 package com.esri.builder.model
 {
 
+import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
+
+import flash.filesystem.File;
+
 import modules.IBuilderModule;
 import modules.IWidgetModel;
 import modules.IWidgetView;
-import modules.supportClasses.CustomXMLModule;
 
 import mx.collections.ArrayList;
 
-public final class WidgetType
+public class WidgetType
 {
     private var builderModule:IBuilderModule; // Module data content - created after the module is loaded.
-
-    //TODO: move custom widget type logic to separate class
-    public function get isCustom():Boolean
-    {
-        return (builderModule is CustomXMLModule);
-    }
 
     public function WidgetType(builderModule:IBuilderModule)
     {
@@ -102,10 +99,19 @@ public final class WidgetType
         return "WidgetType{builderModule:" + builderModule ? builderModule.widgetName : 'UNK' + "}";
     }
 
-    //TODO: add version to native modules?
-    public function get version():String
+    public function getIconFile():File
     {
-        return isCustom ? (builderModule as CustomXMLModule).widgetVersion : null;
+        var iconFile:File = WellKnownDirectories.getInstance().customFlexViewer.resolvePath(iconLocation);
+        if (!iconFile.exists)
+        {
+            iconFile = WellKnownDirectories.getInstance().bundledFlexViewer.resolvePath(iconLocation);
+        }
+        return iconFile;
+    }
+
+    public function release():void
+    {
+        builderModule = null;
     }
 }
 }

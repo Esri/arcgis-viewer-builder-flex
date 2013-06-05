@@ -26,7 +26,7 @@ import com.esri.builder.controllers.supportClasses.SharedImportWidgetData;
 import com.esri.builder.controllers.supportClasses.processes.TransferCustomWidgetContentsProcess;
 import com.esri.builder.controllers.supportClasses.processes.UnzipProcess;
 import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
-import com.esri.builder.controllers.supportClasses.WidgetTypeLoader;
+import com.esri.builder.controllers.supportClasses.StartupWidgetTypeLoader;
 import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.controllers.supportClasses.XMLFileReader;
 import com.esri.builder.views.popups.ImportWidgetPopUp;
@@ -77,10 +77,11 @@ public class ImportCustomWidgetController
         importWidgetArbiter.addProcess(new CleanUpProcess(unzipWidgetWorkspace));
         importWidgetArbiter.addProcess(new UnzipProcess(sharedImportWidgetData, new FileStream(), new Zip()));
         importWidgetArbiter.addProcess(new PrepareCustomWidgetFolderProcess(sharedImportWidgetData));
+        importWidgetArbiter.addProcess(new PrepareCustomWidgetModuleProcess(sharedImportWidgetData));
         importWidgetArbiter.addProcess(new PrepareMetaFileProcess(sharedImportWidgetData,
                                                                   new XMLFileReader(new FileStream())));
         importWidgetArbiter.addProcess(new TransferCustomWidgetContentsProcess(sharedImportWidgetData));
-        importWidgetArbiter.addProcess(new LoadWidgetTypesProcess(sharedImportWidgetData, new WidgetTypeLoader()));
+        importWidgetArbiter.addProcess(new LoadWidgetTypesProcess(sharedImportWidgetData));
         importWidgetArbiter.addProcess(new CleanUpProcess(unzipWidgetWorkspace));
         importWidgetArbiter.addProcess(new UpgradeExistingCustomWidgetsProcess(sharedImportWidgetData));
 
