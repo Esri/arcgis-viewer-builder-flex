@@ -92,12 +92,11 @@ public class WidgetTypeLoader extends EventDispatcher
             if (customWidgetType)
             {
                 dispatchComplete(customWidgetType);
-            }
-            else
-            {
-                dispatchError();
+                return;
             }
         }
+
+        dispatchError();
     }
 
     private function loadModule():void
