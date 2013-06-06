@@ -61,20 +61,9 @@ public class LayerSettings
         if (fields && fields.length > 0)
         {
             var fieldsXML:XML = <fields/>;
-            var fieldXML:XML;
             for each (var field:FieldSettings in fields)
             {
-                fieldXML = <field name={field.name}/>;
-                if (field.alias)
-                {
-                    fieldXML.@alias = field.alias;
-                }
-                if (field.tooltip)
-                {
-                    fieldXML.@tooltip = field.tooltip;
-                }
-
-                fieldsXML.appendChild(fieldXML);
+                fieldsXML.appendChild(field.toXML());
             }
 
             if (fieldsXML.children().length() > 0)
