@@ -18,7 +18,6 @@
 -->
 <s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
          xmlns:s="library://ns.adobe.com/flex/spark"
-         xmlns:mx="library://ns.adobe.com/flex/mx"
          xmlns:views="com.esri.builder.views.*"
          creationComplete="init()"
          implements="com.esri.builder.views.supportClasses.IIncludeLayerDispatcher">
@@ -141,7 +140,9 @@
                             includeIn="portal"
                             isFeaturedContentShown="false"/>
 
-    <views:MapServerView id="mapServerView" includeIn="mapserver"/>
+    <views:MapServerView id="mapServerView"
+                         includeIn="mapserver"
+                         itemCreationPolicy="immediate"/>
 
     <views:LayerFromWebView id="layerFromWebView"
                             includeIn="web"

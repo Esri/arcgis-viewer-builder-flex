@@ -499,7 +499,7 @@
                     LOG.debug("Processing service browser layer");
                 }
 
-                var serviceSelection:ArrayList = layersSearch.mapServerView.serviceBrowser.serviceSelection;
+                var serviceSelection:ArrayList = layersSearch.mapServerView.serviceSelection;
                 var totalServices:int = serviceSelection.length;
 
                 var selectedNode:ServiceDirectoryNode;
