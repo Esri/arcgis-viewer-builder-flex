@@ -401,7 +401,7 @@
                     LOG.debug("Processing service browser layer");
                 }
 
-                var serviceSelection:ArrayList = operationalLayersSearch.mapServerView.serviceBrowser.serviceSelection;
+                var serviceSelection:ArrayList = operationalLayersSearch.mapServerView.serviceSelection;
                 var totalServices:int = serviceSelection.length;
 
                 var selectedNode:ServiceDirectoryNode;

@@ -148,7 +148,9 @@
 
     <views:PortalLayersView id="portalLayersView" includeIn="portal"/>
 
-    <views:MapServerView id="mapServerView" includeIn="mapserver"/>
+    <views:MapServerView id="mapServerView"
+                         includeIn="mapserver"
+                         itemCreationPolicy="immediate"/>
 
     <views:LayerFromWebView id="layerFromWebView"
                             includeIn="web"

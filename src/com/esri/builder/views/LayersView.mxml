@@ -20,6 +20,7 @@
          xmlns:s="library://ns.adobe.com/flex/spark"
          xmlns:mx="library://ns.adobe.com/flex/mx"
          xmlns:views="com.esri.builder.views.*"
+         xmlns:components="com.esri.builder.components.*"
          width="100%" height="100%"
          add="this_addHandler(event)"
          creationComplete="init()"
@@ -31,6 +32,7 @@
             import com.esri.builder.eventbus.AppEvent;
             import com.esri.builder.model.Model;
             import com.esri.builder.model.PortalModel;
+            import com.esri.builder.model.RecentlyUsedURLsModel;
 
             import mx.events.FlexEvent;
 
@@ -122,8 +124,38 @@
                     mapContainer.addElementAt(mapExtent, 2);
                 }
             }
+
+            private function setSharedServiceBrowser(mapServerView:MapServerView):void
+            {
+                mapServerView.setServiceBrowser(serviceBrowser);
+            }
+
+            private function removeSharedServiceBrowser(mapServerView:MapServerView):void
+            {
+                mapServerView.clearServiceBrowser();
+            }
+
+            private function serviceBrowser_creationCompleteHandler(event:FlexEvent):void
+            {
+                var mostRecentURL:String = RecentlyUsedURLsModel.getInstance().mostRecentURL();
+                serviceBrowser.serviceURL = mostRecentURL ? mostRecentURL : 'http://sampleserver1.arcgisonline.com/ArcGIS/rest/services';
+            }
+
+            private function viewstack_creationCompleteHandler(event:FlexEvent):void
+            {
+                setSharedServiceBrowser(basemapsView.layersSearch.mapServerView)
+            }
         ]]>
     </fx:Script>
+
+    <fx:Declarations>
+        <components:ServiceBrowser id="serviceBrowser"
+                                   width="100%" height="100%"
+                                   left="8" right="8" top="8" bottom="8"
+                                   allowMultipleSelection="true"
+                                   creationComplete="serviceBrowser_creationCompleteHandler(event)"
+                                   searchType="maplayers"/>
+    </fx:Declarations>
 
     <s:states>
         <s:State name="normal"/>
@@ -197,12 +229,17 @@
 
     <mx:ViewStack id="viewstack"
                   width="100%" height="100%"
-                  left="139" right="10" top="40" bottom="5">
-        <s:NavigatorContent label="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsOperationalLayers.step1')}">
+                  left="139" right="10" top="40" bottom="5"
+                  creationComplete="viewstack_creationCompleteHandler(event)">
+        <s:NavigatorContent hide="removeSharedServiceBrowser(basemapsView.layersSearch.mapServerView)"
+                            label="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsOperationalLayers.step1')}"
+                            show="setSharedServiceBrowser(basemapsView.layersSearch.mapServerView)">
             <views:BasemapsView id="basemapsView"/>
         </s:NavigatorContent>
 
-        <s:NavigatorContent label="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsOperationalLayers.step2')}">
+        <s:NavigatorContent hide="removeSharedServiceBrowser(operationalLayersView.operationalLayersSearch.mapServerView)"
+                            label="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsOperationalLayers.step2')}"
+                            show="setSharedServiceBrowser(operationalLayersView.operationalLayersSearch.mapServerView)">
             <views:OperationalLayersView id="operationalLayersView"/>
         </s:NavigatorContent>
 
