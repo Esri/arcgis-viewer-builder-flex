@@ -22,17 +22,23 @@ public class FieldSettings
     public var name:String;
     public var alias:String;
     public var tooltip:String;
+    public var dateFormat:String;
+    public var useUTC:Boolean;
+    public var required:Boolean;
 
     public function fromXML(configXML:XML):void
     {
         name = configXML.@name[0];
         alias = configXML.@alias[0];
         tooltip = configXML.@tooltip[0];
+        dateFormat = configXML.@dateformat[0];
+        useUTC = configXML.@useutc[0] == "true";
+        required = configXML.@required[0] == "true";
     }
 
     public function toXML():XML
     {
-        var configXML:XML = <field name={name}/>
+        var configXML:XML = <field name={name} required={required} useutc={useUTC}/>
 
         if (alias)
         {
@@ -41,6 +47,10 @@ public class FieldSettings
         if (tooltip)
         {
             configXML.@tooltip = tooltip;
+        }
+        if (dateFormat)
+        {
+            configXML.@dateformat = dateFormat;
         }
 
         return configXML;
