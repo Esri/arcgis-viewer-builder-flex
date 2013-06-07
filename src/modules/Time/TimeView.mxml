@@ -213,16 +213,20 @@
                     serviceInspector.execute(urlVars, new AsyncResponder(serviceInspector_resultHandler, serviceInspector_faultHandler, configLayer));
                 }
 
-                function serviceInspector_resultHandler(serviceDescription:Object, configLayer:ConfigLayer):void {
-                    if (serviceDescription.timeInfo) {
+                function serviceInspector_resultHandler(serviceDescription:Object, configLayer:ConfigLayer):void
+                {
+                    if (serviceDescription.timeInfo)
+                    {
                         timeAwareLayers.push(configLayer);
                     }
 
                     updateProcessedTimeAwareConfigLayers(timeAwareLayers);
                 }
 
-                function serviceInspector_faultHandler(event:Fault, configLayer:ConfigLayer):void {
-                    if (Log.isWarn()) {
+                function serviceInspector_faultHandler(event:Fault, configLayer:ConfigLayer):void
+                {
+                    if (Log.isWarn())
+                    {
                         LOG.warn('Could not get details for {0} layer', configLayer.label);
                     }
 
