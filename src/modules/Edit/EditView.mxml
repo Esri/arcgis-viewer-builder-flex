@@ -120,11 +120,13 @@
                 featureLayer.addEventListener(LayerEvent.LOAD, featureLayer_loadHandler);
                 featureLayer.addEventListener(FaultEvent.FAULT, featureLayer_faultHandler);
 
-                function featureLayer_loadHandler(event:LayerEvent):void {
+                function featureLayer_loadHandler(event:LayerEvent):void
+                {
                     featureLayer.removeEventListener(LayerEvent.LOAD, featureLayer_loadHandler);
                     featureLayer.removeEventListener(FaultEvent.FAULT, featureLayer_faultHandler);
 
-                    if (!featureLayer.isEditable) {
+                    if (!featureLayer.isEditable)
+                    {
                         removeFromOrderedLayerListItems(layerListItem);
                         delete layerListItemToConfigLayerMap[layerListItem];
                     }
@@ -133,7 +135,8 @@
                     hideLoadingLayersAnimationIfNoPossibleEditableLayersLeft();
                 }
 
-                function featureLayer_faultHandler(event:LayerEvent):void {
+                function featureLayer_faultHandler(event:LayerEvent):void
+                {
                     featureLayer.removeEventListener(LayerEvent.LOAD, featureLayer_loadHandler);
                     featureLayer.removeEventListener(FaultEvent.FAULT, featureLayer_faultHandler);
                     removeFromOrderedLayerListItems(layerListItem);
