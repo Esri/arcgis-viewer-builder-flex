@@ -54,6 +54,19 @@
                 }
             }
 
+            private var _showRequired:Boolean = false;
+
+            public function get showRequired():Boolean
+            {
+                return _showRequired;
+            }
+
+            public function set showRequired(value:Boolean):void
+            {
+                _showRequired = value;
+                currentState = _showRequired ? "showRequired" : "normal"
+            }
+
             public var layerName:String;
 
             [Bindable]
@@ -110,7 +123,14 @@
                 filteredFields = FieldUtil.getValidFields(layerDetails.fields);
                 for each (var field:Field in filteredFields)
                 {
-                    fields.push({ id: field.name, name: field.alias, tooltip: "", selected: true });
+                    fields.push({
+                                    id: field.name,
+                                    name: field.alias,
+                                    tooltip: "",
+                                    required: !field.nullable,
+                                    nullable: field.nullable,
+                                    selected: true
+                                });
                 }
 
                 if (originalLayerSettings)
@@ -130,6 +150,12 @@
                             {
                                 fieldItem.name = fieldSettings.alias;
                                 fieldItem.tooltip = fieldSettings.tooltip;
+
+                                if (!fieldItem.nullable)
+                                {
+                                    fieldItem.required = fieldSettings.required;
+                                }
+
                                 atLeastOneFieldMatched = true;
                             }
                         }
@@ -149,7 +175,6 @@
                 }
 
                 availableFieldItems.source = fields;
-
                 updatePopUpPosition();
             }
 
@@ -192,6 +217,7 @@
                         fieldSettings = new FieldSettings();
                         fieldSettings.name = inclusionItem.id;
                         fieldSettings.alias = inclusionItem.name;
+                        fieldSettings.required = inclusionItem.required;
                         allFieldSettings.push(fieldSettings);
                     }
                 }
@@ -200,6 +226,11 @@
             }
         ]]>
     </fx:Script>
+
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="showRequired"/>
+    </s:states>
 
     <!--background-->
     <s:Rect left="0" right="0" top="0" bottom="0">
@@ -283,6 +314,50 @@
                                       editable="true"
                                       headerText="{resourceManager.getString('BuilderStrings', 'displayFields.alias')}"
                                       maxWidth="200"/>
+
+                        <s:GridColumn width="100"
+                                      dataField="required"
+                                      editable="false"
+                                      headerText="{resourceManager.getString('BuilderStrings', 'geoprocessing.required')}"
+                                      includeIn="showRequired"
+                                      maxWidth="200">
+                            <s:itemRenderer>
+                                <fx:Component>
+                                    <s:GridItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                                                        xmlns:s="library://ns.adobe.com/flex/spark"
+                                                        clipAndEnableScrolling="true">
+                                        <fx:Script>
+                                            <![CDATA[
+                                                [Bindable]
+                                                private var isRequiredEditable:Boolean;
+
+                                                override public function prepare(hasBeenRecycled:Boolean):void
+                                                {
+                                                    if (data)
+                                                    {
+                                                        isRequiredEditable = data["nullable"];
+                                                        checkBox.selected = isRequiredEditable ? data[column.dataField] : true;
+                                                    }
+                                                }
+
+                                                private function updateDataField():void
+                                                {
+                                                    var isSelected:Boolean = checkBox.selected;
+                                                    data[column.dataField] = isSelected;
+                                                    grid.dataProvider.itemUpdated(data, column.dataField, !isSelected, isSelected);
+                                                }
+                                            ]]>
+                                        </fx:Script>
+
+                                        <s:CheckBox id="checkBox"
+                                                    change="updateDataField()"
+                                                    enabled="{isRequiredEditable}"
+                                                    horizontalCenter="0"
+                                                    verticalCenter="0"/>
+                                    </s:GridItemRenderer>
+                                </fx:Component>
+                            </s:itemRenderer>
+                        </s:GridColumn>
                     </s:ArrayList>
                 </s:columns>
             </s:DataGrid>
