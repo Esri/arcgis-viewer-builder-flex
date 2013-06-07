@@ -156,11 +156,30 @@ public final class PopUpInfoUtil
             {
                 fieldXML.@visible = popUpFieldInfo.visible;
             }
+            if (popUpFieldInfo.format)
+            {
+                fieldXML.appendChild(popUpFieldFormatToXML(popUpFieldInfo.format));
+            }
 
             fieldsXML.appendChild(fieldXML);
         }
 
         return fieldsXML;
+    }
+
+    private static function popUpFieldFormatToXML(format:PopUpFieldFormat):XML
+    {
+        var formatXML:XML = <format precision={format.precision}
+                usethousandsseparator={format.useThousandsSeparator}
+                useutc={format.useUTC}/>;
+
+        var dateFormat:String = format.dateFormat;
+        if (dateFormat)
+        {
+            formatXML.@dateformat = dateFormat;
+        }
+
+        return formatXML;
     }
 
     public static function popUpFieldInfosFromFields(fields:Array):Array
