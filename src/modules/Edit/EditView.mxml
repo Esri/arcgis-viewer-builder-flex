@@ -261,6 +261,7 @@
                 {
                     layerSettingsPopUp = new LayerSettingsPopUp();
                     layerSettingsPopUp.layerName = featureConfigLayer.label;
+                    layerSettingsPopUp.showRequired = true;
                     layerSettingsPopUp.overrideLayerSettings(editModel.findLayerSettings(featureConfigLayer.label));
                     var featureLayer:FeatureLayer = featureConfigLayer.createLayer() as FeatureLayer;
                     featureLayer.addEventListener(LayerEvent.LOAD, featureLayer_loadHandler);
