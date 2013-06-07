@@ -35,7 +35,7 @@ public final class PopUpInfoUtil
         return fields;
     }
 
-    private static function popUpFieldInfoFromXML(fieldXML:XML):PopUpFieldInfo
+    public static function popUpFieldInfoFromXML(fieldXML:XML):PopUpFieldInfo
     {
         var popUpFieldInfo:PopUpFieldInfo = new PopUpFieldInfo();
 
@@ -50,7 +50,7 @@ public final class PopUpInfoUtil
         return popUpFieldInfo;
     }
 
-    private static function popUpFieldFormatFromXML(formatXML:XML):PopUpFieldFormat
+    public static function popUpFieldFormatFromXML(formatXML:XML):PopUpFieldFormat
     {
         var popUpFieldFormat:PopUpFieldFormat = new PopUpFieldFormat();
 
@@ -77,7 +77,7 @@ public final class PopUpInfoUtil
         return medias;
     }
 
-    private static function popUpMediaInfoFromXML(mediaXML:XML):PopUpMediaInfo
+    public static function popUpMediaInfoFromXML(mediaXML:XML):PopUpMediaInfo
     {
         var popUpMediaInfo:PopUpMediaInfo = new PopUpMediaInfo();
 
@@ -167,7 +167,7 @@ public final class PopUpInfoUtil
         return fieldsXML;
     }
 
-    private static function popUpFieldFormatToXML(format:PopUpFieldFormat):XML
+    public static function popUpFieldFormatToXML(format:PopUpFieldFormat):XML
     {
         var formatXML:XML = <format precision={format.precision}
                 usethousandsseparator={format.useThousandsSeparator}
