@@ -21,6 +21,11 @@ s|Label
     verticalAlign: middle;
 }
 
+components|DateFormatInput
+{
+    skinClass: ClassReference("com.esri.builder.skins.DateFormatInputSkin");
+}
+
 components|URLInputCheckerBase
 {
     skinClass: ClassReference("com.esri.builder.skins.URLInputCheckerSkin");
