@@ -30,9 +30,9 @@
     </fx:Declarations>
 
     <s:Group id="removeButton"
+             left="2"
              buttonMode="true"
              click="dispatchRemoveItem(data)"
-             horizontalCenter="0"
              rollOut="{removeButton.filters = []}"
              rollOver="{removeButton.filters = [glowFilter]}"
              toolTip="{resourceManager.getString('BuilderStrings', 'widgetsView.delete')}"

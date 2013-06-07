@@ -96,27 +96,36 @@
         <s:State name="atBottom"/>
     </renderers:states>
 
-    <s:HGroup width="100%" height="100%"
-              horizontalAlign="center"
-              verticalAlign="middle">
-        <s:Group id="moveUpButton"
-                 buttonMode="true"
-                 click="dispatchMoveItemUp(data)"
-                 includeIn="atMiddle,atBottom"
-                 rollOut="{moveUpButton.filters = []}"
-                 rollOver="{moveUpButton.filters = [glowFilter]}"
-                 toolTip="{resourceManager.getString('BuilderStrings', 'moveUp')}">
-            <graphics:small_up_arrow width="20" height="10"/>
-        </s:Group>
+    <renderers:layout>
+        <s:HorizontalLayout horizontalAlign="left"
+                            paddingLeft="2"
+                            paddingRight="2"
+                            verticalAlign="middle"/>
+    </renderers:layout>
 
-        <s:Group id="moveDownButton"
-                 buttonMode="true"
-                 click="dispatchMoveItemDown(data)"
-                 includeIn="atMiddle,atTop"
-                 rollOut="{moveDownButton.filters = []}"
-                 rollOver="{moveDownButton.filters = [glowFilter]}"
-                 toolTip="{resourceManager.getString('BuilderStrings', 'moveDown')}">
-            <graphics:small_down_arrow width="20" height="10"/>
-        </s:Group>
-    </s:HGroup>
+    <s:Group id="moveUpButton"
+             alpha.atTop="0.35"
+             alpha.onlyItem="0.25"
+             buttonMode="true"
+             buttonMode.atTop="false"
+             buttonMode.onlyItem="false"
+             click="dispatchMoveItemUp(data)"
+             rollOut="{moveUpButton.filters = []}"
+             rollOver="{moveUpButton.filters = [glowFilter]}"
+             toolTip="{resourceManager.getString('BuilderStrings', 'moveUp')}">
+        <graphics:small_up_arrow width="20" height="10"/>
+    </s:Group>
+
+    <s:Group id="moveDownButton"
+             alpha.atBottom="0.35"
+             alpha.onlyItem="0.25"
+             buttonMode="true"
+             buttonMode.atBottom="false"
+             buttonMode.onlyItem="false"
+             click="dispatchMoveItemDown(data)"
+             rollOut="{moveDownButton.filters = []}"
+             rollOver="{moveDownButton.filters = [glowFilter]}"
+             toolTip="{resourceManager.getString('BuilderStrings', 'moveDown')}">
+        <graphics:small_down_arrow width="20" height="10"/>
+    </s:Group>
 </renderers:ModifiableGridItemRenderer>
