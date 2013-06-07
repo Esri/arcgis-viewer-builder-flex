@@ -59,21 +59,23 @@ public class FieldUtil
     {
         var numericFields:Array = [];
 
-        var isFieldNumeric:Boolean;
         for each (var field:Field in fields)
         {
-            isFieldNumeric = field.type == Field.TYPE_DOUBLE
-                || field.type == Field.TYPE_INTEGER
-                || field.type == Field.TYPE_SINGLE
-                || field.type == Field.TYPE_SMALL_INTEGER;
-
-            if (isFieldNumeric)
+            if (isFieldNumeric(field))
             {
                 numericFields.push(field);
             }
         }
 
         return numericFields;
+    }
+
+    public static function isFieldNumeric(field:Field):Boolean
+    {
+        return field.type == Field.TYPE_DOUBLE
+            || field.type == Field.TYPE_INTEGER
+            || field.type == Field.TYPE_SINGLE
+            || field.type == Field.TYPE_SMALL_INTEGER;
     }
 }
 }

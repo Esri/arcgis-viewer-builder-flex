@@ -1,0 +1,221 @@
+<?xml version="1.0"?>
+<!--//////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2016 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////-->
+<s:SkinnablePopUpContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                           xmlns:s="library://ns.adobe.com/flex/spark"
+                           xmlns:components="com.esri.builder.components.*"
+                           width="100%">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.layers.supportClasses.Field;
+            import com.esri.ags.portal.supportClasses.PopUpFieldFormat;
+            import com.esri.builder.supportClasses.FieldUtil;
+
+            import mx.managers.PopUpManager;
+
+            [Bindable]
+            private var originalFieldFormat:PopUpFieldFormat;
+
+            [Bindable]
+            private var _field:Field;
+
+            private var _dateFormat:String;
+
+            [Bindable]
+            public function get dateFormat():String
+            {
+                return _dateFormat ||= "";
+            }
+
+            public function set dateFormat(value:String):void
+            {
+                _dateFormat = value;
+            }
+
+            [Bindable]
+            private var useThousandsSeparator:Boolean;
+            [Bindable]
+            private var useUTC:Boolean;
+            [Bindable]
+            private var isPrecisionEnabled:Boolean = false;
+            [Bindable]
+            private var precision:int = -1;
+            [Bindable]
+            private var displayedPrecision:Number = 0;
+
+            public function get field():Field
+            {
+                return _field;
+            }
+
+            public function set field(value:Field):void
+            {
+                if (value)
+                {
+                    _field = value;
+                    if (FieldUtil.isFieldNumeric(_field))
+                    {
+                        currentState = "numericField";
+                    }
+                    else if (_field.type == Field.TYPE_DATE)
+                    {
+                        currentState = "dateField";
+                    }
+                }
+            }
+
+            public function overrideFieldFormat(fieldFormat:PopUpFieldFormat):void
+            {
+                originalFieldFormat = fieldFormat;
+
+                dateFormat = fieldFormat.dateFormat;
+                useUTC = fieldFormat.useUTC;
+                precision = fieldFormat.precision;
+                useThousandsSeparator = fieldFormat.useThousandsSeparator;
+
+                isPrecisionEnabled = (precision > -1);
+                displayedPrecision = isPrecisionEnabled ? precision : -1;
+            }
+
+            private function commitAndClose():void
+            {
+                var fieldFormat:PopUpFieldFormat = new PopUpFieldFormat();
+
+                fieldFormat.dateFormat = dateFormat;
+                fieldFormat.useUTC = useUTC;
+
+                fieldFormat.precision = precision;
+                fieldFormat.useThousandsSeparator = useThousandsSeparator;
+
+                close(true, { originalFieldFormat: originalFieldFormat, fieldFormat: fieldFormat });
+            }
+
+            override public function updatePopUpPosition():void
+            {
+                PopUpManager.centerPopUp(this);
+            }
+
+            private function updatePrecision():void
+            {
+                precision = isPrecisionEnabled ? displayedPrecision : -1;
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="numericField"/>
+        <s:State name="dateField"/>
+    </s:states>
+
+    <!--background-->
+    <s:Rect left="0" right="0" top="0" bottom="0">
+        <s:fill>
+            <s:SolidColor color="#FFFFFF"/>
+        </s:fill>
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:Rect height="25"
+            left="2" right="2" top="2">
+        <s:fill>
+            <s:LinearGradient rotation="90">
+                <s:GradientEntry alpha="1"
+                                 color="#FFFFFF"
+                                 ratio="0"/>
+                <s:GradientEntry alpha="1.0"
+                                 color="#CCCCCC"
+                                 ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Rect>
+
+    <s:Line left="0" right="0" top="26">
+        <s:stroke>
+            <s:SolidColorStroke caps="none"
+                                color="#000000"
+                                joints="miter"
+                                miterLimit="4"
+                                weight="2"/>
+        </s:stroke>
+    </s:Line>
+
+    <!--content-->
+    <s:Label left="10" top="9"
+             color="#000000"
+             fontSize="14"
+             fontWeight="bold"
+             text="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.fieldFormat.configureFieldFormat')}"
+             textAlign="center"
+             verticalAlign="middle"/>
+
+    <s:Form width="100%" top="20">
+        <s:layout>
+            <s:FormLayout gap="-10"/>
+        </s:layout>
+
+        <s:FormItem includeIn="dateField" label="{resourceManager.getString('BuilderStrings', 'time.dateFormat')}">
+            <components:DateFormatInput id="dateFieldInput" dateFormat="@{dateFormat}"/>
+        </s:FormItem>
+
+        <s:FormItem includeIn="dateField" label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.fieldFormat.useUTC')}">
+            <s:CheckBox id="useUTCInput" selected="@{useUTC}"/>
+        </s:FormItem>
+
+        <s:FormItem includeIn="numericField" label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.fieldFormat.precision')}">
+            <s:layout>
+                <s:HorizontalLayout verticalAlign="middle"/>
+            </s:layout>
+
+            <components:SliderToggleButton id="enablePrecisionInput"
+                                           change="updatePrecision()"
+                                           deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                           selected="@{isPrecisionEnabled}"
+                                           selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
+
+            <s:NumericStepper id="precisionInput"
+                              change="updatePrecision()"
+                              enabled="{isPrecisionEnabled}"
+                              maximum="100"
+                              minimum="0"
+                              stepSize="1"
+                              value="@{displayedPrecision}"/>
+        </s:FormItem>
+
+        <s:FormItem includeIn="numericField" label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.fieldFormat.useThousandsSeparator')}">
+            <s:CheckBox id="useThousandSeparatorInput" selected="@{useThousandsSeparator}"/>
+        </s:FormItem>
+
+        <s:FormItem>
+            <s:layout>
+                <s:HorizontalLayout horizontalAlign="center" verticalAlign="middle"/>
+            </s:layout>
+
+            <s:Button click="commitAndClose()"
+                      label="{resourceManager.getString('BuilderStrings', 'ok')}"
+                      skinClass="com.esri.builder.skins.BlueButtonSkin"/>
+
+            <s:Button click="close(false)"
+                      label="{resourceManager.getString('BuilderStrings', 'cancel')}"
+                      skinClass="com.esri.builder.skins.LinkButtonSkin"/>
+        </s:FormItem>
+    </s:Form>
+</s:SkinnablePopUpContainer>

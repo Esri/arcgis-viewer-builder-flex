@@ -17,7 +17,6 @@
 -->
 <renderers:ModifiableGridItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
                                       xmlns:s="library://ns.adobe.com/flex/spark"
-                                      xmlns:mx="library://ns.adobe.com/flex/mx"
                                       xmlns:renderers="com.esri.builder.renderers.*"
                                       xmlns:graphics="assets.graphics.*"
                                       clipAndEnableScrolling="true">
@@ -29,7 +28,7 @@
     </fx:Declarations>
 
     <renderers:layout>
-        <s:HorizontalLayout horizontalAlign="center"
+        <s:HorizontalLayout horizontalAlign="left"
                             paddingLeft="2"
                             paddingRight="2"
                             verticalAlign="middle"/>
@@ -41,9 +40,7 @@
              rollOut="{editButton.filters = []}"
              rollOver="{editButton.filters = [glowFilter]}"
              toolTip="{resourceManager.getString('BuilderStrings', 'edit')}">
-        <graphics:pencil width="20" height="20"
-                         horizontalCenter="0"
-                         verticalCenter="0"/>
+        <graphics:pencil width="20" height="20"/>
     </s:Group>
 
     <s:Group id="removeButton"
@@ -52,8 +49,6 @@
              rollOut="{removeButton.filters = []}"
              rollOver="{removeButton.filters = [glowFilter]}"
              toolTip="{resourceManager.getString('BuilderStrings', 'widgetsView.delete')}">
-        <graphics:red_x width="25" height="25"
-                        horizontalCenter="0"
-                        verticalCenter="0"/>
+        <graphics:red_x width="25" height="25"/>
     </s:Group>
 </renderers:ModifiableGridItemRenderer>

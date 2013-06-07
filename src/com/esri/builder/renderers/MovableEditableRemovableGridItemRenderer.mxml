@@ -18,7 +18,6 @@
 -->
 <renderers:ModifiableGridItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
                                       xmlns:s="library://ns.adobe.com/flex/spark"
-                                      xmlns:mx="library://ns.adobe.com/flex/mx"
                                       xmlns:renderers="com.esri.builder.renderers.*"
                                       xmlns:graphics="assets.graphics.*"
                                       clipAndEnableScrolling="true">
@@ -97,16 +96,19 @@
     </renderers:states>
 
     <renderers:layout>
-        <s:HorizontalLayout horizontalAlign="right"
+        <s:HorizontalLayout horizontalAlign="left"
                             paddingLeft="2"
                             paddingRight="2"
                             verticalAlign="middle"/>
     </renderers:layout>
 
     <s:Group id="moveUpButton"
+             alpha.atTop="0.35"
+             alpha.onlyItem="0.25"
              buttonMode="true"
+             buttonMode.atTop="false"
+             buttonMode.onlyItem="false"
              click="dispatchMoveItemUp(data)"
-             includeIn="atMiddle,atBottom"
              rollOut="{moveUpButton.filters = []}"
              rollOver="{moveUpButton.filters = [glowFilter]}"
              toolTip="{resourceManager.getString('BuilderStrings', 'moveUp')}">
@@ -114,9 +116,12 @@
     </s:Group>
 
     <s:Group id="moveDownButton"
+             alpha.atBottom="0.35"
+             alpha.onlyItem="0.25"
              buttonMode="true"
+             buttonMode.atBottom="false"
+             buttonMode.onlyItem="false"
              click="dispatchMoveItemDown(data)"
-             includeIn="atMiddle,atTop"
              rollOut="{moveDownButton.filters = []}"
              rollOver="{moveDownButton.filters = [glowFilter]}"
              toolTip="{resourceManager.getString('BuilderStrings', 'moveDown')}">
@@ -129,9 +134,7 @@
              rollOut="{editButton.filters = []}"
              rollOver="{editButton.filters = [glowFilter]}"
              toolTip="{resourceManager.getString('BuilderStrings', 'edit')}">
-        <graphics:pencil width="20" height="20"
-                         horizontalCenter="0"
-                         verticalCenter="0"/>
+        <graphics:pencil width="20" height="20"/>
     </s:Group>
 
     <s:Group id="deleteButton"
