@@ -30,14 +30,12 @@
             import com.esri.ags.tasks.JSONTask;
             import com.esri.builder.model.ConfigLayer;
             import com.esri.builder.model.Model;
-            import com.esri.builder.supportClasses.LabelUtil;
             import com.esri.builder.views.BuilderAlert;
 
             import modules.IWidgetModel;
 
             import mx.collections.ArrayList;
             import mx.controls.Alert;
-            import mx.events.FlexEvent;
             import mx.logging.ILogger;
             import mx.logging.Log;
             import mx.rpc.AsyncResponder;
@@ -51,9 +49,6 @@
             [Bindable]
             private var timeStopsUnitOptions:ArrayList = new ArrayList();
 
-            [Bindable]
-            private var availableDateFormats:ArrayList = new ArrayList();
-
             private function init():void
             {
                 timeStopsUnitOptions.addItem(new TimeStopsUnit(TimeModel.YEARS, resourceManager.getString('BuilderStrings', 'time.years')));
@@ -63,9 +58,6 @@
                 timeStopsUnitOptions.addItem(new TimeStopsUnit(TimeModel.MINUTES, resourceManager.getString('BuilderStrings', 'time.minutes')));
                 timeStopsUnitOptions.addItem(new TimeStopsUnit(TimeModel.SECONDS, resourceManager.getString('BuilderStrings', 'time.seconds')));
 
-                availableDateFormats.source = getUniqueDateFormats();
-
-                preselectDateFormat();
                 preselectTimeStopUnit();
                 preselectSlider();
 
@@ -108,29 +100,6 @@
             public function cancel():void
             {
                 // NOOP
-            }
-
-            private function dateFormatLabelFunction(dateFormat:String):String
-            {
-                //TODO: refactor checking of custom label
-                if (dateFormat == resourceManager.getString('BuilderStrings', 'time.custom'))
-                {
-                    return resourceManager.getString('BuilderStrings', 'time.custom');
-                }
-                else
-                {
-                    dateFormatter.formatString = dateFormat;
-                    return dateFormatter.format(sampleDate);
-                }
-            }
-
-            private function updateDateFormat():void
-            {
-                const selectedDateFormat:String = dateFormatSelection.selectedItem;
-                if (selectedDateFormat != resourceManager.getString('BuilderStrings', 'time.custom'))
-                {
-                    model.dateFormat = selectedDateFormat;
-                }
             }
 
             private function updateTimeExtentOptions():void
@@ -177,27 +146,6 @@
             private function updateTimeStopsUnit():void
             {
                 model.timeStopsUnits = timeStopsUnitSelection.selectedItem.unit;
-            }
-
-            private function preselectDateFormat():void
-            {
-                const dateFormat:String = model.dateFormat;
-                const dateFormatOptions:Array = dateFormatSelection.dataProvider.toArray();
-                var isDateFormatCustom:Boolean = true;
-                for each (var dateFormatOption:String in dateFormatOptions)
-                {
-                    if (dateFormatOption == dateFormat)
-                    {
-                        dateFormatSelection.selectedItem = dateFormat;
-                        isDateFormatCustom = false;
-                        break;
-                    }
-                }
-
-                if (isDateFormatCustom)
-                {
-                    dateFormatSelection.selectedIndex = dateFormatSelection.dataProvider.length - 1;
-                }
             }
 
             private function preselectTimeStopUnit():void
@@ -298,53 +246,16 @@
                 timeAwareLayersList.source = timeAwareLayers;
             }
 
-            protected function dateFormatSelection_creationCompleteHandler(event:FlexEvent):void
-            {
-                dateFormatSelection.typicalItem = LabelUtil.findLongestLabelItem(
-                    dateFormatSelection.dataProvider.toArray(),
-                    null,
-                    dateFormatLabelFunction);
-            }
-
             private function dateFieldLabelFunction(date:Date):String
             {
                 dateFormatter.formatString = resourceManager.getString('BuilderStrings', 'time.shortDate');
                 return dateFormatter.format(date);
-            }
-
-            private function getUniqueDateFormats():Array
-            {
-                var dateFormats:Array = [ resourceManager.getString('BuilderStrings', 'time.dayShortMonthYear'),
-                                          resourceManager.getString('BuilderStrings', 'time.longDate'),
-                                          resourceManager.getString('BuilderStrings', 'time.longMonthDayYear'),
-                                          resourceManager.getString('BuilderStrings', 'time.longMonthYear'),
-                                          resourceManager.getString('BuilderStrings', 'time.shortDate'),
-                                          resourceManager.getString('BuilderStrings', 'time.shortDateLongTime'),
-                                          resourceManager.getString('BuilderStrings', 'time.shortDateLongTime24'),
-                                          resourceManager.getString('BuilderStrings', 'time.shortDateShortTime'),
-                                          resourceManager.getString('BuilderStrings', 'time.shortDateShortTime24'),
-                                          resourceManager.getString('BuilderStrings', 'time.shortMonthYear'),
-                                          resourceManager.getString('BuilderStrings', 'time.year'),
-                                          resourceManager.getString('BuilderStrings', 'time.custom')];
-
-                var uniqueDateFormats:Array = [];
-
-                for each (var dateFormat:String in dateFormats)
-                {
-                    if (uniqueDateFormats.indexOf(dateFormat) == -1)
-                    {
-                        uniqueDateFormats.push(dateFormat);
-                    }
-                }
-
-                return uniqueDateFormats;
             }
         ]]>
     </fx:Script>
 
     <fx:Declarations>
         <mx:DateFormatter id="dateFormatter"/>
-        <fx:Date id="sampleDate"/>
 
         <s:RadioButtonGroup id="sliderOptions" change="updateSliderOptions()"/>
         <s:RadioButtonGroup id="timeExtentOptions" change="updateTimeExtentOptions()"/>
@@ -383,20 +294,10 @@
              baseline="row1:0"
              text="{resourceManager.getString('BuilderStrings', 'time.dateFormat')}"/>
 
-    <s:DropDownList id="dateFormatSelection"
-                    left="column2:0"
-                    baseline="row1:0"
-                    change="updateDateFormat()"
-                    dataProvider="{availableDateFormats}"
-                    initialize="dateFormatSelection_creationCompleteHandler(event)"
-                    labelFunction="dateFormatLabelFunction"
-                    requireSelection="true"/>
-
-    <s:TextInput left="{dateFormatSelection.x + dateFormatSelection.width + 10}" right="column2:0"
-                 baseline="row1:0"
-                 includeInLayout="{dateFormatSelection.selectedIndex == dateFormatSelection.dataProvider.length - 1}"
-                 text="@{model.dateFormat}"
-                 visible="{dateFormatSelection.selectedIndex == dateFormatSelection.dataProvider.length - 1}"/>
+    <components:DateFormatInput id="dateFormatSelection"
+                                left="column2:0" right="column2:0"
+                                baseline="row1:0"
+                                dateFormat="@{model.dateFormat}"/>
 
     <s:Label left="column1:10" right="column2:10"
              baseline="row2:5"
