@@ -25,6 +25,8 @@
                            stateChangeComplete="updatePopUpPosition()">
     <fx:Script>
         <![CDATA[
+            import com.esri.ags.layers.supportClasses.EditFieldsInfo;
+            import com.esri.ags.layers.supportClasses.FeatureLayerDetails;
             import com.esri.ags.layers.supportClasses.Field;
             import com.esri.ags.layers.supportClasses.LayerDetails;
             import com.esri.builder.supportClasses.FieldUtil;
@@ -117,17 +119,23 @@
                     return;
                 }
 
+                var isEditorTrackingField:Boolean;
+                var editorTrackingFieldNames:Array = getEditorTrackingFieldNames(layerDetails);
+
                 var fields:Array = [];
                 var filteredFields:Array;
                 filteredFields = FieldUtil.getValidFields(layerDetails.fields);
                 for each (var field:Field in filteredFields)
                 {
+                    isEditorTrackingField = editorTrackingFieldNames.indexOf(field.name) > -1;
+
                     fields.push({
                                     id: field.name,
                                     name: field.alias,
                                     tooltip: "",
                                     required: !field.nullable,
                                     nullable: field.nullable,
+                                    isEditorTrackingField: isEditorTrackingField,
                                     selected: true
                                 });
                 }
@@ -150,7 +158,7 @@
                                 fieldItem.name = fieldSettings.alias;
                                 fieldItem.tooltip = fieldSettings.tooltip;
 
-                                if (fieldItem.nullable)
+                                if (fieldItem.nullable && !fieldItem.isEditorTrackingField)
                                 {
                                     fieldItem.required = fieldSettings.required;
                                 }
@@ -222,6 +230,29 @@
                 }
 
                 return allFieldSettings;
+            }
+
+            private function getEditorTrackingFieldNames(layerDetails:LayerDetails):Array
+            {
+                var editorTrackingFieldNames:Array = [];
+
+                var editFieldsInfo:EditFieldsInfo;
+
+                var featureLayerDetails:FeatureLayerDetails = layerDetails as FeatureLayerDetails;
+                if (featureLayerDetails)
+                {
+                    editFieldsInfo = featureLayerDetails.editFieldsInfo;
+                }
+
+                if (editFieldsInfo)
+                {
+                    editorTrackingFieldNames.push(editFieldsInfo.creatorField);
+                    editorTrackingFieldNames.push(editFieldsInfo.creationDateField);
+                    editorTrackingFieldNames.push(editFieldsInfo.editorField);
+                    editorTrackingFieldNames.push(editFieldsInfo.editDateField);
+                }
+
+                return editorTrackingFieldNames;
             }
         ]]>
     </fx:Script>
@@ -328,14 +359,28 @@
                                         <fx:Script>
                                             <![CDATA[
                                                 [Bindable]
+                                                private var isFieldVisible:Boolean;
+                                                [Bindable]
                                                 private var isRequiredEditable:Boolean;
+                                                [Bindable]
+                                                private var isEditorTrackingField:Boolean;
 
                                                 override public function prepare(hasBeenRecycled:Boolean):void
                                                 {
                                                     if (data)
                                                     {
+                                                        isEditorTrackingField = data["isEditorTrackingField"];
+                                                        isFieldVisible = data["selected"];
                                                         isRequiredEditable = data["nullable"];
-                                                        checkBox.selected = isRequiredEditable ? data[column.dataField] : true;
+
+                                                        if (isFieldVisible)
+                                                        {
+                                                            checkBox.selected = isRequiredEditable ? data[column.dataField] : true;
+                                                        }
+                                                        else
+                                                        {
+                                                            checkBox.selected = false;
+                                                        }
                                                     }
                                                 }
 
@@ -350,9 +395,10 @@
 
                                         <s:CheckBox id="checkBox"
                                                     change="updateDataField()"
-                                                    enabled="{isRequiredEditable}"
+                                                    enabled="{isRequiredEditable &amp;&amp; isFieldVisible}"
                                                     horizontalCenter="0"
-                                                    verticalCenter="0"/>
+                                                    verticalCenter="0"
+                                                    visible="{!isEditorTrackingField}"/>
                                     </s:GridItemRenderer>
                                 </fx:Component>
                             </s:itemRenderer>
