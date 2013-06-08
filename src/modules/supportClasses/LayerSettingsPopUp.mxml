@@ -150,7 +150,7 @@
                                 fieldItem.name = fieldSettings.alias;
                                 fieldItem.tooltip = fieldSettings.tooltip;
 
-                                if (!fieldItem.nullable)
+                                if (fieldItem.nullable)
                                 {
                                     fieldItem.required = fieldSettings.required;
                                 }
