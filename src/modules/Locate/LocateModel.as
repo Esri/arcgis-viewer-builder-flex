@@ -25,7 +25,7 @@ import modules.IWidgetModel;
 internal final class LocateModel implements IWidgetModel
 {
     private const DEF_LOCATOR:String = 'http://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer';
-    private const DEF_MIN_SCRORE:Number = 40;
+    private const DEF_MIN_SCORE:Number = 40;
     private const DEF_ZOOM_SCALE:String = '10000';
 
     private var _locator:String = Model.instance.geocodeURL || DEF_LOCATOR;
@@ -41,7 +41,7 @@ internal final class LocateModel implements IWidgetModel
     }
 
     public var useSearchExtent:Boolean = true;
-    public var minScore:Number = DEF_MIN_SCRORE;
+    public var minScore:Number = DEF_MIN_SCORE;
     public var zoomScale:String = DEF_ZOOM_SCALE;
     public var useProxy:Boolean;
 
@@ -52,7 +52,7 @@ internal final class LocateModel implements IWidgetModel
             locator = doc.locator;
         }
         useSearchExtent = (doc.usesearchextent[0] != 'false');
-        minScore = doc.minscore || DEF_MIN_SCRORE;
+        minScore = doc.minscore || DEF_MIN_SCORE;
         zoomScale = doc.zoomscale || DEF_ZOOM_SCALE;
         useProxy = doc.useproxy == 'true';
     }

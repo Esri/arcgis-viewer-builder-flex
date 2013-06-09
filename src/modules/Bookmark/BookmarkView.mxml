@@ -166,7 +166,7 @@
                         bookmarksGraphicsLayer.add(bookmarkExtentGraphic);
                     }
                 }
-                // add layers on the map
+                // Add layers on the map
                 if (Model.instance.webmap)
                 {
                     webMapUtil.createMapById(Model.instance.config.configMap.itemId);
@@ -319,10 +319,10 @@
                     finishAddBookmark(lastBookmark);
                 }
 
-                if (!isAddingBookmark) // dont allow adding a bookmark if previos one is not added
+                if (!isAddingBookmark) // Don't allow adding a bookmark if previous one is not added
                 {
                     isAddingBookmark = true;
-                    // get the current map extent and add it as a bookmark
+                    // Get the current map extent and add it as a bookmark
                     var bookmark:Bookmark = new Bookmark();
                     bookmark.isNew = true;
 

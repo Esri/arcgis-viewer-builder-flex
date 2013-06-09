@@ -124,7 +124,7 @@ public final class AddConfigLayerController
     {
         if (Log.isDebug())
         {
-            LOG.debug("Fetching additional feature layer proeprties");
+            LOG.debug("Fetching additional feature layer properties");
         }
 
         const featureLayer:FeatureLayer = configLayer.createLayer() as FeatureLayer;

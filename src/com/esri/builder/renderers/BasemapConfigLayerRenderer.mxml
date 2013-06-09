@@ -111,7 +111,7 @@
                             case ConfigLayer.WMTS:
                             case ConfigLayer.WEB_TILED:
                             {
-                                // dont wait for layer load
+                                // Don't wait for layer load
                                 if (!configPopUpOpen)
                                 {
                                     showLayerConfigPopUp(layer);
@@ -261,12 +261,12 @@
             <s:Label alpha="0.5"
                      text="{configLayer.prettyType}"
                      text.selected="{resourceManager.getString('BuilderStrings',
-                                                             'mapsView.basemapsView.defaultBasemap', 
+                                                             'mapsView.basemapsView.defaultBasemap',
                                                              [ configLayer.prettyType ])}"
                      textAlign="left"/>
         </s:VGroup>
 
-        <s:Group id="editButton" toolTip="{isLayerTypeSupported ? 
+        <s:Group id="editButton" toolTip="{isLayerTypeSupported ?
                                  resourceManager.getString('BuilderStrings', 'mapsView.editLayerTooltip')
                                  : resourceManager.getString('BuilderStrings', 'unsupportedLayer')}">
             <s:Group buttonMode="true"
