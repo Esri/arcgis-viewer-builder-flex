@@ -226,7 +226,7 @@
                             {
                                 if (Log.isDebug())
                                 {
-                                    LOG.debug("Sign in aborded for layer ", layer.title);
+                                    LOG.debug("Sign in aborted for layer ", layer.title);
                                 }
                             }
                         }
@@ -300,7 +300,7 @@
                                         {
                                             if (Log.isDebug())
                                             {
-                                                LOG.debug("Sign in aborded for layer ", layer.title);
+                                                LOG.debug("Sign in aborted for layer ", layer.title);
                                             }
                                         }
                                     }

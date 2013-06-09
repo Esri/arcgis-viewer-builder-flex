@@ -112,7 +112,7 @@ public class MachineDisplayName extends EventDispatcher
 
     //--------------------------------------------------------------------------
     //
-    //  Variables 
+    //  Variables
     //
     //--------------------------------------------------------------------------
 
@@ -123,7 +123,7 @@ public class MachineDisplayName extends EventDispatcher
 
     //--------------------------------------------------------------------------
     //
-    //  Properties 
+    //  Properties
     //
     //--------------------------------------------------------------------------
 
@@ -177,7 +177,7 @@ public class MachineDisplayName extends EventDispatcher
 
     //--------------------------------------------------------------------------
     //
-    //  Overriden Public Methods
+    //  Overridden Public Methods
     //
     //--------------------------------------------------------------------------
 

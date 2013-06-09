@@ -42,7 +42,7 @@
             {
                 portal = PortalModel.getInstance().portal;
                 currentState = "normal";
-                AppEvent.addListener(AppEvent.PORTAL_OPEN_GROUP, function portalOpenGroupHanlder(event:AppEvent):void {
+                AppEvent.addListener(AppEvent.PORTAL_OPEN_GROUP, function portalOpenGroupHandler(event:AppEvent):void {
                     currentState = "group";
                 });
                 if (groupsList && groupsList.selectedIndex != -1)

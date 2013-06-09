@@ -39,8 +39,8 @@
 
     <!-- host component -->
     <fx:Metadata>
-        <![CDATA[ 
-        /** 
+        <![CDATA[
+        /**
          * @copy spark.skins.spark.ApplicationSkin#hostComponent
          */
         [HostComponent("spark.components.DropDownList")]
@@ -166,7 +166,7 @@
                     left="1" right="1" top="1" bottom="1">
                 <s:fill>
                     <!---
-                        The color of the drop down's background fill.
+                        The color of the drop-down's background fill.
                         The default color is 0xFFFFFF.
                     -->
                     <s:SolidColor id="bgFill" color="0xFFFFFF"/>

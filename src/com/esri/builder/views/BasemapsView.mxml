@@ -294,7 +294,7 @@
                             {
                                 if (Log.isDebug())
                                 {
-                                    LOG.debug("Sign in aborded for basemap ", basemap.title);
+                                    LOG.debug("Sign in aborted for basemap ", basemap.title);
                                 }
                             }
                         }
@@ -364,7 +364,7 @@
                                         {
                                             if (Log.isDebug())
                                             {
-                                                LOG.debug("Sign in aborded for basemap ", basemap.title);
+                                                LOG.debug("Sign in aborted for basemap ", basemap.title);
                                             }
                                         }
                                     }
@@ -603,7 +603,7 @@
                                    listTitle="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsView.listTitle')}"
                                    noLayerText="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsView.noBasemapSelected')}"/>
 
-        <s:Group toolTip="{PortalModel.getInstance().portal.loaded ? 
+        <s:Group toolTip="{PortalModel.getInstance().portal.loaded ?
                  '' : resourceManager.getString('BuilderStrings', 'agsPortal.requiresPortal')}">
             <s:CheckBox id="addArcGISBasemapsCheckBox"
                         change="updateAddArcGISBasemaps()"

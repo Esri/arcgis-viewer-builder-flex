@@ -55,7 +55,7 @@ public class UpgradeExistingCustomWidgetsProcess extends ImportWidgetProcess
         }
         else
         {
-            dispatchSuccess("No need to upgrae existing custom widgets");
+            dispatchSuccess("No need to upgrade existing custom widgets");
         }
     }
 
