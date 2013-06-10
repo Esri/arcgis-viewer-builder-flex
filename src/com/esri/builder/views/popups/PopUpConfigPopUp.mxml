@@ -209,9 +209,9 @@
                 </s:ButtonBar>
 
                 <supportClasses:KeyValueEditor width="100%" height="100%"
+                                               fields="{fieldList}"
                                                includeIn="keyValueDisplay"
                                                maxHeight="260"
-                                               fields="{fieldList}"
                                                popUpFieldInfos="{popUpConfig.fieldInfos}"/>
 
                 <!--Need ID for binding since we're using states-->

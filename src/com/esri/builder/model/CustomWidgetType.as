@@ -15,6 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 package com.esri.builder.model
 {
+
 import modules.IBuilderModule;
 import modules.IWidgetModel;
 
