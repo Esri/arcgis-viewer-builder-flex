@@ -44,14 +44,14 @@ public class CleanUpProcess extends Process
             {
                 fileOrDirectory.deleteFile();
             }
-            dispatchSuccess("Cleaned up finished!");
+            dispatchSuccess("Cleanup finished!");
         }
         catch (ioError:IOError)
         {
             //Directory not found not critical error
             if (ioError.errorID == 3003)
             {
-                dispatchSuccess("Cleaned up finished!");
+                dispatchSuccess("Cleanup finished!");
             }
             else
             {

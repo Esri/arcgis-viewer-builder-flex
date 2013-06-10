@@ -58,7 +58,7 @@
             public var isWebMap:Boolean;
 
             private var map:Map;
-            private var extentInited:Boolean;
+            private var extentInitialized:Boolean;
             private var unitedOpLayersExtent:Extent;
             private var totalOpLayersToUnite:int;
 
@@ -253,9 +253,9 @@
             private function map_extentChangeHandler(event:ExtentEvent):void
             {
                 Model.instance.config.configMap.initExtent = event.extent;
-                if (!extentInited)
+                if (!extentInitialized)
                 {
-                    extentInited = true;
+                    extentInitialized = true;
                 }
                 else
                 {

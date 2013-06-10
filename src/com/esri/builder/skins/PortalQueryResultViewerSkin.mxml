@@ -34,7 +34,7 @@
     </s:states>
 
     <!-- SkinParts
-    name=pager, type=com.esri.buildermponents.PortalQueryResultPager, required=false
+    name=pager, type=com.esri.builder.components.PortalQueryResultPager, required=false
     name=resultsList, type=spark.components.List, required=true
     -->
 
