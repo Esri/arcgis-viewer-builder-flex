@@ -28,8 +28,16 @@
         ]]>
     </fx:Script>
 
+    <s:Path id="anchor"
+            width="12"
+            data="M 11.91 13.71 L 0.19 6.95 11.91 0.19 Z ">
+        <s:fill>
+            <s:SolidColor/>
+        </s:fill>
+    </s:Path>
+
     <!--border + background-->
-    <s:Rect left="12" right="0" top="0" bottom="0">
+    <s:Rect left="0" right="0" top="0" bottom="0">
         <s:fill>
             <s:SolidColor color="#FFFFFF"/>
         </s:fill>
@@ -44,7 +52,7 @@
     </s:Rect>
 
     <!--content-->
-    <s:VGroup left="12" right="0" top="0" bottom="0"
+    <s:VGroup left="0" right="0" top="0" bottom="0"
               gap="0">
         <s:Group width="100%" height="100%">
             <!--header background-->
@@ -69,7 +77,7 @@
                         paddingRight="6"
                         paddingTop="6"
                         text="{title}"
-                        textAlign="center"
+                        textAlign="left"
                         verticalAlign="middle"/>
 
             <!--divider-->
@@ -94,20 +102,4 @@
                     tabStops="S0 S50 S100 S150"
                     text="{content}"/>
     </s:VGroup>
-
-    <!--arrow-->
-    <s:Path width="12.72"
-            left="0" top="7.24"
-            data="M 11.91 13.71 L 0.19 6.95 11.91 0.19 Z ">
-        <s:fill>
-            <s:LinearGradient rotation="0">
-                <s:GradientEntry alpha="1.0"
-                                 color="#999999"
-                                 ratio="0"/>
-                <s:GradientEntry alpha="1.0"
-                                 color="#000000"
-                                 ratio="1"/>
-            </s:LinearGradient>
-        </s:fill>
-    </s:Path>
 </s:Group>
