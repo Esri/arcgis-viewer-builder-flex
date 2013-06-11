@@ -120,7 +120,7 @@ public class ConfigMap implements IConstraints
         configMap.lods = decodeXMLLODs(mapXML.lods.lod);
         configMap.basemaps.importLayers(decodeXMLLayers(mapXML.basemaps.layer));
         configMap.operationalLayers.importLayers(decodeXMLLayers(mapXML.operationallayers.layer));
-        configMap.addArcGISBasemaps = (mapXML.@addarcgisbasemaps == 'true');
+        configMap.addArcGISBasemaps = PortalModel.getInstance().portalURL && (mapXML.@addarcgisbasemaps == 'true');
         return configMap;
     }
 
