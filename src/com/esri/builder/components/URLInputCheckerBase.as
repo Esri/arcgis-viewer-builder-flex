@@ -16,6 +16,8 @@
 package com.esri.builder.components
 {
 
+import com.esri.builder.supportClasses.URLUtil;
+
 import flash.events.Event;
 import flash.events.TimerEvent;
 import flash.utils.Timer;
@@ -37,9 +39,6 @@ public class URLInputCheckerBase extends TextInput
 {
     private const DEFAULT_VALIDATION_DELAY_IN_SEC:Number = 0.8;
     private const DEFAULT_REQUEST_TIMEOUT_IN_SEC:Number = 5;
-
-    private const SIMPLE_URL_EXPR:RegExp =
-        /^ (?: f|ht)tps? :\/\/ .+ $/ix;
 
     private var validationTimer:Timer;
 
@@ -219,7 +218,7 @@ public class URLInputCheckerBase extends TextInput
 
     private function validateURL():void
     {
-        if (!isValidURL(url))
+        if (!URLUtil.isValidURL(url))
         {
             isURLValidationPending = false;
             displayInvalidURL();
@@ -241,11 +240,6 @@ public class URLInputCheckerBase extends TextInput
             removeURLCheckerListeners()
             displayInvalidURL();
         }
-    }
-
-    private function isValidURL(url:String):Boolean
-    {
-        return SIMPLE_URL_EXPR.test(url);
     }
 
     protected function displayInvalidURL():void

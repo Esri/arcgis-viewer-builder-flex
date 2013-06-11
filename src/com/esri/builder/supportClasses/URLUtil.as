@@ -38,5 +38,11 @@ public class URLUtil
     {
         return url.charAt(url.length - 1) == "/" ? url : url + "/";
     }
+
+    public static function isValidURL(url:String):Boolean
+    {
+        const SIMPLE_URL_EXPR:RegExp = /^ (?: f|ht)tps? :\/\/ .+ $/ix;
+        return SIMPLE_URL_EXPR.test(url);
+    }
 }
 }
