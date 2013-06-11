@@ -8,21 +8,21 @@ This is the source code for the ArcGIS Viewer for Flex Application Builder (a.k.
 ## Overview
 
 The ArcGIS Viewer for Flex Application Builder enables quick and easy creation of new web mapping applications, as well as view and modify existing web applications. It is designed to make the process seamless without requiring programming or configuration file editing.
-The application builder is targeted to users who intend to create custom web mapping applications through a WYSIWYG look and feel. It is comes packaged as an Adobe AIR file that includes a what-you-see-is-what-you-get (WYSIWYG) interface.
-The application builder has a simple three-stage process where you define the data content, functionality, and appearance of a web mapping application. It's designed to help novice users learn about the different ArcGIS Viewer configuration properties, as well as create and deploy new web mapping applications effortlessly.
+The application builder is targeted to users who intend to create custom web mapping applications through a WYSIWYG look and feel. It is an Adobe AIR application that includes a what-you-see-is-what-you-get (WYSIWYG) interface.
+The application builder has a simple three-stage process where you define the data content, functionality, and appearance of a web mapping application. It is designed to help novice users learn about the different ArcGIS Viewer configuration properties, as well as create and deploy new web mapping applications effortlessly.
 
 ## Details
 
-This section will provide some insight into who may be interested in using the Application Builder source code.  A smaller percentage of developers will actually be interested taking the additional steps to deploy a custom Application Builder.  For the majority of users the pre-compiled Application Builder will meet their needs.  This is an **advanced workflow**, and will require additional steps to configure.  Make sure you have considered the pre-compiled version of Application Builder before investing the time to compile it yourself.
+The pre-compiled Application Builder should suffice for the vast majority of users.  A smaller percentage of developers might be interested in taking the additional steps to deploy a custom Application Builder.
 
 #### Reasons a developer might want to pursue this option:
 
-* You would like to deliver a custom user interface (CustomModule) for configuring a custom widget instead of the default xml configuration file.
-* You would like to embed your own custom widgets inside of Application Builder, before deploying the Application Builder for your own organization.
-* You want to deploy a custom version of Application Builder within your own organization.
-* You would like to support a custom locale in Application Builder.
-* You would like to brand the Viewer and Application Builder for your own organization.
-* You would like to compile the latest version of Application Builder from GitHub.
+* To deliver a custom user interface (CustomModule) for configuring a custom widget instead of the default xml configuration file.
+* To embed your own custom widgets inside of Application Builder, before deploying the Application Builder for your own organization.
+* To deploy a custom version of Application Builder within your own organization.
+* To support a custom locale in Application Builder.
+* To brand the Viewer and Application Builder for your own organization.
+* To compile the latest version of Application Builder from GitHub.
 
 If you answered yes to one or more of the options above, then proceed to the [instructions on the wiki for compiling the Application Builder source code][wp1].
 
