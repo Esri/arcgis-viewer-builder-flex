@@ -26,7 +26,6 @@ The pre-compiled Application Builder should suffice for the vast majority of use
 
 If you answered yes to one or more of the options above, then proceed to the [instructions on the wiki for compiling the Application Builder source code][wp1].
 
-
 ## Requirements
 
 * Knowledge of Flex development.
@@ -34,7 +33,7 @@ If you answered yes to one or more of the options above, then proceed to the [in
 * Experience with the [ArcGIS API for Flex](http://links.esri.com/flex) would help.
 
 ## Resources
-
+    
 * [ArcGIS Viewer for Flex Resource Center](http://links.esri.com/flexviewer)
 * [ArcGIS API for Flex Resource Center](http://links.esri.com/flex)
 * [Flex Viewer Application Builder License agreement](http://www.apache.org/licenses/LICENSE-2.0.html)
