@@ -37,14 +37,11 @@
 
             private function updateLayoutDirection():void
             {
-                var currentLocale:String = getStyle("locale");
-                var currentLayoutDirection:String = getStyle("layoutDirection");
-
                 //question mark is only mirrored (RTL) for Arabic locale
                 //see http://en.wikipedia.org/wiki/Hebrew_punctuation#Period.2C_question_mark.2C_exclamation_mark.2C_comma
                 var targetLayoutDirection:String = (getStyle("locale") == "ar") ? LayoutDirection.RTL : LayoutDirection.LTR;
 
-                if (currentLayoutDirection != targetLayoutDirection)
+                if (getStyle("layoutDirection") != targetLayoutDirection)
                 {
                     setStyle("layoutDirection", targetLayoutDirection);
                 }
