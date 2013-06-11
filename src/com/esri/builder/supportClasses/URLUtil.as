@@ -36,7 +36,20 @@ public class URLUtil
 
     public static function ensureTrailingForwardSlash(url:String):String
     {
-        return url.charAt(url.length - 1) == "/" ? url : url + "/";
+        if (isValidURL(url))
+        {
+            return url.charAt(url.length - 1) == "/" ? url : url + "/";
+        }
+        else
+        {
+            return url;
+        }
+    }
+
+    public static function isValidURL(url:String):Boolean
+    {
+        const SIMPLE_URL_EXPR:RegExp = /^ (?: f|ht)tps? :\/\/ .+ $/ix;
+        return SIMPLE_URL_EXPR.test(url);
     }
 }
 }
