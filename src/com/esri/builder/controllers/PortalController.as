@@ -129,6 +129,7 @@ public class PortalController
             LOG.debug("Unloading Portal");
         }
 
+        portal.url = null;
         portal.unload();
     }
 
