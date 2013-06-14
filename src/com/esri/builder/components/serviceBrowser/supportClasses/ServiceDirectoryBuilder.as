@@ -192,7 +192,8 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
         {
             isServiceSecured = (serverInfo.currentVersion >= 10.01
                 && serverInfo.authInfo
-                && serverInfo.authInfo.isTokenBasedSecurity);
+                && serverInfo.authInfo.isTokenBasedSecurity
+                && (serverInfo.authInfo.tokenServicesUrl || serverInfo.authInfo.tokenServiceUrl));
 
             if (isServiceSecured)
             {
@@ -207,7 +208,8 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
                 }
 
                 const tokenServiceCrossDomainRequest:HTTPService = new HTTPService();
-                tokenServiceCrossDomainRequest.url = extractCrossDomainPolicyFileURL(serverInfo.authInfo.tokenServicesUrl);
+                const tokenServiceURL:String = serverInfo.authInfo.tokenServicesUrl || serverInfo.authInfo.tokenServiceUrl;
+                tokenServiceCrossDomainRequest.url = extractCrossDomainPolicyFileURL(tokenServiceURL);
                 tokenServiceCrossDomainRequest.resultFormat = HTTPService.RESULT_FORMAT_E4X;
                 tokenServiceCrossDomainRequest.addEventListener(ResultEvent.RESULT, tokenServiceSecurityRequest_resultHandler);
                 tokenServiceCrossDomainRequest.addEventListener(FaultEvent.FAULT, tokenServiceSecurityRequest_faultHandler);
