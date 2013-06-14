@@ -266,7 +266,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
 
     private function extractServiceInfoURL(url:String):String
     {
-        return url.replace('/rest/services', '/rest/info');
+        return url.replace(/\/rest\/services.*/, '/rest/info');
     }
 
     private function startBuildingDirectory():void
