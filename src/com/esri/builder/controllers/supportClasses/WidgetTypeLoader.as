@@ -88,27 +88,6 @@ public class WidgetTypeLoader extends EventDispatcher
         }
     }
 
-    private function loadConfigModule():void
-    {
-        if (Log.isInfo())
-        {
-            LOG.info('Loading XML module: {0}', config.url);
-        }
-
-        var moduleConfig:XML = readModuleConfig(config);
-        if (moduleConfig)
-        {
-            var customWidgetType:CustomWidgetType = parseCustomWidgetType(moduleConfig);
-            if (customWidgetType)
-            {
-                dispatchComplete(customWidgetType);
-                return;
-            }
-        }
-
-        dispatchError();
-    }
-
     private function loadModule():void
     {
         if (Log.isInfo())
@@ -149,17 +128,6 @@ public class WidgetTypeLoader extends EventDispatcher
         }
     }
 
-    private function moduleInfo_progressHandler(event:ModuleEvent):void
-    {
-        if (event.bytesLoaded == event.bytesTotal)
-        {
-            var moduleInfo:IModuleInfo = event.currentTarget as IModuleInfo;
-            moduleInfo.removeEventListener(ModuleEvent.PROGRESS, moduleInfo_progressHandler);
-            moduleInfo.removeEventListener(ModuleEvent.ERROR, moduleInfo_errorHandler);
-            FlexGlobals.topLevelApplication.callLater(processModuleInfo, [ moduleInfo ]);
-        }
-    }
-
     private function moduleInfo_unloadHandler(event:ModuleEvent):void
     {
         if (Log.isInfo())
@@ -176,6 +144,17 @@ public class WidgetTypeLoader extends EventDispatcher
         }
         this.moduleInfo = null;
         FlexGlobals.topLevelApplication.callLater(loadModule);
+    }
+
+    private function moduleInfo_progressHandler(event:ModuleEvent):void
+    {
+        if (event.bytesLoaded == event.bytesTotal)
+        {
+            var moduleInfo:IModuleInfo = event.currentTarget as IModuleInfo;
+            moduleInfo.removeEventListener(ModuleEvent.PROGRESS, moduleInfo_progressHandler);
+            moduleInfo.removeEventListener(ModuleEvent.ERROR, moduleInfo_errorHandler);
+            FlexGlobals.topLevelApplication.callLater(processModuleInfo, [ moduleInfo ]);
+        }
     }
 
     private function processModuleInfo(moduleInfo:IModuleInfo):void
@@ -209,16 +188,6 @@ public class WidgetTypeLoader extends EventDispatcher
         dispatchComplete(widgetType);
     }
 
-    private function dispatchComplete(widgetType:WidgetType):void
-    {
-        if (Log.isInfo())
-        {
-            LOG.info('Module load complete: {0}', name);
-        }
-
-        dispatchEvent(new WidgetTypeLoaderEvent(WidgetTypeLoaderEvent.LOAD_COMPLETE, widgetType));
-    }
-
     private function getWidgetType(moduleInfo:IModuleInfo, builderModule:IBuilderModule, moduleConfig:XML):WidgetType
     {
         var customModulesDirectoryURL:String = WellKnownDirectories.getInstance().customModules.url;
@@ -232,6 +201,56 @@ public class WidgetTypeLoader extends EventDispatcher
         return isCustomModule ?
             new CustomWidgetType(builderModule, version, configXML) :
             new WidgetType(builderModule);
+    }
+
+    private function dispatchComplete(widgetType:WidgetType):void
+    {
+        if (Log.isInfo())
+        {
+            LOG.info('Module load complete: {0}', name);
+        }
+
+        dispatchEvent(new WidgetTypeLoaderEvent(WidgetTypeLoaderEvent.LOAD_COMPLETE, widgetType));
+    }
+
+    private function moduleInfo_errorHandler(event:ModuleEvent):void
+    {
+        var moduleInfo:IModuleInfo = event.module;
+        moduleInfo.removeEventListener(ModuleEvent.PROGRESS, moduleInfo_progressHandler);
+        moduleInfo.removeEventListener(ModuleEvent.ERROR, moduleInfo_errorHandler);
+        this.moduleInfo = null;
+        dispatchError();
+    }
+
+    private function dispatchError():void
+    {
+        if (Log.isInfo())
+        {
+            LOG.info('Module load failed: {0}', name);
+        }
+
+        dispatchEvent(new WidgetTypeLoaderEvent(WidgetTypeLoaderEvent.LOAD_ERROR));
+    }
+
+    private function loadConfigModule():void
+    {
+        if (Log.isInfo())
+        {
+            LOG.info('Loading XML module: {0}', config.url);
+        }
+
+        var moduleConfig:XML = readModuleConfig(config);
+        if (moduleConfig)
+        {
+            var customWidgetType:CustomWidgetType = parseCustomWidgetType(moduleConfig);
+            if (customWidgetType)
+            {
+                dispatchComplete(customWidgetType);
+                return;
+            }
+        }
+
+        dispatchError();
     }
 
     private function readModuleConfig(configFile:File):XML
@@ -258,25 +277,6 @@ public class WidgetTypeLoader extends EventDispatcher
         }
 
         return configXML;
-    }
-
-    private function moduleInfo_errorHandler(event:ModuleEvent):void
-    {
-        var moduleInfo:IModuleInfo = event.module;
-        moduleInfo.removeEventListener(ModuleEvent.ERROR, moduleInfo_errorHandler);
-        moduleInfo.removeEventListener(ModuleEvent.PROGRESS, moduleInfo_progressHandler);
-        this.moduleInfo = null;
-        dispatchError();
-    }
-
-    private function dispatchError():void
-    {
-        if (Log.isInfo())
-        {
-            LOG.info('Module load failed: {0}', name);
-        }
-
-        dispatchEvent(new WidgetTypeLoaderEvent(WidgetTypeLoaderEvent.LOAD_ERROR));
     }
 
     private function parseCustomWidgetType(configXML:XML):CustomWidgetType
