@@ -34,9 +34,15 @@
 
             private function actionsItemRenderer(popUpFieldInfo:PopUpFieldInfo, column:GridColumn):IFactory
             {
-                var field:Field = hostComponent.findMatchingField(popUpFieldInfo.fieldName);
-                var isNumericOrDateField:Boolean = FieldUtil.isFieldNumeric(field) || field.type == Field.TYPE_DATE;
-                var hasCodedValueDomain:Boolean = field.domain && field.domain is CodedValueDomain;
+                var isNumericOrDateField:Boolean;
+                var hasCodedValueDomain:Boolean;
+
+                if (popUpFieldInfo)
+                {
+                    var field:Field = hostComponent.findMatchingField(popUpFieldInfo.fieldName);
+                    isNumericOrDateField = field && (FieldUtil.isFieldNumeric(field) || field.type == Field.TYPE_DATE);
+                    hasCodedValueDomain = field && field.domain && field.domain is CodedValueDomain;
+                }
 
                 var itemRendererClass:Class =
                     (isNumericOrDateField && !hasCodedValueDomain) ?
