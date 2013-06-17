@@ -70,7 +70,7 @@ public class StartupWidgetTypeLoader extends EventDispatcher
             }
         }
 
-        pendingLoaders = loaders;
+        pendingLoaders = loaders.concat();
         for each (var loader:WidgetTypeLoader in loaders)
         {
             loader.addEventListener(WidgetTypeLoaderEvent.LOAD_COMPLETE, loader_loadCompleteHandler);
