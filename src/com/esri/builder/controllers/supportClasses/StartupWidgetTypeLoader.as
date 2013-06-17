@@ -48,7 +48,7 @@ public class StartupWidgetTypeLoader extends EventDispatcher
         var moduleFiles:Array = getModuleFiles(WellKnownDirectories.getInstance().bundledModules)
             .concat(getModuleFiles(WellKnownDirectories.getInstance().customModules));
 
-        var swfFileAndXMLFileMaps:Array = mapFilenameToModuleSWFAndXMLFiles(moduleFiles);
+        var swfAndXMLFileMaps:Array = mapFilenameToModuleSWFAndXMLFiles(moduleFiles);
 
         var processedFileNames:Array = [];
         var loaders:Array = [];
@@ -65,8 +65,8 @@ public class StartupWidgetTypeLoader extends EventDispatcher
             if (processedFileNames.indexOf(fileName) == -1)
             {
                 processedFileNames.push(fileName);
-                loaders.push(new WidgetTypeLoader(swfFileAndXMLFileMaps[0][fileName],
-                                                  swfFileAndXMLFileMaps[1][fileName]));
+                loaders.push(new WidgetTypeLoader(swfAndXMLFileMaps[0][fileName],
+                                                  swfAndXMLFileMaps[1][fileName]));
             }
         }
 
