@@ -78,7 +78,7 @@ public class WidgetTypeLoader extends EventDispatcher
         {
             loadModule();
         }
-        else if (!swf.exists && config.exists)
+        else if (config && config.exists)
         {
             loadConfigModule();
         }
