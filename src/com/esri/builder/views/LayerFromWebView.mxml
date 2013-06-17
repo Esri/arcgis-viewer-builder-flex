@@ -18,7 +18,6 @@
 -->
 <s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
          xmlns:s="library://ns.adobe.com/flex/spark"
-         xmlns:mx="library://ns.adobe.com/flex/mx"
          width="100%" height="100%"
          creationComplete="this_creationCompleteHandler(event)"
          implements="com.esri.builder.views.supportClasses.IIncludeLayerSelection">
@@ -43,6 +42,10 @@
             private const ROAD:String = VETiledLayer.MAP_STYLE_ROAD;
             private const AERIAL:String = VETiledLayer.MAP_STYLE_AERIAL;
             private const HYBRID:String = VETiledLayer.MAP_STYLE_AERIAL_WITH_LABELS;
+
+            private const ROAD_THUMBNAIL_URL:String = "http://www.arcgis.com/sharing/content/items/ba0e576b7c4f48b1af61eed10f111c18/info/thumbnail/tempbing_road_manchester2.png";
+            private const AERIAL_THUMBNAIL_URL:String = "http://www.arcgis.com/sharing/content/items/8651e4d585654f6b955564efe44d04e5/info/thumbnail/tempbing_aerial_manchester2.png";
+            private const HYBRID_THUMBNAIL_URL:String = "http://www.arcgis.com/sharing/content/items/cebcf53409a04f109d309c2befa750e1/info/thumbnail/tempbing_hybrid_manchester2.png";
 
             [Bindable]
             private var layerName:String;
@@ -227,7 +230,28 @@
                 var configLayer:ConfigLayer = createConfigLayer(ConfigLayer.BING, "Bing Maps " + bingTypes.selectedItem.label);
                 configLayer.style = bingTypes.selectedItem.value;
                 configLayer.culture = Model.instance.cultureCode;
+                configLayer.icon = getBingIconURL(bingTypes.selectedItem.value);
                 return configLayer;
+            }
+
+            private function getBingIconURL(style:String):String
+            {
+                var iconURL:String;
+
+                if (style == ROAD)
+                {
+                    iconURL = ROAD_THUMBNAIL_URL;
+                }
+                else if (style == AERIAL)
+                {
+                    iconURL = AERIAL_THUMBNAIL_URL;
+                }
+                else if (style == HYBRID)
+                {
+                    iconURL = HYBRID_THUMBNAIL_URL;
+                }
+
+                return iconURL;
             }
 
             private function createConfigLayer(type:String, label:String, url:String = null):ConfigLayer
