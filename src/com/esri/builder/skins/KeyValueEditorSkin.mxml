@@ -25,6 +25,7 @@
 
     <fx:Script>
         <![CDATA[
+            import com.esri.ags.layers.supportClasses.CodedValueDomain;
             import com.esri.ags.layers.supportClasses.Field;
             import com.esri.ags.portal.supportClasses.PopUpFieldInfo;
             import com.esri.builder.renderers.MovableEditableGridItemRenderer;
@@ -33,17 +34,13 @@
 
             private function actionsItemRenderer(popUpFieldInfo:PopUpFieldInfo, column:GridColumn):IFactory
             {
-                var itemRendererClass:Class;
-
                 var field:Field = hostComponent.findMatchingField(popUpFieldInfo.fieldName);
-                if (FieldUtil.isFieldNumeric(field) || field.type == Field.TYPE_DATE)
-                {
-                    itemRendererClass = MovableEditableGridItemRenderer;
-                }
-                else
-                {
-                    itemRendererClass = MovableGridItemRenderer;
-                }
+                var isNumericOrDateField:Boolean = FieldUtil.isFieldNumeric(field) || field.type == Field.TYPE_DATE;
+                var hasCodedValueDomain:Boolean = field.domain && field.domain is CodedValueDomain;
+
+                var itemRendererClass:Class =
+                    (isNumericOrDateField && !hasCodedValueDomain) ?
+                    MovableEditableGridItemRenderer : MovableGridItemRenderer;
 
                 return new ClassFactory(itemRendererClass);
             }
