@@ -194,7 +194,6 @@ public class WidgetTypeLoader extends EventDispatcher
             var moduleConfig:XML = readModuleConfig(config);
         }
 
-
         const builderModule:IBuilderModule = moduleInfo.factory.create() as IBuilderModule;
         if (builderModule)
         {
