@@ -142,9 +142,21 @@ public class WidgetTypeLoader extends EventDispatcher
             fileStream.readBytes(fileBytes);
             fileStream.close();
 
-            moduleInfo.addEventListener(ModuleEvent.READY, moduleInfo_readyHandler);
+            //Use ModuleEvent.PROGRESS instead of ModuleEvent.READY to avoid the case where the latter is never dispatched.
+            moduleInfo.addEventListener(ModuleEvent.PROGRESS, moduleInfo_progressHandler);
             moduleInfo.addEventListener(ModuleEvent.ERROR, moduleInfo_errorHandler);
             moduleInfo.load(null, null, fileBytes, FlexGlobals.topLevelApplication.moduleFactory);
+        }
+    }
+
+    private function moduleInfo_progressHandler(event:ModuleEvent):void
+    {
+        if (event.bytesLoaded == event.bytesTotal)
+        {
+            var moduleInfo:IModuleInfo = event.currentTarget as IModuleInfo;
+            moduleInfo.removeEventListener(ModuleEvent.PROGRESS, moduleInfo_progressHandler);
+            moduleInfo.removeEventListener(ModuleEvent.ERROR, moduleInfo_errorHandler);
+            FlexGlobals.topLevelApplication.callLater(processModuleInfo, [ moduleInfo ]);
         }
     }
 
@@ -166,16 +178,12 @@ public class WidgetTypeLoader extends EventDispatcher
         FlexGlobals.topLevelApplication.callLater(loadModule);
     }
 
-    private function moduleInfo_readyHandler(event:ModuleEvent):void
+    private function processModuleInfo(moduleInfo:IModuleInfo):void
     {
         if (Log.isInfo())
         {
             LOG.info('Module loaded: {0}', swf.url);
         }
-
-        var moduleInfo:IModuleInfo = event.currentTarget as IModuleInfo;
-        moduleInfo.removeEventListener(ModuleEvent.READY, moduleInfo_readyHandler);
-        moduleInfo.removeEventListener(ModuleEvent.ERROR, moduleInfo_errorHandler);
 
         if (config && config.exists)
         {
@@ -187,7 +195,7 @@ public class WidgetTypeLoader extends EventDispatcher
         }
 
 
-        const builderModule:IBuilderModule = event.module.factory.create() as IBuilderModule;
+        const builderModule:IBuilderModule = moduleInfo.factory.create() as IBuilderModule;
         if (builderModule)
         {
             if (Log.isInfo())
@@ -257,7 +265,7 @@ public class WidgetTypeLoader extends EventDispatcher
     {
         var moduleInfo:IModuleInfo = event.module;
         moduleInfo.removeEventListener(ModuleEvent.ERROR, moduleInfo_errorHandler);
-        moduleInfo.removeEventListener(ModuleEvent.READY, moduleInfo_readyHandler);
+        moduleInfo.removeEventListener(ModuleEvent.PROGRESS, moduleInfo_progressHandler);
         this.moduleInfo = null;
         dispatchError();
     }
