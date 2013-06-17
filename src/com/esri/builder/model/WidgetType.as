@@ -101,7 +101,7 @@ public class WidgetType
 
     public function getIconFile():File
     {
-        var iconFile:File = WellKnownDirectories.getInstance().customFlexViewer.resolvePath(iconLocation);
+        var iconFile:File = WellKnownDirectories.getInstance().customFlexViewer.resolvePath("widgets/" + name + "/" + iconLocation);
         if (!iconFile.exists)
         {
             iconFile = WellKnownDirectories.getInstance().bundledFlexViewer.resolvePath(iconLocation);

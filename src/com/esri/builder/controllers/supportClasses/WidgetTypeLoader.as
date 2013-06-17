@@ -290,34 +290,19 @@ public class WidgetTypeLoader extends EventDispatcher
         customModule.widgetName = configXML.name;
         customModule.isOpenByDefault = (configXML.openbydefault == 'true');
 
+        var widgetIcon:String = configXML.icon[0];
         var widgetLabel:String = configXML.label[0];
         var widgetDescription:String = configXML.description[0];
         var widgetHelpURL:String = configXML.helpurl[0];
         var widgetConfiguration:XML = configXML.configuration[0] ? configXML.configuration[0] : <configuration/>;
         var widgetVersion:String = configXML.widgetversion[0];
 
-        customModule.widgetIconLocation = createWidgetIconPath(configXML.icon[0], customModule.widgetName);
+        customModule.widgetIconLocation = widgetIcon ? widgetIcon : "assets/images/i_widget.png";
         customModule.widgetLabel = widgetLabel ? widgetLabel : customModule.widgetName;
         customModule.widgetDescription = widgetDescription ? widgetDescription : "";
         customModule.widgetHelpURL = widgetHelpURL ? widgetHelpURL : "";
 
         return new CustomWidgetType(customModule, widgetVersion, widgetConfiguration);
-    }
-
-    private function createWidgetIconPath(iconPath:String, widgetName:String):String
-    {
-        var widgetIconPath:String;
-
-        if (iconPath)
-        {
-            widgetIconPath = "widgets/" + widgetName + "/" + iconPath;
-        }
-        else
-        {
-            widgetIconPath = "assets/images/i_widget.png";
-        }
-
-        return widgetIconPath;
     }
 }
 }
