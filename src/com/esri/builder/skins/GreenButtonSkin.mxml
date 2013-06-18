@@ -98,8 +98,8 @@
     <s:RichText id="labelDisplay"
                 left="3" right="3" top="5" bottom="5"
                 color="#FFFFFF"
-                fontWeight="bold"
                 horizontalCenter="0"
+                styleName="boldText"
                 textAlign="center"
                 verticalAlign="middle"
                 verticalCenter="0.5"/>

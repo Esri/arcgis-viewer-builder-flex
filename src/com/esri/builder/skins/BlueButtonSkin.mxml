@@ -61,8 +61,8 @@
     <s:RichText id="labelDisplay"
                 left="4.85" right="6.15" top="5" bottom="5"
                 color="0xFFFFFF"
-                fontWeight="bold"
                 horizontalCenter="0"
+                styleName="boldText"
                 textAlign="center"
                 verticalAlign="middle"
                 verticalCenter="0.5"/>

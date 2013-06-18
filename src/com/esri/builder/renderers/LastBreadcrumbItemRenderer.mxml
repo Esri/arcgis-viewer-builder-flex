@@ -28,9 +28,9 @@
         <s:HorizontalLayout/>
     </s:layout>
     <s:Label color="0x367DD5"
-             fontWeight="bold"
              maxDisplayedLines="1"
              maxWidth="400"
              showTruncationTip="true"
+             styleName="boldText"
              text="{data.label}"/>
 </s:ItemRenderer>

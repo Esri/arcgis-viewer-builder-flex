@@ -229,17 +229,17 @@
 
                 <s:HGroup verticalAlign="middle">
                     <mx:ColorPicker change="textcolor_changeHandler(event)" selectedColor="@{Model.instance.config.textColor}"/>
-                    <s:Label fontWeight="bold" text="{resourceManager.getString('BuilderStrings', 'stylesWindow.textColor')}"/>
+                    <s:Label styleName="boldText" text="{resourceManager.getString('BuilderStrings', 'stylesWindow.textColor')}"/>
                 </s:HGroup>
 
                 <s:HGroup paddingLeft="25" verticalAlign="middle">
                     <mx:ColorPicker change="titleColor_changeHandler(event)" selectedColor="@{Model.instance.config.titleColor}"/>
-                    <s:Label fontWeight="bold" text="{resourceManager.getString('BuilderStrings', 'stylesWindow.titleColor')}"/>
+                    <s:Label styleName="boldText" text="{resourceManager.getString('BuilderStrings', 'stylesWindow.titleColor')}"/>
                 </s:HGroup>
 
                 <s:HGroup verticalAlign="middle">
                     <mx:ColorPicker change="backgroundColor_changeHandler(event)" selectedColor="@{Model.instance.config.backgroundColor}"/>
-                    <s:Label fontWeight="bold" text="{resourceManager.getString('BuilderStrings', 'stylesWindow.backgroundColor')}"/>
+                    <s:Label styleName="boldText" text="{resourceManager.getString('BuilderStrings', 'stylesWindow.backgroundColor')}"/>
                 </s:HGroup>
             </s:FormItem>
 
@@ -250,18 +250,18 @@
 
                 <s:HGroup verticalAlign="middle">
                     <mx:ColorPicker change="rolloverColor_changeHandler(event)" selectedColor="@{Model.instance.config.rolloverColor}"/>
-                    <s:Label fontWeight="bold" text="{resourceManager.getString('BuilderStrings', 'stylesWindow.rolloverColor')}"/>
+                    <s:Label styleName="boldText" text="{resourceManager.getString('BuilderStrings', 'stylesWindow.rolloverColor')}"/>
                 </s:HGroup>
 
                 <s:HGroup verticalAlign="middle">
                     <mx:ColorPicker change="selectionColor_changeHandler(event)" selectedColor="@{Model.instance.config.selectionColor}"/>
-                    <s:Label fontWeight="bold" text="{resourceManager.getString('BuilderStrings', 'stylesWindow.selectionColor')}"/>
+                    <s:Label styleName="boldText" text="{resourceManager.getString('BuilderStrings', 'stylesWindow.selectionColor')}"/>
                 </s:HGroup>
             </s:FormItem>
         </s:Form>
 
         <s:VGroup gap="0">
-            <s:Label fontWeight="bold"
+            <s:Label styleName="boldText"
                      text="{resourceManager.getString('BuilderStrings', 'stylesWindow.alpha')}"
                      textAlign="left"/>
 

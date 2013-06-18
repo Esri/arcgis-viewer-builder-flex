@@ -100,7 +100,7 @@
     <s:RichText id="labelDisplay"
                 left="5" right="18" right.up="21"
                 color="#FFFFFF"
-                fontWeight="bold"
+                styleName="boldText"
                 textAlign="center"
                 verticalAlign="middle"
                 verticalCenter="0.5"/>

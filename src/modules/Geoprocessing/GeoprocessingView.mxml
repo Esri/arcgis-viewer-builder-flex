@@ -275,7 +275,7 @@
               excludeFrom="browseTasks"
               paddingBottom="6"
               verticalAlign="middle">
-        <s:Label fontWeight="bold" text="{resourceManager.getString('BuilderStrings', 'geoprocessing.taskURL')}"/>
+        <s:Label styleName="boldText" text="{resourceManager.getString('BuilderStrings', 'geoprocessing.taskURL')}"/>
 
         <components:SearchInput width="100%"
                                 direction="ltr"

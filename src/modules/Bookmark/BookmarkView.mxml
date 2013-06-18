@@ -597,9 +597,9 @@
                   buttonMode="true"
                   click="addBookmark_clickHandler(event)"
                   enabled="{!isAddingBookmark &amp;&amp; hasBasemap}"
-                  fontWeight="bold"
                   label="{resourceManager.getString('BuilderStrings', 'bookmark.addBookmark')}"
-                  skinClass="com.esri.builder.skins.SquareGreenButtonSkin"/>
+                  skinClass="com.esri.builder.skins.SquareGreenButtonSkin"
+                  styleName="boldText"/>
 
         <bookmark:BookmarkGrid id="bookmarkList"
                                height="95%"

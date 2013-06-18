@@ -68,7 +68,7 @@
     <s:Label left="10" top="9"
              color="#000000"
              fontSize="14"
-             fontWeight="bold"
+             styleName="boldText"
              text="{resourceManager.getString('BuilderStrings', 'aboutPopUp.aboutApplicationBuilder')}"
              textAlign="center"
              verticalAlign="middle"/>
@@ -97,12 +97,12 @@
 
         <s:HGroup paddingTop="15">
             <s:Label color="#000000"
-                     fontWeight="bold"
+                     styleName="boldText"
                      text="{resourceManager.getString('BuilderStrings', 'aboutPopUp.versionLabel')}"
                      textAlign="right"/>
 
             <s:Label color="#000000"
-                     fontWeight="bold"
+                     styleName="boldText"
                      text="{resourceManager.getString('BuilderStrings', 'applicationBuilderVersion')}"
                      textAlign="right"/>
         </s:HGroup>

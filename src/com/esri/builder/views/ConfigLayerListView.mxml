@@ -38,8 +38,8 @@
                                title="{listTitle}">
         <s:Label left="10" right="10" top="5"
                  fontSize="14"
-                 fontWeight="bold"
                  includeInLayout="{dataProvider.length &lt; 1}"
+                 styleName="boldText"
                  text="{noLayerText}"
                  visible="{dataProvider.length &lt; 1}"/>
         <s:List id="list"

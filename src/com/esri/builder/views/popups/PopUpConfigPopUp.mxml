@@ -162,7 +162,7 @@
     <s:Label left="10" top="9"
              color="#000000"
              fontSize="14"
-             fontWeight="bold"
+             styleName="boldText"
              text="{resourceManager.getString('BuilderStrings', 'configure')}"
              textAlign="center"
              verticalAlign="middle"/>
@@ -173,7 +173,7 @@
             <s:FormLayout gap="-10"/>
         </s:layout>
 
-        <s:FormHeading label="{StringUtil.substitute(resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.contentTitle'), layerName)}"/>
+        <s:FormHeading label="{StringUtil.substitute(resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.contentTitle'), layerName)}" styleName="boldText"/>
 
         <s:FormItem label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.popUpTitle')}">
             <s:HGroup width="100%" verticalAlign="middle">

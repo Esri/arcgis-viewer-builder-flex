@@ -137,12 +137,12 @@ Move the indicator tooltip string to a resource bundle
     <s:Label id="sequenceLabelDisplay"
              left="sequenceCol:10" right="sequenceCol:5" bottom="row1:10"
              baseline="row1:0"
-             fontWeight="bold"/>
+             styleName="boldText"/>
     <!--- @copy spark.components.FormItem#labelDisplay -->
     <s:Label id="labelDisplay"
              left="labelCol:0" right="labelCol:5" bottom="row1:10"
              baseline="row1:0"
-             fontWeight="bold"/>
+             styleName="boldText"/>
     <!--- @copy spark.components.SkinnableContainer#contentGroup -->
     <!-- Don't show the error tip on the content elements -->
     <s:Group id="contentGroup"

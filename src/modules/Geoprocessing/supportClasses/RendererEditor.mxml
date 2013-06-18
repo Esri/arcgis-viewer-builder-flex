@@ -288,7 +288,7 @@
     <s:Label left="column2:0" right="column2:0"
              baseline="row2:0"
              excludeFrom="cannotEditRenderer"
-             fontWeight="bold"
+             styleName="boldText"
              text="{resourceManager.getString('BuilderStrings', 'geoprocessing.type')}"/>
 
     <s:Group left="column4:0" right="column4:0"
@@ -310,14 +310,14 @@
 
     <s:Label left="column4:0" right="column4:0"
              baseline="row2:0"
-             fontWeight="bold"
              includeIn="cannotEditRenderer"
+             styleName="boldText"
              text="{resourceManager.getString('BuilderStrings', 'geoprocessing.cannotEditRendererProperties')}"/>
 
     <s:Label left="column2:0" right="column2:0"
              baseline="row4:0"
-             fontWeight="bold"
              includeIn="editingClassBreaksRenderer, editingUniqueValueRenderer"
+             styleName="boldText"
              text="{resourceManager.getString('BuilderStrings', 'chart.field')}"/>
 
     <s:HGroup left="column4:0" right="column4:0"
@@ -347,8 +347,8 @@
     <s:Label left="column2:0" right="column2:0"
              baseline="row6:0"
              excludeFrom="cannotEditRenderer"
-             fontWeight="bold"
              paddingTop="6"
+             styleName="boldText"
              text.editingClassBreaksRenderer="{resourceManager.getString('BuilderStrings', 'geoprocessing.defaultSymbol')}"
              text.editingSimpleRenderer="{resourceManager.getString('BuilderStrings', 'georss.symbol')}"
              text.editingUniqueValueRenderer="{resourceManager.getString('BuilderStrings', 'geoprocessing.defaultSymbol')}"/>

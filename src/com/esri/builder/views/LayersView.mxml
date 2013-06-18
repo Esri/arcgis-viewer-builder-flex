@@ -166,7 +166,7 @@
               gap="10"
               verticalAlign="bottom">
         <s:Label fontSize="18"
-                 fontWeight="bold"
+                 styleName="boldText"
                  text="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsOperationalLayers')}"/>
 
         <s:Group toolTip="{portal.loaded ? '' : resourceManager.getString('BuilderStrings', 'agsPortal.requiresPortal')}">
@@ -250,8 +250,8 @@
                       paddingLeft="10"
                       paddingRight="10">
                 <s:Label fontSize="18"
-                         fontWeight="bold"
                          paddingTop="10"
+                         styleName="boldText"
                          text="{resourceManager.getString('BuilderStrings', 'mapsView.mapExtentView.title')}"/>
 
                 <s:Label alpha="0.5"

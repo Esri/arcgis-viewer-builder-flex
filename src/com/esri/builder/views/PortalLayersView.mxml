@@ -247,9 +247,9 @@
                  verticalCenter="0"/>
 
     <s:Label fontSize="16"
-             fontWeight="bold"
              horizontalCenter="0"
              includeIn="nomatch, searchnomatch"
+             styleName="boldText"
              text.nomatch="{resourceManager.getString('BuilderStrings', 'mapsView.noBasemap')}"
              text.searchnomatch="{resourceManager.getString('BuilderStrings', 'agsPortal.noLayersFound')}"
              verticalCenter="0"/>
@@ -264,8 +264,8 @@
                  buttonMode.featured="false"
                  click="featured_clickHandler(event)"
                  color="0x367AD5"
-                 fontWeight.featured="bold"
                  includeInLayout="{isFeaturedContentShown}"
+                 styleName.featured="boldText"
                  text="{resourceManager.getString('BuilderStrings', 'agsPortal.featuredBasemaps')}"
                  textDecoration="underline"
                  textDecoration.featured="none"
@@ -283,7 +283,7 @@
                  buttonMode.search="false"
                  click="search_clickHandler(event)"
                  color="0x367AD5"
-                 fontWeight.search="bold"
+                 styleName.search="boldText"
                  text="{resourceManager.getString('BuilderStrings', 'agsPortal.search')}"
                  textDecoration="underline"
                  textDecoration.search="none"/>
@@ -298,7 +298,7 @@
                  buttonMode.mycontent="false"
                  click="myContent_clickHandler(event)"
                  color="0x367AD5"
-                 fontWeight.mycontent="bold"
+                 styleName.mycontent="boldText"
                  text="{resourceManager.getString('BuilderStrings', 'agsPortal.myContent')}"
                  textDecoration="underline"
                  textDecoration.mycontent="none"/>

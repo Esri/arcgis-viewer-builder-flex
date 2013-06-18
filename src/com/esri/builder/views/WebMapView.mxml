@@ -91,7 +91,7 @@
               gap="10"
               verticalAlign="bottom">
         <s:Label fontSize="18"
-                 fontWeight="bold"
+                 styleName="boldText"
                  text="{resourceManager.getString('BuilderStrings', 'mapsView.webmaps')}"/>
 
         <s:Button buttonMode="true"
@@ -118,9 +118,9 @@
             <s:CheckBox id="addArcGISBasemapsCheckBox"
                         change="updateAddArcGISBasemaps()"
                         fontSize="14"
-                        fontWeight="bold"
                         label="{resourceManager.getString('BuilderStrings', 'mapsView.addArcGISBasemaps')}"
-                        selected="{Model.instance.config.configMap.addArcGISBasemaps}"/>
+                        selected="{Model.instance.config.configMap.addArcGISBasemaps}"
+                        styleName="boldText"/>
         </s:VGroup>
 
         <views:WebMapConfigureExtentView includeIn="configureMapExtent"/>

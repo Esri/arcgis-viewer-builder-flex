@@ -169,10 +169,10 @@
     <s:Label id="titleLabel"
              left="15" top="5"
              fontSize="14"
-             fontWeight="bold"
              maxWidth="{width - 24}"
              paddingLeft="3"
              paddingRight="3"
+             styleName="boldText"
              text="{hostComponent.title}"/>
 
     <s:Group id="contentGroup"
