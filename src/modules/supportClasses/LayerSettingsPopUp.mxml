@@ -119,6 +119,8 @@
                     return;
                 }
 
+                var serverVersion:Number = layerDetails.version;
+
                 var isEditorTrackingField:Boolean;
                 var editorTrackingFieldNames:Array = getEditorTrackingFieldNames(layerDetails);
 
@@ -136,7 +138,8 @@
                                     required: !field.nullable,
                                     nullable: field.nullable,
                                     isEditorTrackingField: isEditorTrackingField,
-                                    selected: true
+                                    selected: true,
+                                    serverVersion: serverVersion
                                 });
                 }
 
@@ -371,7 +374,9 @@
                                                     {
                                                         isEditorTrackingField = data["isEditorTrackingField"];
                                                         isFieldVisible = data["selected"];
-                                                        isRequiredEditable = data["nullable"];
+
+                                                        var serverVersion:Number = data["serverVersion"];
+                                                        isRequiredEditable = serverVersion < 10.1 || data["nullable"];
 
                                                         if (isFieldVisible)
                                                         {
