@@ -135,6 +135,7 @@
                                     id: field.name,
                                     name: field.alias,
                                     tooltip: "",
+                                    editable: field.editable,
                                     required: !field.nullable,
                                     nullable: field.nullable,
                                     isEditorTrackingField: isEditorTrackingField,
@@ -366,6 +367,8 @@
                                                 [Bindable]
                                                 private var isRequiredEditable:Boolean;
                                                 [Bindable]
+                                                private var isEditable:Boolean;
+                                                [Bindable]
                                                 private var isEditorTrackingField:Boolean;
 
                                                 override public function prepare(hasBeenRecycled:Boolean):void
@@ -373,6 +376,7 @@
                                                     if (data)
                                                     {
                                                         isEditorTrackingField = data["isEditorTrackingField"];
+                                                        isEditable = data["editable"];
                                                         isFieldVisible = data["selected"];
 
                                                         var serverVersion:Number = data["serverVersion"];
@@ -403,7 +407,7 @@
                                                     enabled="{isRequiredEditable &amp;&amp; isFieldVisible}"
                                                     horizontalCenter="0"
                                                     verticalCenter="0"
-                                                    visible="{!isEditorTrackingField}"/>
+                                                    visible="{isEditable &amp;&amp; !isEditorTrackingField}"/>
                                     </s:GridItemRenderer>
                                 </fx:Component>
                             </s:itemRenderer>
