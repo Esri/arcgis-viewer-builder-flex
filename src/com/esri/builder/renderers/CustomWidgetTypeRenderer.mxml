@@ -23,7 +23,6 @@
                 autoDrawBackground="false">
     <fx:Script>
         <![CDATA[
-            import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
             import com.esri.builder.model.CustomWidgetType;
             import com.esri.builder.views.supportClasses.CustomWidgetCatalog;
 
@@ -53,22 +52,12 @@
                 widgetType = value as CustomWidgetType;
                 if (widgetType)
                 {
-                    //Look for icon in custom viewer, then in bundled viewer
-                    var customWidgetIcon:File = WellKnownDirectories.getInstance().customFlexViewer.resolvePath(widgetType.iconLocation);
-                    if (customWidgetIcon.exists)
-                    {
-                        displayImage.source = customWidgetIcon.url;
-                    }
-                    else
-                    {
-                        customWidgetIcon = WellKnownDirectories.getInstance().bundledFlexViewer.resolvePath(widgetType.iconLocation);
-                        displayImage.source = customWidgetIcon.url;
-                    }
+                    displayImage.source = widgetType.getIconFile().url;
+                    displayImage.toolTip = widgetType.description;
+                    displayLabel.text = widgetType.label;
+                    displayLabel.toolTip = widgetType.description;
+                    widgetVersion = widgetType.version;
                 }
-                displayImage.toolTip = widgetType.description;
-                displayLabel.text = widgetType.label;
-                displayLabel.toolTip = widgetType.description;
-                widgetVersion = widgetType.version;
             }
 
             private function dispatchDeleteWidget():void
