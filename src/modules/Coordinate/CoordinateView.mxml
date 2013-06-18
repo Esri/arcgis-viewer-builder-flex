@@ -97,7 +97,7 @@
         <s:FormLayout gap="-10"/>
     </s:layout>
 
-    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'coordinate.outputUnit')}" skinClass="spark.skins.spark.StackedFormItemSkin">
+    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'coordinate.outputUnit')}" skinClass="com.esri.builder.skins.StackedFormItemSkin">
         <s:DropDownList id="outputUnits"
                         change="outputUnits_changeHandler(event)"
                         creationComplete="outputUnits_creationCompleteHandler(event)"
@@ -110,7 +110,7 @@
         </s:DropDownList>
     </s:FormItem>
 
-    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'coordinate.fontSize')}" skinClass="spark.skins.spark.StackedFormItemSkin">
+    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'coordinate.fontSize')}" skinClass="com.esri.builder.skins.StackedFormItemSkin">
         <s:NumericStepper maximum="15"
                           minimum="4"
                           value="@{coordinateModel.fontSize}"

@@ -59,7 +59,7 @@
 
     <s:FormItem width="100%" height="100%"
                 label="{resourceManager.getString('BuilderStrings', 'splash.content')}"
-                skinClass="spark.skins.spark.StackedFormItemSkin">
+                skinClass="com.esri.builder.skins.StackedFormItemSkin">
         <supportClasses:ContentEditor width="100%" height="100%"
                                       content="@{splashModel.content}"/>
     </s:FormItem>
