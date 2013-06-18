@@ -66,8 +66,8 @@
                  minHeight="0"
                  minWidth="0">
             <s:Label left="10" top="10"
-                     fontWeight="bold"
                      maxDisplayedLines="1"
+                     styleName="boldText"
                      text="{hostComponent.title}"/>
 
             <s:Scroller left="20" right="20" top="45" bottom="40">

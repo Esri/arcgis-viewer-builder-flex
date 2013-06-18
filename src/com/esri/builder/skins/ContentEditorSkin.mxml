@@ -44,8 +44,8 @@
     <s:HGroup gap="2" verticalAlign="middle">
         <s:Button id="boldButton"
                   width="32"
-                  fontWeight="bold"
-                  label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.bold')}"/>
+                  label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.bold')}"
+                  styleName="boldText"/>
 
         <s:Button id="italicButton"
                   width="32"

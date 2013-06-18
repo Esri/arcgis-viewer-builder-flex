@@ -122,7 +122,7 @@
     <s:Label left="10" top="9"
              color="#000000"
              fontSize="14"
-             fontWeight="bold"
+             styleName="boldText"
              text="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.linkProperties')}"
              textAlign="center"
              verticalAlign="middle"/>

@@ -325,7 +325,7 @@
             <s:FormLayout gap="-5"/>
         </s:layout>
 
-        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'mapsView.layerType')}" skinClass="spark.skins.spark.StackedFormItemSkin">
+        <s:FormItem label="{resourceManager.getString('BuilderStrings', 'mapsView.layerType')}" skinClass="com.esri.builder.skins.StackedFormItemSkin">
             <s:DropDownList id="layerTypeOptionGroup"
                             requireSelection="true"
                             valueCommit="dispatchUpdateLayerSelection()">
@@ -345,7 +345,7 @@
 
         <s:FormItem includeInLayout="{layerTypeOptionGroup.selectedItem != bingOption}"
                     label="{resourceManager.getString('BuilderStrings', 'mapsView.url')}"
-                    skinClass="spark.skins.spark.StackedFormItemSkin"
+                    skinClass="com.esri.builder.skins.StackedFormItemSkin"
                     visible="{layerTypeOptionGroup.selectedItem != bingOption}">
             <s:TextInput width="100%"
                          change="dispatchUpdateLayerSelection()"
@@ -356,7 +356,7 @@
 
         <s:FormItem includeInLayout="{layerTypeOptionGroup.selectedItem == webTiledOption}"
                     label="{resourceManager.getString('BuilderStrings', 'configLayerView.label')}"
-                    skinClass="spark.skins.spark.StackedFormItemSkin"
+                    skinClass="com.esri.builder.skins.StackedFormItemSkin"
                     visible="{layerTypeOptionGroup.selectedItem == webTiledOption}">
             <s:TextInput width="100%"
                          change="dispatchUpdateLayerSelection()"
@@ -366,7 +366,7 @@
 
         <s:FormItem includeInLayout="{layerTypeOptionGroup.selectedItem == bingOption}"
                     label="{resourceManager.getString('BuilderStrings', 'configLayerView.mapStyle')}"
-                    skinClass="spark.skins.spark.StackedFormItemSkin"
+                    skinClass="com.esri.builder.skins.StackedFormItemSkin"
                     visible="{layerTypeOptionGroup.selectedItem == bingOption}">
             <s:DropDownList id="bingTypes" requireSelection="true">
                 <s:ArrayList>

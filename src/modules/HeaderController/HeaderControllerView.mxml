@@ -348,9 +348,9 @@
             <s:Group>
                 <s:CheckBox left="5" top="10" bottom="15"
                             fontSize="14"
-                            fontWeight="bold"
                             label="{resourceManager.getString('BuilderStrings', 'headerController.locator')}"
-                            selected="@{headerControllerModel.locatorEnabled}"/>
+                            selected="@{headerControllerModel.locatorEnabled}"
+                            styleName="boldText"/>
             </s:Group>
 
             <s:FormItem width="100%"
@@ -435,9 +435,9 @@
             <s:Group>
                 <s:CheckBox left="5" top="20" bottom="5"
                             fontSize="14"
-                            fontWeight="bold"
                             label="{resourceManager.getString('BuilderStrings', 'headerController.mapServices')}"
-                            selected="@{headerControllerModel.mapServicesEnabled}"/>
+                            selected="@{headerControllerModel.mapServicesEnabled}"
+                            styleName="boldText"/>
             </s:Group>
 
             <s:VGroup width="100%" height="100%"

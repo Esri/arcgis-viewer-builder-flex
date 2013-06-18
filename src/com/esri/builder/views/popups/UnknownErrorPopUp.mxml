@@ -73,9 +73,9 @@
     <s:Label left="5" top="9"
              color="#000000"
              fontSize="14"
-             fontWeight="bold"
              maxDisplayedLines="1"
              showTruncationTip="true"
+             styleName="boldText"
              text="{resourceManager.getString('BuilderStrings', 'unknownErrorTitle')}"
              textAlign="center"
              verticalAlign="middle"/>

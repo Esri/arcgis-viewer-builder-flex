@@ -126,14 +126,14 @@
     <s:HGroup left="column1:0" right="column2:0"
               baseline="row2:0"
               verticalAlign="middle">
-        <s:Label fontWeight="bold" text="{resourceManager.getString('BuilderStrings', 'geoprocessing.minValue')}"/>
+        <s:Label styleName="boldText" text="{resourceManager.getString('BuilderStrings', 'geoprocessing.minValue')}"/>
 
         <s:NumericStepper id="minValueInput"
                           width="100"
                           change="updateMinValue()"
                           value="@{minValue}"/>
 
-        <s:Label fontWeight="bold" text="{resourceManager.getString('BuilderStrings', 'geoprocessing.maxValue')}"/>
+        <s:Label styleName="boldText" text="{resourceManager.getString('BuilderStrings', 'geoprocessing.maxValue')}"/>
 
         <s:NumericStepper id="maxValueInput"
                           width="100"
@@ -149,8 +149,8 @@
 
     <s:Label left="column1:0" right="column1:0"
              baseline="row4:0"
-             fontWeight="bold"
              paddingTop="6"
+             styleName="boldText"
              text="{resourceManager.getString('BuilderStrings', 'georss.symbol')}"/>
 
     <supportClasses:SymbolEditor id="symbolEditor"

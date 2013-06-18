@@ -120,7 +120,7 @@
     <s:Label left="10" top="9"
              color="#000000"
              fontSize="14"
-             fontWeight="bold"
+             styleName="boldText"
              text="{StringUtil.substitute(resourceManager.getString('BuilderStrings', 'widgetsView.configureWidget'), widgetType.label)}"
              textAlign="center"
              verticalAlign="middle"/>

@@ -54,12 +54,12 @@
         <s:Label id="statusText"
                  width="100%"
                  fontSize="14"
-                 fontWeight="bold"
                  maxDisplayedLines="1"
                  paddingBottom="5"
                  paddingLeft="5"
                  paddingRight="5"
-                 paddingTop="5"/>
+                 paddingTop="5"
+                 styleName="boldText"/>
     </s:Group>
 
 </s:Skin>

@@ -54,7 +54,7 @@
 
     <s:Label left="5" top="2"
              fontSize="14"
-             fontWeight="bold"
+             styleName="boldText"
              text="{resourceManager.getString('BuilderStrings', 'mapsView.customizeMapExtentForSelectedWebMap')}"/>
 
     <s:Button height="50"

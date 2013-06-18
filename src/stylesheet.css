@@ -12,7 +12,12 @@
 
 .emphasisText
 {
-	/* changed dynamically */
+    /* changed dynamically */
+}
+
+.boldText
+{
+    /* changed dynamically */
 }
 
 s|Label
@@ -77,7 +82,7 @@ s|TextInput, mx|DateField
 s|TabBar, s|DropDownList, s|ComboBox, components|FieldPickerBase s|ListBase
 {
     color: #000000;
-	contentBackgroundAlpha: 1.0;
+    contentBackgroundAlpha: 1.0;
     borderVisible: true;    
 }
 
@@ -105,9 +110,9 @@ s|List
 
 mx|Tree
 {
-	contentBackgroundAlpha: 0;
-	rollOverColor: #97C6D8;
-	selectionColor: #97C6D8;
+    contentBackgroundAlpha: 0;
+    rollOverColor: #97C6D8;
+    selectionColor: #97C6D8;
     color: #000000;
     borderColor: #000000;
 }
@@ -119,8 +124,8 @@ views|BuilderAlert
 
 mx|ProgressBar
 {
-	chromeColor: #0097F0;
-	color: #DADADA;
+    chromeColor: #0097F0;
+    color: #DADADA;
 }
 
 components|PortalQueryResultViewer
@@ -155,5 +160,11 @@ components|SearchInput #searchButton
 
 s|DataGrid
 {
+    skinClass: ClassReference("com.esri.builder.skins.DataGridSkin");
     stretchCursor: ClassReference("assets.graphics.stretch_cursor");
+}
+
+components|SignInWindow
+{
+    skinClass: ClassReference("com.esri.builder.skins.TitleWindowSkin");
 }

@@ -21,14 +21,15 @@
 Move the indicator tooltip string to a resource bundle
 -->
 
-<!--- The default skin class for the Spark FormItem component.
+<!--- An alternate skin class for the Spark FormItem component
+ which positions the label above the content.
 
-@see spark.components.FormItem
+ @see spark.components.FormItem
 
-@langversion 3.0
-@playerversion Flash 10
-@playerversion AIR 1.5
-@productversion Flex 4.5
+ @langversion 3.0
+ @playerversion Flash 10
+ @playerversion AIR 1.5
+ @productversion Flex 4.5
 -->
 <s:Skin xmlns:fx="http://ns.adobe.com/mxml/2009"
         xmlns:s="library://ns.adobe.com/flex/spark"
@@ -37,10 +38,10 @@ Move the indicator tooltip string to a resource bundle
 
     <!-- host component -->
     <fx:Metadata>
-        <![CDATA[ 
-        /** 
-        * @copy spark.skins.spark.ApplicationSkin#hostComponent
-        */
+        <![CDATA[
+        /**
+         * @copy spark.skins.spark.ApplicationSkin#hostComponent
+         */
         [HostComponent("spark.components.FormItem")]
         ]]>
     </fx:Metadata>
@@ -108,18 +109,16 @@ Move the indicator tooltip string to a resource bundle
             <s:constraintColumns>
                 <!--- The column containing the sequence label. -->
                 <s:ConstraintColumn id="sequenceCol"/>
-                <!--- The column containing the FormItem's label. -->
-                <s:ConstraintColumn id="labelCol" maxWidth="200"/>
-                <!--- The column containing the FormItem's content. -->
+                <!--- The column containing the FormItem's label and content. -->
                 <s:ConstraintColumn id="contentCol" width="100%"/>
                 <!--- The column containing the FormItem's help content. -->
                 <s:ConstraintColumn id="helpCol" maxWidth="200"/>
             </s:constraintColumns>
             <s:constraintRows>
                 <!--- @private -->
-                <s:ConstraintRow id="row1"
-                                 height="100%"
-                                 baseline="maxAscent:10"/>
+                <s:ConstraintRow id="row1" baseline="maxAscent:10"/>
+                <!--- @private -->
+                <s:ConstraintRow id="row2" height="100%"/>
             </s:constraintRows>
         </s:FormItemLayout>
     </s:layout>
@@ -135,51 +134,38 @@ Move the indicator tooltip string to a resource bundle
 
     <!--- @copy spark.components.FormItem#sequenceLabelDisplay -->
     <s:Label id="sequenceLabelDisplay"
-             left="sequenceCol:10" right="sequenceCol:5" bottom="row1:10"
+             left="sequenceCol:10" right="sequenceCol:5" bottom="row1:5"
              baseline="row1:0"
              styleName="boldText"/>
     <!--- @copy spark.components.FormItem#labelDisplay -->
     <s:Label id="labelDisplay"
-             left="labelCol:0" right="labelCol:5" bottom="row1:10"
+             left="contentCol:0" right="contentCol:5" bottom="row1:5"
              baseline="row1:0"
              styleName="boldText"/>
     <!--- @copy spark.components.SkinnableContainer#contentGroup -->
-    <!-- Don't show the error tip on the content elements -->
     <s:Group id="contentGroup"
-             left="contentCol:0" right="contentCol:1" bottom="row1:10"
-             baseline="row1:0"
+             left="contentCol:0" right="contentCol:1" top="row2:0" bottom="row2:10"
+             baseline="row2:0"
              showErrorSkin="true"
              showErrorTip="false">
         <s:layout>
             <s:VerticalLayout/>
         </s:layout>
     </s:Group>
-    <!-- Don't include the indicator in layout since we position it ourselves -->
     <s:Group x="{contentGroup.x + contentGroup.contentWidth + 4}" y="{contentGroup.y}" height="{Math.max(indicatorDisplay.height, contentGroup.contentHeight)}"
              includeInLayout="false">
         <!--- @private -->
         <s:Image id="indicatorDisplay"
                  includeIn="requiredStates,errorStates"
-                 toolTip="{resourceManager.getString('BuilderStrings','geoprocessing.required')}"
-                 toolTip.errorStates=""
+                 toolTip="Required"
+                 toolTip.errorStates="{hostComponent.errorString}"
                  verticalCenter="0"/>
     </s:Group>
-
     <!--- @copy spark.components.FormItem#helpContentGroup -->
     <s:Group id="helpContentGroup"
-             left="helpCol:27" right="helpCol:10" bottom="row1:10"
-             baseline="row1:0"
+             left="helpCol:27" right="helpCol:10" bottom="row2:10"
+             baseline="row2:0"
              color="0x666666"
-             excludeFrom="errorStates"
-             fontWeight="normal"
-             styleName="emphasisText"/>
-    <!--- @copy spark.components.FormItem#errorTextDisplay -->
-    <s:RichText id="errorTextDisplay"
-                left="helpCol:27" right="helpCol:10" bottom="row1:10"
-                baseline="row1:0"
-                color="0xFE0000"
-                fontWeight="normal"
-                includeIn="errorStates"
-                maxDisplayedLines="-1"
-                styleName="emphasisText"/>
+             fontStyle="italic"
+             fontWeight="normal"/>
 </s:Skin>

@@ -451,7 +451,7 @@
 
     <s:Label left="10" top="10"
              fontSize="18"
-             fontWeight="bold"
+             styleName="boldText"
              text="{resourceManager.getString('BuilderStrings', 'mapsView.operationalLayersView.title')}"/>
 
     <s:Label left="10" top="30"

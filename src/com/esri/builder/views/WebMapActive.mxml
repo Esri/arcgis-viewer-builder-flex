@@ -58,7 +58,7 @@
             </s:stroke>
         </s:Line>
         <s:Label fontSize="14"
-                 fontWeight="bold"
+                 styleName="boldText"
                  text="{resourceManager.getString('BuilderStrings', 'mapsView.selectedWebMap')}"/>
         <s:Line width="100%">
             <s:stroke>
@@ -90,16 +90,16 @@
                         left="10" top="40"
                         editable="false"
                         fontSize="14"
-                        fontWeight="bold"
                         includeInLayout="{Model.instance.webmap == null}"
+                        styleName="boldText"
                         text="{resourceManager.getString('BuilderStrings', 'mapsView.noWebMapSelected')}"
                         visible="{Model.instance.webmap == null}"/>
     <s:Label id="displayTitle"
              width="100%"
              left="10" right="10" top="45"
              fontSize="14"
-             fontWeight="bold"
              maxDisplayedLines="1"
+             styleName="boldText"
              text="{Model.instance.webmap.title}"/>
     <s:Image id="displayImage"
              width="230" height="150"

@@ -59,9 +59,9 @@
         <s:Label text="{resourceManager.getString('BuilderStrings', 'applicationName')}"/>
 
         <s:Label width="200"
-                 fontWeight="bold"
                  maxDisplayedLines="1"
                  showTruncationTip="true"
+                 styleName="boldText"
                  text="{Model.instance.appName}"/>
     </s:HGroup>
 

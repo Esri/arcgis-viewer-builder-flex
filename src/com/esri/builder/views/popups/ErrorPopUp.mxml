@@ -69,7 +69,7 @@
     <s:Label left="5" top="9"
              color="#000000"
              fontSize="14"
-             fontWeight="bold"
+             styleName="boldText"
              text="{resourceManager.getString('BuilderStrings', 'errorPopUp.title')}"
              textAlign="center"
              verticalAlign="middle"/>

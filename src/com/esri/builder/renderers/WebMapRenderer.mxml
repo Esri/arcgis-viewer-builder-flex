@@ -82,7 +82,7 @@
 
     <s:Label id="displayTitle"
              left="0" right="5" top="150"
-             fontWeight="bold"
              maxDisplayedLines="2"
+             styleName="boldText"
              textAlign="center"/>
 </s:ItemRenderer>

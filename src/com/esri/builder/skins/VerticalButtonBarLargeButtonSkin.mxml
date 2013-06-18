@@ -143,8 +143,8 @@ Custom skin class for the Spark ButtonBarButton component.
              color.down="#000000"
              color.up="#000000"
              fontSize="12"
-             fontWeight="bold"
              kerning="off"
              maxDisplayedLines="2"
+             styleName="boldText"
              textAlign="start"/>
 </s:SparkButtonSkin>

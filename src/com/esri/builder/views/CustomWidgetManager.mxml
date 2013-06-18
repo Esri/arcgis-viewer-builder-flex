@@ -159,7 +159,7 @@
     <!--content-->
     <s:Label left="10" top="5"
              fontSize="14"
-             fontWeight="bold"
+             styleName="boldText"
              text="{resourceManager.getString('BuilderStrings', 'widgetManager.manageCustomWidgets')}"
              textAlign="center"
              verticalAlign="middle"/>

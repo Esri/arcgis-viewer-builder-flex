@@ -574,7 +574,7 @@
 
     <s:Label left="10" top="10"
              fontSize="18"
-             fontWeight="bold"
+             styleName="boldText"
              text="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsView.title')}"/>
 
     <s:Label left="10" top="30"
@@ -609,9 +609,9 @@
                         change="updateAddArcGISBasemaps()"
                         enabled="{PortalModel.getInstance().portal.loaded}"
                         fontSize="14"
-                        fontWeight="bold"
                         label="{resourceManager.getString('BuilderStrings', 'mapsView.addArcGISBasemaps')}"
-                        selected="{Model.instance.config.configMap.addArcGISBasemaps}"/>
+                        selected="{Model.instance.config.configMap.addArcGISBasemaps}"
+                        styleName="boldText"/>
         </s:Group>
     </s:VGroup>
 </s:Group>

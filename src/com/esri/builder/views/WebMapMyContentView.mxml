@@ -81,9 +81,9 @@
                      buttonMode.mygroups="false"
                      click="myGroups_clickHandler(event)"
                      color.mygroups="0x217598"
-                     fontWeight.mygroups="bold"
                      paddingLeft="4"
                      paddingRight="4"
+                     styleName.mygroups="boldText"
                      text="{resourceManager.getString('BuilderStrings', 'agsPortal.myGroups')}"
                      textDecoration="underline"
                      textDecoration.mygroups="none"/>
@@ -99,7 +99,7 @@
                      buttonMode.mymaps="false"
                      click="currentState = 'mymaps'"
                      color.mymaps="0x217598"
-                     fontWeight.mymaps="bold"
+                     styleName.mymaps="boldText"
                      text="{resourceManager.getString('BuilderStrings', 'agsPortal.myMaps')}"
                      textDecoration="underline"
                      textDecoration.mymaps="none"/>

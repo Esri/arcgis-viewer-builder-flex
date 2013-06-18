@@ -67,8 +67,8 @@
               paddingTop="5">
         <s:Label width="225"
                  color="0x217598"
-                 fontWeight="bold"
                  lineBreak="toFit"
+                 styleName="boldText"
                  text="{data.title}"/>
         <s:Label width="225" text="{StringUtil.substitute(resourceManager.getString('BuilderStrings', 'agsPortal.groupCreatedBy'), data.owner, dateFormatter.format(data.created))}"/>
         <s:HGroup width="100%" verticalAlign="top">

@@ -60,5 +60,6 @@
                     label="{resourceManager.getString('BuilderStrings', 'introView.loading')}"
                     labelPlacement="center"
                     mode="manual"
+                    styleName="boldText"
                     verticalCenter="95"/>
 </s:Group>

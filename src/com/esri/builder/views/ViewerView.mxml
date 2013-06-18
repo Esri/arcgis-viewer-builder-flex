@@ -393,9 +393,9 @@
 
                 <s:Label left="5" right="5" top="2" bottom="2"
                          color="0xFFFFFF"
-                         fontWeight="bold"
                          horizontalCenter="0"
                          maxDisplayedLines="1"
+                         styleName="boldText"
                          text="{resourceManager.getString('BuilderStrings', 'viewerView.saved')}"
                          textAlign="center"
                          verticalAlign="middle"
@@ -428,7 +428,7 @@
 
                         <s:Label width="120"
                                  fontSize="14"
-                                 fontWeight="bold"
+                                 styleName="boldText"
                                  text="{resourceManager.getString('BuilderStrings', 'viewer.webmap')}"
                                  textAlign="center"/>
                     </s:VGroup>
@@ -448,7 +448,7 @@
 
                         <s:Label width="120"
                                  fontSize="14"
-                                 fontWeight="bold"
+                                 styleName="boldText"
                                  text="{resourceManager.getString('BuilderStrings', 'viewer.layers')}"
                                  textAlign="center"/>
                     </s:VGroup>
@@ -520,7 +520,7 @@
               paddingTop="50"
               verticalAlign="top">
         <s:Label fontSize="16"
-                 fontWeight="bold"
+                 styleName="boldText"
                  text="{resourceManager.getString('BuilderStrings', 'desginView.noSupportedForSecureWebmaps')}"
                  textAlign="center"/>
     </s:HGroup>

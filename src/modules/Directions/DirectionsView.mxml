@@ -369,7 +369,7 @@
             <s:Group>
                 <s:Label left="5" top="10" bottom="15"
                          fontSize="14"
-                         fontWeight="bold"
+                         styleName="boldText"
                          text="{resourceManager.getString('BuilderStrings', 'directions.route')}"/>
             </s:Group>
 
@@ -421,7 +421,7 @@
             <s:Group>
                 <s:Label left="5" top="20" bottom="10"
                          fontSize="14"
-                         fontWeight="bold"
+                         styleName="boldText"
                          text="{resourceManager.getString('BuilderStrings', 'headerController.search')}"/>
             </s:Group>
 
@@ -429,10 +429,10 @@
                 <s:CheckBox left="15" top="10" bottom="15"
                             enabled="{directionsModel.mapServicesEnabled}"
                             fontSize="14"
-                            fontWeight="bold"
                             label="{resourceManager.getString('BuilderStrings', 'headerController.locator')}"
                             selected="@{directionsModel.locatorEnabled}"
-                            skinClass="com.esri.builder.skins.FixedLabelCheckBoxSkin"/>
+                            skinClass="com.esri.builder.skins.FixedLabelCheckBoxSkin"
+                            styleName="boldText"/>
             </s:Group>
 
             <s:FormItem width="100%"
@@ -482,10 +482,10 @@
                 <s:CheckBox left="15" top="0" bottom="5"
                             enabled="{directionsModel.locatorEnabled}"
                             fontSize="14"
-                            fontWeight="bold"
                             label="{resourceManager.getString('BuilderStrings', 'headerController.mapServices')}"
                             selected="@{directionsModel.mapServicesEnabled}"
-                            skinClass="com.esri.builder.skins.FixedLabelCheckBoxSkin"/>
+                            skinClass="com.esri.builder.skins.FixedLabelCheckBoxSkin"
+                            styleName="boldText"/>
             </s:Group>
 
             <s:VGroup width="100%" height="100%"

@@ -74,14 +74,14 @@
               paddingRight="5">
         <s:Label color="0x217598"
                  fontSize="14"
-                 fontWeight="bold"
                  paddingTop="4"
+                 styleName="boldText"
                  text="{resourceManager.getString('BuilderStrings', 'agsPortal.myGroups')}"/>
         <s:Label id="numGroupsLabel"
                  color="0x217598"
-                 fontWeight="bold"
                  paddingBottom="5"
                  paddingTop="10"
+                 styleName="boldText"
                  text="{StringUtil.substitute(resourceManager.getString('BuilderStrings', 'agsPortal.numGroupsLabel'), getNumGroups())}"/>
         <s:List id="groupsList"
                 width="100%" height="100%"

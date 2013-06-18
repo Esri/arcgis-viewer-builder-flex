@@ -61,7 +61,7 @@ public class LocaleController
         ResourceManager.getInstance().update();
         applyLocaleLayoutDirection(selectedLocale);
         setPreferredLocaleFonts(selectedLocale);
-        setEmphasisText(selectedLocale);
+        setLocaleSpecificStyles(selectedLocale);
     }
 
     private function applyLocaleLayoutDirection(selectedLocale:String):void
@@ -106,16 +106,24 @@ public class LocaleController
         }
     }
 
-    private function setEmphasisText(locale:String):void
+    private function setLocaleSpecificStyles(locale:String):void
     {
         var topLevelStyleManager:IStyleManager2 = StyleManager.getStyleManager(null);
-        var emphasisStyle:CSSStyleDeclaration = topLevelStyleManager.getStyleDeclaration(".emphasisText");
 
         var isItalicInappropriateLocale:Boolean =
             locale == 'ja_JP' || locale == 'ko_KR' || locale == 'zh_CN'
             || locale == 'ar' || locale == 'he_IL';
+
+        var emphasisStyle:CSSStyleDeclaration = topLevelStyleManager.getStyleDeclaration(".emphasisText");
         var emphasisFontStyle:String = isItalicInappropriateLocale ? "normal" : "italic";
         emphasisStyle.setStyle("fontStyle", emphasisFontStyle);
+
+        var isBoldInappropriateLocale:Boolean =
+            locale == 'ja_JP' || locale == 'ko_KR' || locale == 'zh_CN';
+
+        var boldStyle:CSSStyleDeclaration = topLevelStyleManager.getStyleDeclaration(".boldText");
+        var emphasisFontWeight:String = isBoldInappropriateLocale ? "normal" : "bold";
+        boldStyle.setStyle("fontWeight", emphasisFontWeight);
     }
 }
 }

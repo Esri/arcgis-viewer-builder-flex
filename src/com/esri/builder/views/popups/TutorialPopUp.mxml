@@ -71,7 +71,7 @@
     <s:Label left="10" top="9"
              color="#FFFFFF"
              fontSize="14"
-             fontWeight="bold"
+             styleName="boldText"
              text="{resourceManager.getString('BuilderStrings', 'gettingStartedPopUp.title')}"
              textAlign="center"
              verticalAlign="middle"/>

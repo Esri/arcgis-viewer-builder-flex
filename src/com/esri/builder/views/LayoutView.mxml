@@ -753,7 +753,7 @@
                          left="{headerControllerWidgetContainer.width + 20}" right="{headerControllerWidgetContainer.width + 20}"
                          color="#FFFFFF"
                          fontSize="14"
-                         fontWeight="bold"
+                         styleName="boldText"
                          text="{resourceManager.getString('BuilderStrings', 'viewerWireframe.headerPlaceholder')}"
                          textAlign="center"
                          verticalCenter="0"/>

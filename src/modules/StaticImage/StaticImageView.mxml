@@ -77,18 +77,18 @@
     <s:layout>
         <s:FormLayout gap="-10"/>
     </s:layout>
-    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'staticImage.image')}" skinClass="spark.skins.spark.StackedFormItemSkin">
+    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'staticImage.image')}" skinClass="com.esri.builder.skins.StackedFormItemSkin">
         <components:ImageBrowser id="imageBrowser"
                                  change="updateImageURL()"
                                  skinClass="com.esri.builder.skins.IconImageBrowserSkin"/>
         <s:Label text="{resourceManager.getString('BuilderStrings', 'staticImage.recommendedSize')}"/>
     </s:FormItem>
-    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'staticImage.linkURL')}" skinClass="spark.skins.spark.StackedFormItemSkin">
+    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'staticImage.linkURL')}" skinClass="com.esri.builder.skins.StackedFormItemSkin">
         <s:TextInput width="100%"
                      direction="ltr"
                      text="@{staticImageModel.linkURL}"/>
     </s:FormItem>
-    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'staticImage.tooltip')}" skinClass="spark.skins.spark.StackedFormItemSkin">
+    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'staticImage.tooltip')}" skinClass="com.esri.builder.skins.StackedFormItemSkin">
         <s:TextInput width="100%" text="@{staticImageModel.toolTip}"/>
     </s:FormItem>
 </s:Form>

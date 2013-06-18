@@ -82,7 +82,7 @@
 
     <s:Label left="column1:0" right="column1:0"
              baseline="row2:0"
-             fontWeight="bold"
+             styleName="boldText"
              text="{resourceManager.getString('BuilderStrings', 'geoprocessing.value')}"/>
 
     <s:TextInput left="column2:0"
@@ -98,8 +98,8 @@
 
     <s:Label left="column1:0" right="column1:0"
              baseline="row4:0"
-             fontWeight="bold"
              paddingTop="6"
+             styleName="boldText"
              text="{resourceManager.getString('BuilderStrings', 'georss.symbol')}"/>
 
     <supportClasses:SymbolEditor id="symbolEditor"
