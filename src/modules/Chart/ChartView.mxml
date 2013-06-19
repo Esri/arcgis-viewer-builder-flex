@@ -44,6 +44,7 @@
             import modules.IWidgetModel;
 
             import mx.controls.Alert;
+            import mx.core.FlexGlobals;
             import mx.events.CloseEvent;
             import mx.events.FlexEvent;
             import mx.managers.PopUpManager;
@@ -271,7 +272,7 @@
                     errorPopUp = new ErrorPopUp();
                     errorPopUp.addEventListener(CloseEvent.CLOSE, errorPopUp_closeHandler, false, 0, true);
                     errorPopUp.content = resourceManager.getString('BuilderStrings', 'chart.layerNoLongerExists');
-                    PopUpManager.addPopUp(errorPopUp, this, true);
+                    PopUpManager.addPopUp(errorPopUp, FlexGlobals.topLevelApplication as DisplayObject, true);
                     PopUpManager.centerPopUp(errorPopUp);
                 }
             }
