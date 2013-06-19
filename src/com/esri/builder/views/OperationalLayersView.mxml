@@ -189,13 +189,13 @@
                             }
                             else
                             {
-                                if (!isNaN(Number(layer.serviceURL.charAt(layer.serviceURL.length))))
+                                if (pointsToLayer(layer.serviceURL))
                                 {
-                                    ConfigLayer(token).type = ConfigLayer.DYNAMIC;
+                                    ConfigLayer(token).type = ConfigLayer.FEATURE;
                                 }
                                 else
                                 {
-                                    ConfigLayer(token).type = ConfigLayer.FEATURE;
+                                    ConfigLayer(token).type = ConfigLayer.DYNAMIC;
                                 }
                             }
 
@@ -238,8 +238,7 @@
                         {
                             if (configLayer1.type == ConfigLayer.FEATURE)
                             {
-                                // check to see if it points to the feature service or actual layer
-                                if (isNaN(Number(layer.serviceURL.charAt(layer.serviceURL.length - 1))))
+                                if (pointsToLayer(layer.serviceURL))
                                 {
                                     if (Log.isDebug())
                                     {
@@ -331,6 +330,12 @@
                         }
                     }
                 }
+            }
+
+            private function pointsToLayer(url:String):Boolean
+            {
+                var endsWithLayerId:RegExp = /\/[0-9]+$/;
+                return endsWithLayerId.test(url);
             }
 
             private function getConfigLayerType(type:String, url:String = null):String
