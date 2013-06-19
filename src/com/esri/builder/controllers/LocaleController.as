@@ -84,30 +84,32 @@ public class LocaleController
 
     private function setPreferredLocaleFonts(selectedLocale:String):void
     {
+        var mainApp:Object = FlexGlobals.topLevelApplication;
+
         if (selectedLocale == 'ar')
         {
-            FlexGlobals.topLevelApplication.setStyle('fontFamily', toFontFamily(LocaleModel.PREFERRED_ARABIC_FONTS));
+            mainApp.setStyle('fontFamily', toFontFamily(LocaleModel.PREFERRED_ARABIC_FONTS));
         }
         else if (selectedLocale == 'ja_JP')
         {
-            FlexGlobals.topLevelApplication.setStyle('fontFamily', toFontFamily(LocaleModel.PREFERRED_JAPANESE_FONTS));
+            mainApp.setStyle('fontFamily', toFontFamily(LocaleModel.PREFERRED_JAPANESE_FONTS));
         }
         else if (selectedLocale == 'ko_KR')
         {
-            FlexGlobals.topLevelApplication.setStyle('fontFamily', toFontFamily(LocaleModel.PREFERRED_KOREAN_FONTS));
+            mainApp.setStyle('fontFamily', toFontFamily(LocaleModel.PREFERRED_KOREAN_FONTS));
         }
         else if (selectedLocale == 'zh_CN')
         {
-            FlexGlobals.topLevelApplication.setStyle('fontFamily', toFontFamily(LocaleModel.PREFERRED_CHINESE_FONTS));
+            mainApp.setStyle('fontFamily', toFontFamily(LocaleModel.PREFERRED_CHINESE_FONTS));
         }
         else
         {
-            FlexGlobals.topLevelApplication.setStyle('fontFamily', undefined);
+            mainApp.setStyle('fontFamily', undefined);
         }
 
         if (Log.isDebug())
         {
-            LOG.debug("Current font family: {0}", FlexGlobals.topLevelApplication.getStyle('fontFamily'));
+            LOG.debug("Current font family: {0}", mainApp.getStyle('fontFamily'));
         }
     }
 
