@@ -99,9 +99,9 @@
                     selectMatchingItem(printModel.defaultFormat, defaultFormatSelection);
 
                     defaultLayoutTemplateSelection.typicalItem =
-                        LabelUtil.findLongestLabelItem(layoutTemplateOptions.toArray());
+                        LabelUtil.findLongestLabelItem(layoutTemplateOptions.toArray(), "label");
                     defaultFormatSelection.typicalItem =
-                        LabelUtil.findLongestLabelItem(formatOptions.toArray());
+                        LabelUtil.findLongestLabelItem(formatOptions.toArray(), "label");
                 }
                 else
                 {
