@@ -108,7 +108,15 @@ public class LocaleController
 
     private function toFontFamily(fontNames:Array):String
     {
-        return fontNames ? fontNames.join(',') : "";
+        if (!fontNames)
+        {
+            return "";
+        }
+
+        var fallbackFontName:String = "_sans";
+        fontNames.push(fallbackFontName);
+
+        return fontNames.join(',');
     }
 
     private function setLocaleSpecificStyles(locale:String):void
