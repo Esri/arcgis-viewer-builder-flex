@@ -86,24 +86,29 @@ public class LocaleController
     {
         if (selectedLocale == 'ar')
         {
-            FlexGlobals.topLevelApplication.setStyle('fontFamily', LocaleModel.ARABIC_FONT_FAMILY);
+            FlexGlobals.topLevelApplication.setStyle('fontFamily', toFontFamily(LocaleModel.PREFERRED_ARABIC_FONTS));
         }
         else if (selectedLocale == 'ja_JP')
         {
-            FlexGlobals.topLevelApplication.setStyle('fontFamily', LocaleModel.JAPANESE_FONT_FAMILY);
+            FlexGlobals.topLevelApplication.setStyle('fontFamily', toFontFamily(LocaleModel.PREFERRED_JAPANESE_FONTS));
         }
         else if (selectedLocale == 'ko_KR')
         {
-            FlexGlobals.topLevelApplication.setStyle('fontFamily', LocaleModel.KOREAN_FONT_FAMILY);
+            FlexGlobals.topLevelApplication.setStyle('fontFamily', toFontFamily(LocaleModel.PREFERRED_KOREAN_FONTS));
         }
         else if (selectedLocale == 'zh_CN')
         {
-            FlexGlobals.topLevelApplication.setStyle('fontFamily', LocaleModel.CHINESE_FONT_FAMILY);
+            FlexGlobals.topLevelApplication.setStyle('fontFamily', toFontFamily(LocaleModel.PREFERRED_CHINESE_FONTS));
         }
         else
         {
             FlexGlobals.topLevelApplication.setStyle('fontFamily', undefined);
         }
+    }
+
+    private function toFontFamily(fontNames:Array):String
+    {
+        return fontNames ? fontNames.join(',') : "";
     }
 
     private function setLocaleSpecificStyles(locale:String):void

@@ -46,24 +46,21 @@ public class LocaleModel
     private static const SWEDISH_LOCALE_ID:String = 'sv_SE';
     private static const CHINESE_SIMPLIFIED_HAN_LOCALE_ID:String = 'zh_CN';
 
-    public static const ARABIC_FONT_FAMILY:String = 'Tahoma';
+    public static const PREFERRED_ARABIC_FONTS:Array = [ 'Tahoma' ];
 
-    public static const JAPANESE_FONT_FAMILY:String =
-        'メイリオ,' +
-        'ＭＳ Ｐゴシック,' +
-        'ＭＳ Ｐ明朝,' +
-        'ＭＳ 明朝,' +
-        'MS UI Gothic,' +
-        'ＭＳ ゴシック';
+    public static const PREFERRED_JAPANESE_FONTS:Array = [ 'メイリオ',
+                                                           'ＭＳ Ｐゴシック',
+                                                           'ＭＳ Ｐ明朝',
+                                                           'ＭＳ 明朝',
+                                                           'MS UI Gothic',
+                                                           'ＭＳ ゴシック' ];
 
-    public static const KOREAN_FONT_FAMILY:String =
-        'Malgun Gothic,' +
-        'Batang';
+    public static const PREFERRED_KOREAN_FONTS:Array = [ 'Malgun Gothic',
+                                                         'Batang' ];
 
-    public static const CHINESE_FONT_FAMILY:String =
-        'SimSun,' +
-        'FangSong,' +
-        'SIMHEI';
+    public static const PREFERRED_CHINESE_FONTS:Array = [ 'SimSun',
+                                                          'FangSong',
+                                                          'SIMHEI' ];
 
     private static var instance:LocaleModel;
 
