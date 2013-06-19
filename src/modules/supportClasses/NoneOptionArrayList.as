@@ -17,13 +17,14 @@ package modules.supportClasses
 {
 
 import mx.collections.ArrayList;
+import mx.resources.ResourceManager;
 
 public class NoneOptionArrayList extends ArrayList
 {
     override public function set source(s:Array):void
     {
         s ||= [];
-        s.unshift(new NoneItem("None"));
+        s.unshift(new NoneItem(ResourceManager.getInstance().getString("BuilderStrings", "none")));
         super.source = s;
     }
 }
