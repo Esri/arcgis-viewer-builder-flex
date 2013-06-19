@@ -104,6 +104,11 @@ public class LocaleController
         {
             FlexGlobals.topLevelApplication.setStyle('fontFamily', undefined);
         }
+
+        if (Log.isDebug())
+        {
+            LOG.debug("Current font family: {0}", FlexGlobals.topLevelApplication.getStyle('fontFamily'));
+        }
     }
 
     private function toFontFamily(fontNames:Array):String
