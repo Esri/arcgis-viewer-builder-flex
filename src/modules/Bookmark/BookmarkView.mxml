@@ -495,44 +495,29 @@
 
             protected function bookmarkList_gridItemEditorSessionSaveHandler(event:GridItemEditorEvent):void
             {
-                if (editBookmark)
+                var currentBookmark:Bookmark = editBookmark ? editBookmark : lastBookmark;
+                var currentBookmarkGraphic:Graphic = editBookmark ? editBookmarkGraphic : lastBookmarkExtentGraphic;
+
+                if (!currentBookmark)
                 {
-                    if (isBookmarkNameEditorValid())
-                    {
-                        editBookmark.name = bookmarkNameEditor.text;
-                    }
-                    else if (isBookmarkNameValid(bookmarkNameBeforeEditing))
-                    {
-                        editBookmark.name = bookmarkNameBeforeEditing;
-                        return;
-                    }
-                    else
-                    {
-                        editBookmark.name = getDefaultBookmarkName() + bookmarkCount;
-                        bookmarkCount++;
-                    }
-                    editBookmarkGraphic.id = editBookmark.name;
-                    editBookmarkGraphic.toolTip = editBookmark.name;
+                    return;
                 }
-                else if (lastBookmark)
+
+                if (isBookmarkNameEditorValid())
                 {
-                    if (isBookmarkNameEditorValid())
-                    {
-                        lastBookmark.name = bookmarkNameEditor.text;
-                    }
-                    else if (isBookmarkNameValid(bookmarkNameBeforeEditing))
-                    {
-                        lastBookmark.name = bookmarkNameBeforeEditing;
-                        return;
-                    }
-                    else
-                    {
-                        lastBookmark.name = getDefaultBookmarkName() + bookmarkCount;
-                        bookmarkCount++;
-                    }
-                    lastBookmarkExtentGraphic.id = lastBookmark.name;
-                    lastBookmarkExtentGraphic.toolTip = lastBookmark.name;
+                    currentBookmark.name = bookmarkNameEditor.text;
                 }
+                else if (isBookmarkNameValid(bookmarkNameBeforeEditing))
+                {
+                    currentBookmark.name = bookmarkNameBeforeEditing;
+                }
+                else
+                {
+                    currentBookmark.name = getDefaultBookmarkName() + bookmarkCount;
+                }
+
+                currentBookmarkGraphic.id = currentBookmark.name;
+                currentBookmarkGraphic.toolTip = currentBookmark.name;
             }
 
             private function getDefaultBookmarkName():String
