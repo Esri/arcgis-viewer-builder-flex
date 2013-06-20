@@ -384,23 +384,18 @@
                                             searchTextInputToolTip="{resourceManager.getString('BuilderStrings', 'serviceBrowser.urlTooltip')}"
                                             text="@{routeURL}"/>
                     <graphics:green_check width="20" height="20"
+                                          includeInLayout="{hasSupportedRouteURL}"
                                           layoutDirection="ltr"
                                           visible="{hasSupportedRouteURL}"/>
-                    <s:VGroup paddingLeft="30" verticalAlign="middle">
+                    <s:HGroup paddingLeft="30" verticalAlign="middle">
                         <s:CheckBox id="useProxy"
                                     label="{resourceManager.getString('BuilderStrings', 'configLayerView.useProxy')}"
                                     selected="@{directionsModel.routeUseProxy}"/>
-                        <s:HGroup verticalAlign="middle">
-                            <graphics:warning width="20" height="20"
-                                              visible="{useProxy.selected 
-                                                  &amp;&amp; !Model.instance.proxyURL}"/>
-
-                            <s:Label maxWidth="250"
-                                     text="{resourceManager.getString('BuilderStrings', 'httpProxyMissing')}"
-                                     visible="{useProxy.selected
-                                     &amp;&amp; !Model.instance.proxyURL}"/>
-                        </s:HGroup>
-                    </s:VGroup>
+                        <s:Group toolTip="{resourceManager.getString('BuilderStrings', 'httpProxyMissing')}" visible="{useProxy.selected
+                                        &amp;&amp; !Model.instance.proxyURL}">
+                            <graphics:warning width="20" height="20"/>
+                        </s:Group>
+                    </s:HGroup>
                 </s:HGroup>
             </s:FormItem>
         </s:Form>
@@ -447,34 +442,28 @@
                                             searchHistory="{RecentlyUsedURLsModel.getInstance().urls}"
                                             searchTextInputToolTip="{resourceManager.getString('BuilderStrings', 'serviceBrowser.urlTooltip')}"
                                             text="@{locatorURL}"/>
-                    <graphics:green_check width="20" height="20"
-                                          layoutDirection="ltr"
-                                          visible="{hasSupportedSingleLineLocator}"/>
-                    <s:VGroup paddingLeft="10" verticalAlign="middle">
+
+                    <s:Group width="20" height="20">
+                        <graphics:green_check width="20" height="20"
+                                              layoutDirection="ltr"
+                                              visible="{hasSupportedSingleLineLocator}"/>
+
+                        <s:Group toolTip="{resourceManager.getString('BuilderStrings', 'headerController.needSingleLineFieldLocator')}"
+                                 visible="{!hasSupportedSingleLineLocator}">
+                            <graphics:warning width="20" height="20"/>
+                        </s:Group>
+                    </s:Group>
+
+                    <s:HGroup paddingLeft="10" verticalAlign="middle">
                         <s:CheckBox id="useProxyForLocator"
                                     label="{resourceManager.getString('BuilderStrings', 'configLayerView.useProxy')}"
                                     selected="@{directionsModel.locatorUseProxy}"/>
 
-                        <s:HGroup>
-                            <graphics:warning width="20" height="20"
-                                              visible="{useProxyForLocator.selected 
-                                                      &amp;&amp; !Model.instance.proxyURL}"/>
-
-                            <s:Label maxWidth="250"
-                                     text="{resourceManager.getString('BuilderStrings', 'httpProxyMissing')}"
-                                     visible="{useProxyForLocator.selected
-                                         &amp;&amp; !Model.instance.proxyURL}"/>
-                        </s:HGroup>
-                    </s:VGroup>
-                </s:HGroup>
-                <s:HGroup verticalAlign="middle">
-                    <graphics:warning width="20" height="20"
-                                      includeInLayout="{!hasSupportedSingleLineLocator}"
-                                      visible="{!hasSupportedSingleLineLocator}"/>
-                    <s:Label includeInLayout="{!hasSupportedSingleLineLocator}"
-                             maxWidth="300"
-                             text="{resourceManager.getString('BuilderStrings', 'headerController.needSingleLineFieldLocator')}"
-                             visible="{!hasSupportedSingleLineLocator}"/>
+                        <s:Group toolTip="{resourceManager.getString('BuilderStrings', 'httpProxyMissing')}" visible="{useProxyForLocator.selected
+                                        &amp;&amp; !Model.instance.proxyURL}">
+                            <graphics:warning width="20" height="20"/>
+                        </s:Group>
+                    </s:HGroup>
                 </s:HGroup>
             </s:FormItem>
 
