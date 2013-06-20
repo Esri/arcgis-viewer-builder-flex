@@ -44,7 +44,7 @@
                 portal = PortalModel.getInstance().portal;
 
                 var queryParams:PortalQueryParameters = new PortalQueryParameters();
-                queryParams.ofUser(portal.user.username);
+                queryParams.ofUser(portal.user.username).withLimit(100);
                 queryParams.addQueryCondition("(" + "type:" + '"' + PortalItem.TYPE_MAP_SERVICE + '"' + " OR " + "type:" + '"' + PortalItem.TYPE_FEATURE_SERVICE + '"' + " OR " +
                                               "type:" + '"' + PortalItem.TYPE_IMAGE_SERVICE + '"' + " OR " + "type:" + '"' + PortalItem.TYPE_KML_SERVICE + '"' + ")", "AND");
                 portal.queryItems(queryParams, new AsyncResponder(items_resultHandler, items_faultHandler));
