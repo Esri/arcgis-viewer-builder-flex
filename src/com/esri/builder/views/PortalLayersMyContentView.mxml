@@ -18,7 +18,6 @@
 -->
 <s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
          xmlns:s="library://ns.adobe.com/flex/spark"
-         xmlns:mx="library://ns.adobe.com/flex/mx"
          add="this_addHandler(event)"
          implements="com.esri.builder.views.supportClasses.IIncludeLayerSelection">
     <fx:Script>
@@ -35,6 +34,7 @@
             import mx.events.FlexEvent;
             import mx.rpc.AsyncResponder;
             import mx.rpc.AsyncToken;
+            import mx.utils.StringUtil;
 
             private var portal:Portal;
             private var layers:Array = [];
@@ -44,9 +44,14 @@
                 portal = PortalModel.getInstance().portal;
 
                 var queryParams:PortalQueryParameters = new PortalQueryParameters();
-                queryParams.ofUser(portal.user.username);
-                queryParams.addQueryCondition("(" + "type:" + '"' + PortalItem.TYPE_MAP_SERVICE + '"' + " OR " + "type:" + '"' + PortalItem.TYPE_FEATURE_SERVICE + '"' + " OR " +
-                                              "type:" + '"' + PortalItem.TYPE_IMAGE_SERVICE + '"' + " OR " + "type:" + '"' + PortalItem.TYPE_KML_SERVICE + '"' + ")", "AND");
+                queryParams.ofUser(portal.user.username).withLimit(100);
+                queryParams.addQueryCondition(
+                    StringUtil.substitute('(type:"{0}" OR type:"{1}" OR type:"{2}" OR type:"{3}")',
+                                          PortalItem.TYPE_MAP_SERVICE,
+                                          PortalItem.TYPE_FEATURE_SERVICE,
+                                          PortalItem.TYPE_IMAGE_SERVICE,
+                                          PortalItem.TYPE_KML_SERVICE));
+
                 portal.queryItems(queryParams, new AsyncResponder(items_resultHandler, items_faultHandler));
             }
 
