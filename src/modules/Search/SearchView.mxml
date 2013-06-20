@@ -451,7 +451,7 @@
 
             <s:Label left="editSearchColumn1:10"
                      baseline="editSearchRow2:0"
-                     text="{resourceManager.getString('BuilderStrings', 'search.name')}"/>
+                     text="{resourceManager.getString('BuilderStrings', 'displayFields.title')}"/>
 
             <s:TextInput left="editSearchColumn2:10" right="editSearchColumn2:0"
                          baseline="editSearchRow2:0"
