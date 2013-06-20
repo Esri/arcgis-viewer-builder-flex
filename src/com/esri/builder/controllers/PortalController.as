@@ -16,6 +16,7 @@
 package com.esri.builder.controllers
 {
 
+import com.esri.ags.components.IdentityManager;
 import com.esri.ags.components.supportClasses.Credential;
 import com.esri.ags.events.PortalEvent;
 import com.esri.ags.portal.Portal;
@@ -26,6 +27,8 @@ import com.esri.builder.supportClasses.LogUtil;
 
 import mx.logging.ILogger;
 import mx.logging.Log;
+import mx.resources.ResourceManager;
+import mx.rpc.Fault;
 import mx.rpc.events.FaultEvent;
 
 public class PortalController
@@ -157,7 +160,23 @@ public class PortalController
         portal.removeEventListener(PortalEvent.LOAD, portal_loadHandler);
         portal.removeEventListener(FaultEvent.FAULT, portal_faultHandler);
 
-        AppEvent.dispatch(AppEvent.PORTAL_STATUS_UPDATED);
+        var fault:Fault = event.fault;
+        if (fault.faultCode == "403" && fault.faultString == "User not part of this account")
+        {
+            var credential:Credential = IdentityManager.instance.findCredential(portal.url);
+            if (credential)
+            {
+                credential.destroy();
+            }
+
+            AppEvent.dispatch(
+                AppEvent.SHOW_ERROR,
+                ResourceManager.getInstance().getString("BuilderStrings", "notOrgMember"));
+        }
+        else
+        {
+            AppEvent.dispatch(AppEvent.PORTAL_STATUS_UPDATED);
+        }
     }
 }
 }
