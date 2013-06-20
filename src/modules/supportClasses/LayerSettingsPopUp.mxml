@@ -120,6 +120,7 @@
                 }
 
                 var serverVersion:Number = layerDetails.version;
+                var isRequiredEditable:Boolean;
 
                 var isEditorTrackingField:Boolean;
                 var editorTrackingFieldNames:Array = getEditorTrackingFieldNames(layerDetails);
@@ -130,17 +131,17 @@
                 for each (var field:Field in filteredFields)
                 {
                     isEditorTrackingField = editorTrackingFieldNames.indexOf(field.name) > -1;
+                    isRequiredEditable = serverVersion < 10.1 || field.nullable;
 
                     fields.push({
                                     id: field.name,
                                     name: field.alias,
                                     tooltip: "",
                                     editable: field.editable,
-                                    required: !field.nullable,
-                                    nullable: field.nullable,
+                                    required: !isRequiredEditable,
+                                    isRequiredEditable: isRequiredEditable,
                                     isEditorTrackingField: isEditorTrackingField,
-                                    selected: true,
-                                    serverVersion: serverVersion
+                                    selected: true
                                 });
                 }
 
@@ -162,7 +163,7 @@
                                 fieldItem.name = fieldSettings.alias;
                                 fieldItem.tooltip = fieldSettings.tooltip;
 
-                                if (fieldItem.nullable && !fieldItem.isEditorTrackingField)
+                                if (fieldItem.isRequiredEditable && !fieldItem.isEditorTrackingField)
                                 {
                                     fieldItem.required = fieldSettings.required;
                                 }
@@ -378,9 +379,7 @@
                                                         isEditorTrackingField = data["isEditorTrackingField"];
                                                         isEditable = data["editable"];
                                                         isFieldVisible = data["selected"];
-
-                                                        var serverVersion:Number = data["serverVersion"];
-                                                        isRequiredEditable = serverVersion < 10.1 || data["nullable"];
+                                                        isRequiredEditable = data["isRequiredEditable"];
 
                                                         if (isFieldVisible)
                                                         {
