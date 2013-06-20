@@ -497,12 +497,10 @@
                       verticalAlign="middle">
                 <s:CheckBox id="useProxy" selected="@{searchLayerUseProxy}"/>
 
-                <graphics:warning width="20" height="20"
-                                  visible="{useProxy.selected 
-                                      &amp;&amp; !Model.instance.proxyURL}"/>
-
-                <s:Label text="{resourceManager.getString('BuilderStrings', 'httpProxyMissing')}" visible="{useProxy.selected
-                         &amp;&amp; !Model.instance.proxyURL}"/>
+                <s:Group toolTip="{resourceManager.getString('BuilderStrings', 'httpProxyMissing')}" visible="{useProxy.selected
+                                        &amp;&amp; !Model.instance.proxyURL}">
+                    <graphics:warning width="20" height="20"/>
+                </s:Group>
             </s:HGroup>
         </s:Group>
 
