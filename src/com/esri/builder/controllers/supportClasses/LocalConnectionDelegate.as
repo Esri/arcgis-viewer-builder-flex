@@ -16,6 +16,8 @@
 package com.esri.builder.controllers.supportClasses
 {
 
+import com.esri.builder.supportClasses.LogUtil;
+
 import flash.events.StatusEvent;
 import flash.net.LocalConnection;
 
@@ -24,24 +26,24 @@ import mx.logging.Log;
 
 public final class LocalConnectionDelegate
 {
-    private static const LOG:ILogger = Log.getLogger('com.esri.builder.controllers.supportClasses.LocalConnectionDelegate');
-    private static const CNAME:String = '_flexViewer';
+    private static const LOG:ILogger = LogUtil.createLogger(LocalConnectionDelegate);
+    private static const CONNECTION_NAME:String = '_flexViewer';
 
-    private var m_localConnection:LocalConnection;
+    private var _localConnection:LocalConnection;
 
     private function get localConnection():LocalConnection
     {
-        if (m_localConnection === null)
+        if (_localConnection === null)
         {
             if (Log.isDebug())
             {
                 LOG.debug("Acquiring local connection");
             }
 
-            m_localConnection = new LocalConnection();
-            m_localConnection.addEventListener(StatusEvent.STATUS, localConnection_statusHandler);
+            _localConnection = new LocalConnection();
+            _localConnection.addEventListener(StatusEvent.STATUS, localConnection_statusHandler);
         }
-        return m_localConnection;
+        return _localConnection;
     }
 
     private function localConnection_statusHandler(event:StatusEvent):void
@@ -70,7 +72,7 @@ public final class LocalConnectionDelegate
         try
         {
             //use Function#apply to avoid passing rest argument as Array
-            localConnection.send.apply(null, [ CNAME, methodName ].concat(values));
+            localConnection.send.apply(null, [ CONNECTION_NAME, methodName ].concat(values));
         }
         catch (error:Error)
         {
