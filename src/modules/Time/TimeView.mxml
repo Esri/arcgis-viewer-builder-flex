@@ -114,6 +114,7 @@
             private function updateStopMethodOptions():void
             {
                 model.willUseTimeStopsCount = (stopMethodOptions.selection == useTimeStopsCountOption);
+                updateTimeStopsUnit();
             }
 
             private function updateSliderOptions():void
