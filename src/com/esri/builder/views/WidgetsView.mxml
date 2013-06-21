@@ -27,15 +27,15 @@
                     hide="this_hideHandler(event)">
     <fx:Script>
         <![CDATA[
-            import com.esri.builder.model.CustomWidgetType;
-            import com.esri.builder.supportClasses.AssetImporter;
-            import com.esri.builder.supportClasses.FileUtil;
             import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
             import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.CustomWidgetType;
             import com.esri.builder.model.Model;
             import com.esri.builder.model.Widget;
             import com.esri.builder.model.WidgetType;
             import com.esri.builder.model.WidgetTypeRegistryModel;
+            import com.esri.builder.supportClasses.AssetImporter;
+            import com.esri.builder.supportClasses.FileUtil;
             import com.esri.builder.views.popups.WidgetEditorPopUp;
             import com.esri.builder.views.supportClasses.WidgetAndModelSet;
 
