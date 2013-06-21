@@ -16,6 +16,7 @@
 package com.esri.builder.controllers.supportClasses
 {
 
+import flash.events.StatusEvent;
 import flash.net.LocalConnection;
 
 import mx.logging.ILogger;
@@ -38,8 +39,20 @@ public final class LocalConnectionDelegate
             }
 
             m_localConnection = new LocalConnection();
+            m_localConnection.addEventListener(StatusEvent.STATUS, localConnection_statusHandler);
         }
         return m_localConnection;
+    }
+
+    private function localConnection_statusHandler(event:StatusEvent):void
+    {
+        if (event.level == "error")
+        {
+            if (Log.isDebug())
+            {
+                LOG.debug("Call failed: {0}", event.toString());
+            }
+        }
     }
 
     public function setTitles(title:String, subtitle:String):void
@@ -49,7 +62,23 @@ public final class LocalConnectionDelegate
             LOG.debug("Sending titles changes: title {0} - subtitle {1}", title, subtitle);
         }
 
-        localConnection.send(CNAME, 'setTitles', title, subtitle);
+        callViewerMethod('setTitles', title, subtitle);
+    }
+
+    private function callViewerMethod(methodName:String, ... values):void
+    {
+        try
+        {
+            //use Function#apply to avoid passing rest argument as Array
+            localConnection.send.apply(null, [ CNAME, methodName ].concat(values));
+        }
+        catch (error:Error)
+        {
+            if (Log.isDebug())
+            {
+                LOG.debug("Call to Viewer method {0} failed: {1}", methodName, error);
+            }
+        }
     }
 
     public function setLogo(value:String):void
@@ -59,7 +88,7 @@ public final class LocalConnectionDelegate
             LOG.debug("Sending logo changes {0}", value);
         }
 
-        localConnection.send(CNAME, 'setLogo', value);
+        callViewerMethod('setLogo', value);
     }
 
     public function setTextColor(value:uint):void
@@ -69,7 +98,7 @@ public final class LocalConnectionDelegate
             LOG.debug("Sending text color changes {0}", value);
         }
 
-        localConnection.send(CNAME, 'setTextColor', value);
+        callViewerMethod('setTextColor', value);
     }
 
     public function setBackgroundColor(value:uint):void
@@ -79,7 +108,7 @@ public final class LocalConnectionDelegate
             LOG.debug("Sending background color changes {0}", value);
         }
 
-        localConnection.send(CNAME, 'setBackgroundColor', value);
+        callViewerMethod('setBackgroundColor', value);
     }
 
     public function setRolloverColor(value:uint):void
@@ -89,7 +118,7 @@ public final class LocalConnectionDelegate
             LOG.debug("Sending rollover color changes {0}", value);
         }
 
-        localConnection.send(CNAME, 'setRolloverColor', value);
+        callViewerMethod('setRolloverColor', value);
     }
 
     public function setSelectionColor(value:uint):void
@@ -99,7 +128,7 @@ public final class LocalConnectionDelegate
             LOG.debug("Sending selection color changes {0}", value);
         }
 
-        localConnection.send(CNAME, 'setSelectionColor', value);
+        callViewerMethod('setSelectionColor', value);
     }
 
     public function setTitleColor(value:uint):void
@@ -109,7 +138,7 @@ public final class LocalConnectionDelegate
             LOG.debug("Sending title color changes {0}", value);
         }
 
-        localConnection.send(CNAME, 'setTitleColor', value);
+        callViewerMethod('setTitleColor', value);
     }
 
     public function setLocale(localeChain:String):void
@@ -119,7 +148,7 @@ public final class LocalConnectionDelegate
             LOG.debug("Sending locale changes {0}", localeChain);
         }
 
-        localConnection.send(CNAME, 'setLocale', localeChain);
+        callViewerMethod('setLocale', localeChain);
     }
 
     public function setFontName(value:String):void
@@ -129,7 +158,7 @@ public final class LocalConnectionDelegate
             LOG.debug("Sending font name changes {0}", value);
         }
 
-        localConnection.send(CNAME, 'setFontName', value);
+        callViewerMethod('setFontName', value);
     }
 
     public function setAppTitleFontName(value:String):void
@@ -139,7 +168,7 @@ public final class LocalConnectionDelegate
             LOG.debug("Sending app title font name changes {0}", value);
         }
 
-        localConnection.send(CNAME, 'setAppTitleFontName', value);
+        callViewerMethod('setAppTitleFontName', value);
     }
 
     public function setSubTitleFontName(value:String):void
@@ -149,7 +178,7 @@ public final class LocalConnectionDelegate
             LOG.debug("Sending subtitle font name changes {0}", value);
         }
 
-        localConnection.send(CNAME, 'setSubTitleFontName', value);
+        callViewerMethod('setSubTitleFontName', value);
     }
 
     public function setAlpha(value:Number):void
@@ -159,7 +188,7 @@ public final class LocalConnectionDelegate
             LOG.debug("Sending alpha changes {0}", value);
         }
 
-        localConnection.send(CNAME, 'setAlpha', value);
+        callViewerMethod('setAlpha', value);
     }
 
     public function setPredefinedStyles(value:Object):void
@@ -169,7 +198,7 @@ public final class LocalConnectionDelegate
             LOG.debug("Sending predefined changes {0}", value);
         }
 
-        localConnection.send(CNAME, 'setPredefinedStyles', value);
+        callViewerMethod('setPredefinedStyles', value);
     }
 }
 }
