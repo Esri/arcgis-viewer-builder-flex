@@ -82,7 +82,17 @@
 
             private function init():void
             {
+                AppEvent.addListener(AppEvent.DELETE_WIDGET, deleteWidgetHandler, false, 0, true);
                 AppEvent.addListener(AppEvent.EDIT_WIDGET, editWidgetHandler, false, 0, true);
+            }
+
+            private function deleteWidgetHandler(event:AppEvent):void
+            {
+                var widget:Widget = event.data as Widget;
+                if (widget)
+                {
+                    modifiedWidgetAndModelSets.removeItem(findWidgetAndModelSetFromWidget(widget));
+                }
             }
 
             private function editWidgetHandler(event:AppEvent):void
