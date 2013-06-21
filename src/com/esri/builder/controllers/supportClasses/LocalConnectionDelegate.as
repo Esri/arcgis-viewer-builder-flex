@@ -59,16 +59,16 @@ public final class LocalConnectionDelegate
 
     public function setTitles(title:String, subtitle:String):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Sending titles changes: title {0} - subtitle {1}", title, subtitle);
-        }
-
         callViewerMethod('setTitles', title, subtitle);
     }
 
     private function callViewerMethod(methodName:String, ... values):void
     {
+        if (Log.isDebug())
+        {
+            LOG.debug("Calling Viewer method: {0} with the following arguments: {1}", methodName, values);
+        }
+
         try
         {
             //use Function#apply to avoid passing rest argument as Array
@@ -78,128 +78,68 @@ public final class LocalConnectionDelegate
         {
             if (Log.isDebug())
             {
-                LOG.debug("Call to Viewer method {0} failed: {1}", methodName, error);
+                LOG.debug("Call to method {0} failed: {1}", methodName, error);
             }
         }
     }
 
     public function setLogo(value:String):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Sending logo changes {0}", value);
-        }
-
         callViewerMethod('setLogo', value);
     }
 
     public function setTextColor(value:uint):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Sending text color changes {0}", value);
-        }
-
         callViewerMethod('setTextColor', value);
     }
 
     public function setBackgroundColor(value:uint):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Sending background color changes {0}", value);
-        }
-
         callViewerMethod('setBackgroundColor', value);
     }
 
     public function setRolloverColor(value:uint):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Sending rollover color changes {0}", value);
-        }
-
         callViewerMethod('setRolloverColor', value);
     }
 
     public function setSelectionColor(value:uint):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Sending selection color changes {0}", value);
-        }
-
         callViewerMethod('setSelectionColor', value);
     }
 
     public function setTitleColor(value:uint):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Sending title color changes {0}", value);
-        }
-
         callViewerMethod('setTitleColor', value);
     }
 
     public function setLocale(localeChain:String):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Sending locale changes {0}", localeChain);
-        }
-
         callViewerMethod('setLocale', localeChain);
     }
 
     public function setFontName(value:String):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Sending font name changes {0}", value);
-        }
-
         callViewerMethod('setFontName', value);
     }
 
     public function setAppTitleFontName(value:String):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Sending app title font name changes {0}", value);
-        }
-
         callViewerMethod('setAppTitleFontName', value);
     }
 
     public function setSubTitleFontName(value:String):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Sending subtitle font name changes {0}", value);
-        }
-
         callViewerMethod('setSubTitleFontName', value);
     }
 
     public function setAlpha(value:Number):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Sending alpha changes {0}", value);
-        }
-
         callViewerMethod('setAlpha', value);
     }
 
     public function setPredefinedStyles(value:Object):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Sending predefined changes {0}", value);
-        }
-
         callViewerMethod('setPredefinedStyles', value);
     }
 }
