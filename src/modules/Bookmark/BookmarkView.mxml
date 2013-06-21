@@ -40,6 +40,7 @@
             import com.esri.builder.model.Model;
             import com.esri.builder.model.PortalModel;
             import com.esri.builder.supportClasses.ErrorMessageUtil;
+            import com.esri.builder.supportClasses.LabelUtil;
 
             import modules.IWidgetModel;
 
@@ -65,7 +66,6 @@
             private var lastBookmarkExtentGraphic:Graphic;
             private var lastBookmark:Bookmark;
 
-            private var bookmarkCount:int = 1;
             [Bindable]
             private var isAddingBookmark:Boolean;
             private var isEditingBookmark:Boolean;
@@ -74,6 +74,7 @@
             private var hasBasemap:Boolean;
 
             private var bookmarkNameBeforeEditing:String;
+            private var usedBookmarkNames:Array;
 
             private function init():void
             {
@@ -120,11 +121,6 @@
                     finishAddBookmark(lastBookmark);
                 }
                 return true;
-            }
-
-            private function isBookmarkNameEditorValid():Boolean
-            {
-                return isBookmarkNameValid(bookmarkNameEditor.text);
             }
 
             private function isBookmarkNameValid(name:String):Boolean
@@ -446,6 +442,27 @@
                 bookmarkNameEditor = editorInstance.textArea;
                 bookmarkNameEditor.maxWidth = bookmarkList.labelColumn.width;
                 bookmarkNameBeforeEditing = bookmarkNameEditor.text;
+                usedBookmarkNames = getUsedBookmarkNames();
+                if (isEditingBookmark)
+                {
+                    var editBookmarkNameIndex:int = usedBookmarkNames.indexOf(editBookmark.name);
+                    if (editBookmarkNameIndex > -1)
+                    {
+                        usedBookmarkNames.splice(editBookmarkNameIndex, 1);
+                    }
+                }
+            }
+
+            private function getUsedBookmarkNames():Array
+            {
+                var usedNames:Array = [];
+
+                for each (var bookmark:Bookmark in m_model.bookmarkList.toArray())
+                {
+                    usedNames.push(bookmark.name);
+                }
+
+                return usedNames;
             }
 
             private function removeBookmarkFromList(isEditing:Boolean = false):void
@@ -495,44 +512,29 @@
 
             protected function bookmarkList_gridItemEditorSessionSaveHandler(event:GridItemEditorEvent):void
             {
-                if (editBookmark)
+                var currentBookmark:Bookmark = editBookmark ? editBookmark : lastBookmark;
+                var currentBookmarkGraphic:Graphic = editBookmark ? editBookmarkGraphic : lastBookmarkExtentGraphic;
+
+                if (!currentBookmark)
                 {
-                    if (isBookmarkNameEditorValid())
-                    {
-                        editBookmark.name = bookmarkNameEditor.text;
-                    }
-                    else if (isBookmarkNameValid(bookmarkNameBeforeEditing))
-                    {
-                        editBookmark.name = bookmarkNameBeforeEditing;
-                        return;
-                    }
-                    else
-                    {
-                        editBookmark.name = getDefaultBookmarkName() + bookmarkCount;
-                        bookmarkCount++;
-                    }
-                    editBookmarkGraphic.id = editBookmark.name;
-                    editBookmarkGraphic.toolTip = editBookmark.name;
+                    return;
                 }
-                else if (lastBookmark)
-                {
-                    if (isBookmarkNameEditorValid())
-                    {
-                        lastBookmark.name = bookmarkNameEditor.text;
-                    }
-                    else if (isBookmarkNameValid(bookmarkNameBeforeEditing))
-                    {
-                        lastBookmark.name = bookmarkNameBeforeEditing;
-                        return;
-                    }
-                    else
-                    {
-                        lastBookmark.name = getDefaultBookmarkName() + bookmarkCount;
-                        bookmarkCount++;
-                    }
-                    lastBookmarkExtentGraphic.id = lastBookmark.name;
-                    lastBookmarkExtentGraphic.toolTip = lastBookmark.name;
-                }
+
+                var bookmarkName:String =
+                    StringUtil.trim(bookmarkNameEditor.text)
+                    || StringUtil.trim(bookmarkNameBeforeEditing);
+
+                var isNameValidAndUnique:Boolean = bookmarkName && usedBookmarkNames.indexOf(bookmarkName) == -1;
+
+                currentBookmark.name = isNameValidAndUnique ? bookmarkName : getUniqueBookmarkName(bookmarkName);
+                currentBookmarkGraphic.id = currentBookmark.name;
+                currentBookmarkGraphic.toolTip = currentBookmark.name;
+            }
+
+            private function getUniqueBookmarkName(name:String):String
+            {
+                var bookmarkName:String = name ? name : getDefaultBookmarkName();
+                return LabelUtil.generateUniqueLabel(bookmarkName + "{0}", usedBookmarkNames);
             }
 
             private function getDefaultBookmarkName():String

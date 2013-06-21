@@ -18,13 +18,10 @@ package com.esri.builder.supportClasses
 
 import flash.filesystem.File;
 
-import mx.utils.StringUtil;
-
 public class FileUtil
 {
     public static function generateUniqueRelativePath(baseDirectory:File, relativeFilePath:String, relativePathBlackList:Array = null):String
     {
-        var currentID:int = 1;
         var extensionIndex:int = relativeFilePath.lastIndexOf(".");
         var extension:String = "";
         if (extensionIndex > -1)
@@ -33,26 +30,21 @@ public class FileUtil
             relativeFilePath = relativeFilePath.substr(0, extensionIndex);
         }
         var filenameTemplate:String = relativeFilePath + "_{0}" + extension;
-        var uniqueWidgetConfigPath:String;
 
-        do
-        {
-            uniqueWidgetConfigPath = StringUtil.substitute(filenameTemplate, currentID++);
-        } while (doesFileExist(baseDirectory, uniqueWidgetConfigPath, relativePathBlackList));
+        var uniqueWidgetConfigPath:String =
+            LabelUtil.generateUniqueLabel(filenameTemplate,
+                                          relativePathBlackList,
+                                          function isNonExistentFile(uniqueFilePath:String, availableNames:Array):Boolean
+                                          {
+                                              if (availableNames
+                                                  && availableNames.indexOf(uniqueFilePath) > -1)
+                                              {
+                                                  return false;
+                                              }
 
+                                              return !baseDirectory.resolvePath(uniqueFilePath).exists;
+                                          });
         return uniqueWidgetConfigPath;
-    }
-
-    private static function doesFileExist(baseDirectory:File, relativeFilePath:String, relativePathBlackList:Array):Boolean
-    {
-        if (relativePathBlackList
-            && relativePathBlackList.indexOf(relativeFilePath) > -1)
-        {
-            return true;
-        }
-
-        var fileToCheck:File = baseDirectory.resolvePath(relativeFilePath);
-        return fileToCheck.exists;
     }
 
     public static function getFileName(file:File):String

@@ -17,6 +17,7 @@ package com.esri.builder.supportClasses
 {
 
 import mx.core.FlexGlobals;
+import mx.utils.StringUtil;
 
 import spark.utils.LabelUtil;
 
@@ -54,6 +55,27 @@ public final class LabelUtil
                                         labelFunction:Function = null):String
     {
         return spark.utils.LabelUtil.itemToLabel(item, labelField, labelFunction);
+    }
+
+    public static function generateUniqueLabel(fileNameTemplate:String, usedNames:Array, isUniqueFunction:Function = null):String
+    {
+        var currentID:int = 1;
+        var uniqueLabel:String;
+
+        var uniquenessFunction:Function =
+            isUniqueFunction != null ? isUniqueFunction : isNameUnique;
+
+        do
+        {
+            uniqueLabel = StringUtil.substitute(fileNameTemplate, currentID++);
+        } while (!uniquenessFunction(uniqueLabel, usedNames));
+
+        return uniqueLabel;
+    }
+
+    private static function isNameUnique(name:String, usedNames:Array):Boolean
+    {
+        return usedNames.indexOf(name) == -1;
     }
 }
 }
