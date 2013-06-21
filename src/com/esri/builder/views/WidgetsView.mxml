@@ -18,7 +18,6 @@
 -->
 <s:NavigatorContent xmlns:fx="http://ns.adobe.com/mxml/2009"
                     xmlns:s="library://ns.adobe.com/flex/spark"
-                    xmlns:mx="library://ns.adobe.com/flex/mx"
                     xmlns:views="com.esri.builder.views.*"
                     xmlns:components="com.esri.builder.components.*"
                     width="100%" height="100%"
@@ -27,15 +26,15 @@
                     hide="this_hideHandler(event)">
     <fx:Script>
         <![CDATA[
-            import com.esri.builder.model.CustomWidgetType;
-            import com.esri.builder.supportClasses.AssetImporter;
-            import com.esri.builder.supportClasses.FileUtil;
             import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
             import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.CustomWidgetType;
             import com.esri.builder.model.Model;
             import com.esri.builder.model.Widget;
             import com.esri.builder.model.WidgetType;
             import com.esri.builder.model.WidgetTypeRegistryModel;
+            import com.esri.builder.supportClasses.AssetImporter;
+            import com.esri.builder.supportClasses.FileUtil;
             import com.esri.builder.views.popups.WidgetEditorPopUp;
             import com.esri.builder.views.supportClasses.WidgetAndModelSet;
 
@@ -82,7 +81,17 @@
 
             private function init():void
             {
+                AppEvent.addListener(AppEvent.DELETE_WIDGET, deleteWidgetHandler, false, 0, true);
                 AppEvent.addListener(AppEvent.EDIT_WIDGET, editWidgetHandler, false, 0, true);
+            }
+
+            private function deleteWidgetHandler(event:AppEvent):void
+            {
+                var widget:Widget = event.data as Widget;
+                if (widget)
+                {
+                    modifiedWidgetAndModelSets.removeItem(findWidgetAndModelSetFromWidget(widget));
+                }
             }
 
             private function editWidgetHandler(event:AppEvent):void
