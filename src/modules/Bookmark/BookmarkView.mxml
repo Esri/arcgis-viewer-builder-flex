@@ -145,22 +145,19 @@
                 for (var i:int = 0; i < m_model.bookmarkList.length; i++)
                 {
                     const bookmark:Bookmark = m_model.bookmarkList.getItemAt(i) as Bookmark;
-                    if (!isBookmarkExtentAlreadyAdded(bookmark))
-                    {
-                        var bookmarkExtentGraphic:Graphic = new Graphic;
-                        bookmarkExtentGraphic.id = bookmark.name;
-                        bookmarkExtentGraphic.toolTip = bookmark.name;
+                    var bookmarkExtentGraphic:Graphic = new Graphic;
+                    bookmarkExtentGraphic.id = bookmark.name;
+                    bookmarkExtentGraphic.toolTip = bookmark.name;
 
-                        var bookmarkExtent:Extent = new Extent;
-                        bookmarkExtent.xmin = bookmark.xmin;
-                        bookmarkExtent.xmax = bookmark.xmax;
-                        bookmarkExtent.ymin = bookmark.ymin;
-                        bookmarkExtent.ymax = bookmark.ymax;
+                    var bookmarkExtent:Extent = new Extent;
+                    bookmarkExtent.xmin = bookmark.xmin;
+                    bookmarkExtent.xmax = bookmark.xmax;
+                    bookmarkExtent.ymin = bookmark.ymin;
+                    bookmarkExtent.ymax = bookmark.ymax;
 
-                        bookmarkExtentGraphic.geometry = bookmarkExtent;
-                        bookmarkExtentGraphic.symbol = bookmarkExtentSymbol;
-                        bookmarksGraphicsLayer.add(bookmarkExtentGraphic);
-                    }
+                    bookmarkExtentGraphic.geometry = bookmarkExtent;
+                    bookmarkExtentGraphic.symbol = bookmarkExtentSymbol;
+                    bookmarksGraphicsLayer.add(bookmarkExtentGraphic);
                 }
                 // Add layers on the map
                 if (Model.instance.webmap)
@@ -490,24 +487,6 @@
 
                     isAddingBookmark = false;
                 }
-            }
-
-            private function isBookmarkExtentAlreadyAdded(bookmark:Bookmark):Boolean
-            {
-                var result:Boolean;
-                var graphics:ArrayCollection = bookmarksGraphicsLayer.graphicProvider as ArrayCollection;
-                if (graphics.length)
-                {
-                    for each (var graphic:Graphic in graphics)
-                    {
-                        if (bookmark.name === graphic.id)
-                        {
-                            result = true;
-                            break;
-                        }
-                    }
-                }
-                return result;
             }
 
             protected function bookmarkList_gridItemEditorSessionSaveHandler(event:GridItemEditorEvent):void
