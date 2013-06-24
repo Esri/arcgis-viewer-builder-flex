@@ -107,5 +107,10 @@ public class FileUtil
 
         return matchingFile;
     }
+
+    public static function ensureOSLineEndings(text:String):String
+    {
+        return text ? text.replace(/\n/g, File.lineEnding) : "";
+    }
 }
 }
