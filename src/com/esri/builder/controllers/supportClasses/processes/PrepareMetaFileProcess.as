@@ -103,7 +103,7 @@ public class PrepareMetaFileProcess extends ImportWidgetProcess
         try
         {
             fileStream.open(metaFile, FileMode.WRITE);
-            fileStream.writeUTFBytes(metaFileContents.toXMLString());
+            fileStream.writeUTFBytes(metaFileContents.toXMLString().replace(/\n/g, File.lineEnding));
         }
         catch (error:Error)
         {

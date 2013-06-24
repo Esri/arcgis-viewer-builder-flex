@@ -209,7 +209,7 @@
                     fileStream.open(file, FileMode.WRITE);
                     try
                     {
-                        fileStream.writeUTFBytes(configText);
+                        fileStream.writeUTFBytes(configText.replace(/\n/g, File.lineEnding));
                         success = true;
                     }
                     finally

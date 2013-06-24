@@ -516,7 +516,7 @@
                 const file:File = Model.instance.appDir.resolvePath(widget.config);
                 const fileStream:FileStream = new FileStream();
                 fileStream.open(file, FileMode.WRITE);
-                fileStream.writeUTFBytes(configText);
+                fileStream.writeUTFBytes(configText.replace(/\n/g, File.lineEnding));
                 fileStream.close();
 
                 AppEvent.dispatch(AppEvent.WIDGET_CONFIG_XML_SAVED);

@@ -60,7 +60,7 @@ public class LogFileTarget extends LineFormattedTarget
     private function writeToFile(message:String):void
     {
         const newTextBytes:ByteArray = new ByteArray();
-        newTextBytes.writeUTFBytes(message + "\n");
+        newTextBytes.writeUTFBytes(message + File.lineEnding);
 
         fileStream.open(outputFile, FileMode.UPDATE);
         const currentTextBytes:ByteArray = new ByteArray();

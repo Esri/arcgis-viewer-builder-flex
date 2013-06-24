@@ -110,7 +110,7 @@ public final class HTMLWrapperUpdater
     {
         var fileStream:FileStream = new FileStream();
         fileStream.open(textFile, FileMode.WRITE);
-        fileStream.writeUTFBytes(content);
+        fileStream.writeUTFBytes(content.replace(/\n/g, File.lineEnding));
         fileStream.close();
         fileStream = null;
     }

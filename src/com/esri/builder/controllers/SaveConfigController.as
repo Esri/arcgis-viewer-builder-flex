@@ -82,7 +82,7 @@ public final class SaveConfigController
                     LOG.debug("Config XML write success");
                 }
 
-                fileStream.writeUTFBytes(configText);
+                fileStream.writeUTFBytes(configText.replace(/\n/g, File.lineEnding));
                 success = true;
             }
             finally
