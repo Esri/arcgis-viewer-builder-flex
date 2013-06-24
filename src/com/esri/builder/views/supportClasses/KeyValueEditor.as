@@ -146,7 +146,7 @@ public class KeyValueEditor extends SkinnableComponent
 
     public function findMatchingField(fieldName:String):Field
     {
-        return fieldNameToFieldLookUp[fieldName];
+        return fieldNameToFieldLookUp ? fieldNameToFieldLookUp[fieldName] : null;
     }
 
     private function fieldFormatPopUp_closeHandler(event:PopUpEvent):void
