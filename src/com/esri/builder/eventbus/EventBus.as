@@ -20,8 +20,6 @@ import flash.events.EventDispatcher;
 
 /**
  * The EventBus allows centralized application communication.
- * It uses the singleton design pattern to make sure one event bus
- * is available globally.
  */
 public class EventBus extends EventDispatcher
 {
@@ -30,8 +28,6 @@ public class EventBus extends EventDispatcher
 
     /**
      * Normally the EventBus is not instantiated via the <b>new</b> method directly.
-     * The constructor helps enforce only one EventBus available for the application
-     * (singleton) so that it assures the communication only via a single event bus.
      */
     public function EventBus()
     {
