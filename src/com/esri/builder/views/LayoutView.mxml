@@ -35,6 +35,7 @@
             import com.esri.builder.model.WidgetContainer;
             import com.esri.builder.model.WidgetType;
             import com.esri.builder.model.WidgetTypeRegistryModel;
+            import com.esri.builder.supportClasses.FileUtil;
             import com.esri.builder.views.popups.LayoutWidgetEditorPopUp;
             import com.esri.builder.views.supportClasses.WidgetAndModelSet;
 
@@ -516,7 +517,7 @@
                 const file:File = Model.instance.appDir.resolvePath(widget.config);
                 const fileStream:FileStream = new FileStream();
                 fileStream.open(file, FileMode.WRITE);
-                fileStream.writeUTFBytes(configText.replace(/\n/g, File.lineEnding));
+                fileStream.writeUTFBytes(FileUtil.ensureOSLineEndings(configText));
                 fileStream.close();
 
                 AppEvent.dispatch(AppEvent.WIDGET_CONFIG_XML_SAVED);

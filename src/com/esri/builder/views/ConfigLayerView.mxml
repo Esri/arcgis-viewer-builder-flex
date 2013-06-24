@@ -361,7 +361,7 @@
                     fileStream.open(file, FileMode.WRITE);
                     try
                     {
-                        fileStream.writeUTFBytes(configText.replace(/\n/g, File.lineEnding));
+                        fileStream.writeUTFBytes(FileUtil.ensureOSLineEndings(configText));
                         success = true;
                     }
                     finally

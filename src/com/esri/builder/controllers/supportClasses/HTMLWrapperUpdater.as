@@ -17,6 +17,7 @@ package com.esri.builder.controllers.supportClasses
 {
 
 import com.esri.builder.model.Model;
+import com.esri.builder.supportClasses.FileUtil;
 import com.esri.builder.views.BuilderAlert;
 
 import flash.filesystem.File;
@@ -110,7 +111,7 @@ public final class HTMLWrapperUpdater
     {
         var fileStream:FileStream = new FileStream();
         fileStream.open(textFile, FileMode.WRITE);
-        fileStream.writeUTFBytes(content.replace(/\n/g, File.lineEnding));
+        fileStream.writeUTFBytes(FileUtil.ensureOSLineEndings(content));
         fileStream.close();
         fileStream = null;
     }
