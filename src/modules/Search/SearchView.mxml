@@ -281,7 +281,7 @@
 
                 searchLayerURL = "http://server.arcgisonline.com/ArcGIS/rest/services/Demographics/USA_Median_Age/MapServer/4";
                 searchLayerName = "";
-                searchLayerLabel = "Label";
+                searchLayerLabel = resourceManager.getString("BuilderStrings", "textsearchLabel");
                 searchLayerExpression = "";
                 searchLayerUseProxy = false;
                 searchLayerFields.source = [];
