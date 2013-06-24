@@ -16,7 +16,6 @@
 package com.esri.builder.eventbus
 {
 
-import flash.events.Event;
 import flash.events.EventDispatcher;
 
 /**
@@ -37,25 +36,5 @@ public class EventBus extends EventDispatcher
     public function EventBus()
     {
     }
-
-    /**
-     * The factory method is used to create a instance of the EventBus. It returns
-     * the only instance of EventBus and makes sure no another instance is created.
-     */
-    [Deprecated(replacement="instance")]
-    public static function getInstance():EventBus
-    {
-        return instance;
-    }
-
-    /**
-     * Basic dispatch function, dispatches simple named events.
-     */
-    [Deprecated(replacement="AppEvent.dispatch")]
-    public function dispatch(type:String):Boolean
-    {
-        return dispatchEvent(new Event(type));
-    }
 }
-
 }
