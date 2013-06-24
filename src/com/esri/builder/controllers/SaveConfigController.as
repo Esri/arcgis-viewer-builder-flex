@@ -19,6 +19,7 @@ package com.esri.builder.controllers
 import com.esri.builder.controllers.supportClasses.HTMLWrapperUpdater;
 import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.model.Model;
+import com.esri.builder.supportClasses.FileUtil;
 import com.esri.builder.supportClasses.LogUtil;
 import com.esri.builder.views.BuilderAlert;
 
@@ -82,7 +83,7 @@ public final class SaveConfigController
                     LOG.debug("Config XML write success");
                 }
 
-                fileStream.writeUTFBytes(configText);
+                fileStream.writeUTFBytes(FileUtil.ensureOSLineEndings(configText));
                 success = true;
             }
             finally

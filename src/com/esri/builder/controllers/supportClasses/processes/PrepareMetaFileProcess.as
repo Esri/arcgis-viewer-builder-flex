@@ -19,6 +19,7 @@ package com.esri.builder.controllers.supportClasses.processes
 import com.esri.builder.controllers.supportClasses.*;
 
 import com.esri.builder.controllers.supportClasses.XMLFileReader;
+import com.esri.builder.supportClasses.FileUtil;
 
 import flash.filesystem.File;
 import flash.filesystem.FileMode;
@@ -103,7 +104,7 @@ public class PrepareMetaFileProcess extends ImportWidgetProcess
         try
         {
             fileStream.open(metaFile, FileMode.WRITE);
-            fileStream.writeUTFBytes(metaFileContents.toXMLString());
+            fileStream.writeUTFBytes(FileUtil.ensureOSLineEndings(metaFileContents.toXMLString()));
         }
         catch (error:Error)
         {
