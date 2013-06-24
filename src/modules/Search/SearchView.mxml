@@ -140,7 +140,7 @@
                 searchLayerFields.source = fields;
 
                 lastLoadedURL = searchLayerURL;
-                getFieldsFromURL();
+                getPropertiesFromLayerMetadata();
                 validateExpression();
 
                 currentState = "configureSearchLayer";
@@ -168,7 +168,7 @@
                 return ObjectUtil.copy(field) as Field;
             }
 
-            private function getFieldsFromURL():void
+            private function getPropertiesFromLayerMetadata():void
             {
                 //TODO: use regEx validator
                 var urlRE:RegExp = /https?:\/\/([^\s.]+.)+([^\s.]+)/;
@@ -193,6 +193,11 @@
                 {
                     lastLoadedURL = currentLoadedURL;
                     searchLayerFields.removeAll();
+                }
+
+                if (!searchLayerName)
+                {
+                    searchLayerName = layerDetails.name;
                 }
 
                 layerFields.source = FieldUtil.getValidFields(layerDetails.fields);
@@ -275,7 +280,7 @@
                 isInCreateMode = true;
 
                 searchLayerURL = "http://server.arcgisonline.com/ArcGIS/rest/services/Demographics/USA_Median_Age/MapServer/4";
-                searchLayerName = "Name";
+                searchLayerName = "";
                 searchLayerLabel = "Label";
                 searchLayerExpression = "";
                 searchLayerUseProxy = false;
@@ -299,7 +304,7 @@
                 {
                     const selectedLayer:LayerNode = serviceBrowser.serviceSelection.getItemAt(0) as LayerNode;
                     searchLayerURL = selectedLayer.url;
-                    getFieldsFromURL();
+                    getPropertiesFromLayerMetadata();
                     currentState = "configureSearchLayer";
                 }
             }
@@ -330,7 +335,7 @@
             {
                 if (hasLayerEndPoint())
                 {
-                    getFieldsFromURL();
+                    getPropertiesFromLayerMetadata();
                 }
                 else
                 {
