@@ -36,8 +36,10 @@
             import mx.rpc.AsyncToken;
             import mx.utils.StringUtil;
 
+            [Bindable]
+            private var results:ArrayList = new ArrayList();
+
             private var portal:Portal;
-            private var layers:Array = [];
 
             protected function this_addHandler(event:FlexEvent):void
             {
@@ -57,29 +59,23 @@
 
             private function items_resultHandler(queryResult:PortalQueryResult, asyncToken:AsyncToken):void
             {
-                layers = [];
-                if (queryResult.results.length)
+                results.removeAll();
+
+                var layers:Array = [];
+                for each (var portalItem:PortalItem in queryResult.results)
                 {
-                    currentState = "loaded";
-                    var portalItem:PortalItem;
-                    for (var i:uint = 0; i < queryResult.results.length; i++)
-                    {
-                        portalItem = queryResult.results[i] as PortalItem;
-                        var portalLayer:PortalLayer = new PortalLayer(portalItem);
-                        portalLayer.serviceURL = portalItem.url;
-                        layers.push(portalLayer);
-                    }
-                    list.dataProvider = new ArrayList(layers);
+                    var portalLayer:PortalLayer = new PortalLayer(portalItem);
+                    portalLayer.serviceURL = portalItem.url;
+                    layers.push(portalLayer);
                 }
-                else
-                {
-                    currentState = "nolayers";
-                }
+                results.source = layers;
+
+                currentState = (layers.length > 0) ? "loaded" : "nolayers";
             }
 
             private function items_faultHandler(queryResult:PortalQueryResult, asyncToken:AsyncToken):void
             {
-                layers = [];
+                results.removeAll();
             }
 
             private function list_valueCommitHandler(event:FlexEvent):void
@@ -109,6 +105,7 @@
     <s:List id="list"
             width="99%" height="99%"
             borderVisible="false"
+            dataProvider="{results}"
             excludeFrom="nolayers"
             itemRenderer="com.esri.builder.renderers.PortalLayerRenderer"
             valueCommit="list_valueCommitHandler(event)">
