@@ -109,6 +109,7 @@
     <s:List id="list"
             width="99%" height="99%"
             borderVisible="false"
+            excludeFrom="nolayers"
             itemRenderer="com.esri.builder.renderers.PortalLayerRenderer"
             valueCommit="list_valueCommitHandler(event)">
         <s:layout>
@@ -121,4 +122,11 @@
                           requestedColumnCount="3"/>
         </s:layout>
     </s:List>
+
+    <s:Label fontSize="16"
+             horizontalCenter="0"
+             includeIn="nolayers"
+             styleName="boldText"
+             text="{resourceManager.getString('BuilderStrings', 'noLayersFound')}"
+             verticalCenter="0"/>
 </s:Group>
