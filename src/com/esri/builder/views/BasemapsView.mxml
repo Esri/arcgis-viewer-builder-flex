@@ -45,8 +45,8 @@
             import mx.events.FlexEvent;
             import mx.logging.ILogger;
             import mx.logging.Log;
-            import mx.rpc.AsyncResponder;
             import mx.rpc.Fault;
+            import mx.rpc.Responder;
 
             import spark.components.List;
 
@@ -239,8 +239,8 @@
                         jsonTask.url = basemap.serviceURL;
                         jsonTask.requestTimeout = Model.REQUEST_TIMEOUT;
                         jsonTask.showBusyCursor = true;
-                        jsonTask.execute(param, new AsyncResponder(jsonTask_resultHandler, jsonTask_faultHandler, configLayer1));
-                        function jsonTask_resultHandler(resultObject:Object, token:Object = null):void
+                        jsonTask.execute(param, new mx.rpc.Responder(jsonTask_resultHandler, jsonTask_faultHandler));
+                        function jsonTask_resultHandler(resultObject:Object):void
                         {
                             if (Log.isDebug())
                             {
@@ -249,21 +249,21 @@
 
                             if (resultObject.bandCount)
                             {
-                                ConfigLayer(token).type = ConfigLayer.IMAGE;
+                                configLayer1.type = ConfigLayer.IMAGE;
                             }
                             else if (resultObject.singleFusedMapCache)
                             {
-                                ConfigLayer(token).type = ConfigLayer.TILED;
+                                configLayer1.type = ConfigLayer.TILED;
                             }
                             else
                             {
                                 if (pointsToLayer(basemap.serviceURL))
                                 {
-                                    ConfigLayer(token).type = ConfigLayer.FEATURE;
+                                    configLayer1.type = ConfigLayer.FEATURE;
                                 }
                                 else
                                 {
-                                    ConfigLayer(token).type = ConfigLayer.DYNAMIC;
+                                    configLayer1.type = ConfigLayer.DYNAMIC;
                                 }
                             }
 
@@ -276,7 +276,7 @@
                             updateConfigLayerList();
                         }
 
-                        function jsonTask_faultHandler(fault:Fault, token:Object = null):void
+                        function jsonTask_faultHandler(fault:Fault):void
                         {
                             if (fault.faultString != "Sign in aborted")
                             {
@@ -330,8 +330,8 @@
                                     jsonTask1.url = basemap.serviceURL;
                                     jsonTask1.requestTimeout = Model.REQUEST_TIMEOUT;
                                     jsonTask1.showBusyCursor = true;
-                                    jsonTask1.execute(param1, new AsyncResponder(jsonTask1_resultHandler, jsonTask1_faultHandler));
-                                    function jsonTask1_resultHandler(resultObject:Object, token:Object = null):void
+                                    jsonTask1.execute(param1, new mx.rpc.Responder(jsonTask1_resultHandler, jsonTask1_faultHandler));
+                                    function jsonTask1_resultHandler(resultObject:Object):void
                                     {
                                         if (Log.isDebug())
                                         {
@@ -356,7 +356,7 @@
                                         }
                                     }
 
-                                    function jsonTask1_faultHandler(fault:Fault, token:Object = null):void
+                                    function jsonTask1_faultHandler(fault:Fault):void
                                     {
                                         if (fault.faultString != "Sign in aborted")
                                         {
