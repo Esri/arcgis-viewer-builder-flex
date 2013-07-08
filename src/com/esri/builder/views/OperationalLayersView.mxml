@@ -242,6 +242,17 @@
                                 {
                                     if (Log.isDebug())
                                     {
+                                        LOG.debug("Add portal config layer - type: {0}, url: {1}", configLayer1.type, configLayer1.url);
+                                    }
+
+                                    configLayer1.url = layer.serviceURL;
+                                    Model.instance.configOpsLayerList.addLayer(configLayer1);
+                                    updateConfigLayerList();
+                                }
+                                else
+                                {
+                                    if (Log.isDebug())
+                                    {
                                         LOG.debug("Fetching feature service item");
                                     }
 
@@ -303,17 +314,6 @@
                                             }
                                         }
                                     }
-                                }
-                                else
-                                {
-                                    if (Log.isDebug())
-                                    {
-                                        LOG.debug("Add portal config layer - type: {0}, url: {1}", configLayer1.type, configLayer1.url);
-                                    }
-
-                                    configLayer1.url = layer.serviceURL;
-                                    Model.instance.configOpsLayerList.addLayer(configLayer1);
-                                    updateConfigLayerList();
                                 }
                             }
                             else
