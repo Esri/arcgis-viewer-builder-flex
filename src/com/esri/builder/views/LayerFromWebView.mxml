@@ -177,6 +177,14 @@
                     {
                         visibleLayerNames.push(info.name);
                     }
+
+                    if(info.subLayers)
+                    {
+                        for each(var subLayerInfo:WMSLayerInfo in info.subLayers)
+                        {
+                            visibleLayerNames.push(subLayerInfo.name);
+                        }
+                    }
                 }
 
                 configLayer.label = wmsLayer.title ? wmsLayer.title : findAppropriateLabel(wmsLayer.url);
