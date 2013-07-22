@@ -29,6 +29,7 @@
             import com.esri.builder.model.PortalLayer;
             import com.esri.builder.model.PortalModel;
             import com.esri.builder.views.supportClasses.IIncludeLayerDispatcher;
+            import com.esri.builder.views.supportClasses.ILayerSelectionUpdater;
 
             import mx.collections.ArrayList;
             import mx.events.FlexEvent;
@@ -82,9 +83,9 @@
             {
                 if (this.parent is PortalLayersView)
                 {
-                    if (this.parent.parent is IIncludeLayerDispatcher)
+                    if (this.parent.parent is ILayerSelectionUpdater)
                     {
-                        (this.parent.parent as IIncludeLayerDispatcher).updateLayerSelection();
+                        (this.parent.parent as ILayerSelectionUpdater).updateLayerSelection();
                     }
                 }
             }
@@ -96,7 +97,7 @@
 
             private function dispatchIncludeLayer():void
             {
-                (owner as PortalLayersView).dispatchIncludeLayer();
+                (owner as IIncludeLayerDispatcher).dispatchIncludeLayer();
             }
         ]]>
     </fx:Script>

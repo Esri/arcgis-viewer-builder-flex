@@ -24,7 +24,8 @@
          add="this_addHandler(event)"
          creationComplete="init()"
          currentState="{Model.instance.portalLayersState}"
-         implements="com.esri.builder.views.supportClasses.IIncludeLayerSelection">
+         implements="com.esri.builder.views.supportClasses.IIncludeLayerSelection,
+                     com.esri.builder.views.supportClasses.IIncludeLayerDispatcher">
     <fx:Script>
         <![CDATA[
             import com.esri.ags.portal.Portal;
@@ -33,6 +34,7 @@
             import com.esri.builder.model.Model;
             import com.esri.builder.model.PortalModel;
             import com.esri.builder.views.supportClasses.IIncludeLayerDispatcher;
+            import com.esri.builder.views.supportClasses.ILayerSelectionUpdater;
 
             import mx.core.UIComponent;
             import mx.events.FlexEvent;
@@ -170,7 +172,7 @@
             {
                 if (owner)
                 {
-                    (owner as IIncludeLayerDispatcher).updateLayerSelection();
+                    (owner as ILayerSelectionUpdater).updateLayerSelection();
                 }
             }
 
