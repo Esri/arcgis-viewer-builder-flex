@@ -16,8 +16,8 @@
 package com.esri.builder.views.supportClasses
 {
 
-public interface IIncludeLayerDispatcher
+public interface ILayerSelectionUpdater
 {
-    function dispatchIncludeLayer():void;
+    function updateLayerSelection():void;
 }
 }

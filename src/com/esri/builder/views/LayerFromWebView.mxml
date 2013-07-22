@@ -34,6 +34,7 @@
             import com.esri.builder.model.Model;
             import com.esri.builder.supportClasses.URLUtil;
             import com.esri.builder.views.supportClasses.IIncludeLayerDispatcher;
+            import com.esri.builder.views.supportClasses.ILayerSelectionUpdater;
 
             import mx.events.FlexEvent;
             import mx.managers.CursorManager;
@@ -288,7 +289,7 @@
 
             private function dispatchUpdateLayerSelection():void
             {
-                (owner as IIncludeLayerDispatcher).updateLayerSelection();
+                (owner as ILayerSelectionUpdater).updateLayerSelection();
             }
 
             protected function this_creationCompleteHandler(event:FlexEvent):void
