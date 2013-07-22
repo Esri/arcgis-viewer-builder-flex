@@ -173,7 +173,10 @@
                 var visibleLayerNames:Array = [];
                 for each (var info:WMSLayerInfo in wmsLayer.layerInfos)
                 {
-                    visibleLayerNames.push(info.name);
+                    if(info.name)
+                    {
+                        visibleLayerNames.push(info.name);
+                    }
                 }
 
                 configLayer.label = wmsLayer.title ? wmsLayer.title : findAppropriateLabel(wmsLayer.url);
