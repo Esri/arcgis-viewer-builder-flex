@@ -170,25 +170,26 @@
 
             private function assimilateWMSLayer(wmsLayer:WMSLayer, configLayer:ConfigLayer):void
             {
+                configLayer.label = wmsLayer.title ? wmsLayer.title : findAppropriateLabel(wmsLayer.url);
+                configLayer.visibleLayers = extractVisibleLayerNames(wmsLayer.layerInfos).join();
+            }
+
+            private function extractVisibleLayerNames(layerInfos:Array):Array
+            {
                 var visibleLayerNames:Array = [];
-                for each (var info:WMSLayerInfo in wmsLayer.layerInfos)
+                for each (var info:WMSLayerInfo in layerInfos)
                 {
-                    if(info.name)
+                    if (info.name)
                     {
                         visibleLayerNames.push(info.name);
                     }
 
-                    if(info.subLayers)
+                    if (info.subLayers)
                     {
-                        for each(var subLayerInfo:WMSLayerInfo in info.subLayers)
-                        {
-                            visibleLayerNames.push(subLayerInfo.name);
-                        }
+                        visibleLayerNames = visibleLayerNames.concat(extractVisibleLayerNames(info.subLayers));
                     }
                 }
-
-                configLayer.label = wmsLayer.title ? wmsLayer.title : findAppropriateLabel(wmsLayer.url);
-                configLayer.visibleLayers = visibleLayerNames.join();
+                return visibleLayerNames;
             }
 
             private function assimilateWMTSLayer(wmtsLayer:WMTSLayer, configLayer:ConfigLayer):void
