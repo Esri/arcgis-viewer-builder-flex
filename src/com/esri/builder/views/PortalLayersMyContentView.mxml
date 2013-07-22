@@ -93,6 +93,11 @@
             {
                 return list && list.selectedIndex > -1;
             }
+
+            private function dispatchIncludeLayer():void
+            {
+                (owner as PortalLayersView).dispatchIncludeLayer();
+            }
         ]]>
     </fx:Script>
 
@@ -106,6 +111,7 @@
             width="99%" height="99%"
             borderVisible="false"
             dataProvider="{results}"
+            doubleClick="dispatchIncludeLayer()"
             excludeFrom="nolayers"
             itemRenderer="com.esri.builder.renderers.PortalLayerRenderer"
             valueCommit="list_valueCommitHandler(event)">

@@ -180,7 +180,7 @@
                 searchInput.setFocus();
             }
 
-            private function dispatchIncludeLayer():void
+            public function dispatchIncludeLayer():void
             {
                 (owner as IIncludeLayerDispatcher).dispatchIncludeLayer();
             }
