@@ -23,7 +23,7 @@ import mx.resources.ResourceManager;
 public final class MapSwitcherModel implements IWidgetModel
 {
     [Bindable]
-    public var moreLabel:String = ResourceManager.getInstance().getString('BuilderStrings', 'mapSwitcher.more');
+    public var layerListLabel:String = ResourceManager.getInstance().getString('BuilderStrings', 'mapSwitcher.more');
     [Bindable]
     public var basemapsLabel:String = ResourceManager.getInstance().getString('BuilderStrings', 'mapSwitcher.basemap');
     [Bindable]
@@ -40,7 +40,7 @@ public final class MapSwitcherModel implements IWidgetModel
     {
         if (doc.labels.layerlistlabel[0])
         {
-            moreLabel = doc.labels.layerlistlabel;
+            layerListLabel = doc.labels.layerlistlabel;
         }
         if (doc.labels.basemapslabel[0])
         {
@@ -59,7 +59,7 @@ public final class MapSwitcherModel implements IWidgetModel
             <configuration>
                 <layerlist/>
                 <labels>
-                    <layerlistlabel>{moreLabel}</layerlistlabel>
+                    <layerlistlabel>{layerListLabel}</layerlistlabel>
                     <basemapslabel>{basemapsLabel}</basemapslabel>
                 </labels>
                 <showthumbnails>{showThumbnails}</showthumbnails>

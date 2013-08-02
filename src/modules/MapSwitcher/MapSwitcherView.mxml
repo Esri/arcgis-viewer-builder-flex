@@ -81,7 +81,7 @@
         <s:TextInput width="100%"
                      enabled="{mapSwitcherModel.layerListVisible}"
                      maxChars="30"
-                     text="@{mapSwitcherModel.moreLabel}"/>
+                     text="@{mapSwitcherModel.layerListLabel}"/>
     </s:FormItem>
 
     <s:FormItem label="{resourceManager.getString('BuilderStrings', 'mapSwitcher.expandLayerItems')}">
