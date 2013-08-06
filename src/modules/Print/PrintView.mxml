@@ -28,6 +28,7 @@
             import com.esri.ags.tasks.supportClasses.PrintServiceInfo;
             import com.esri.builder.components.serviceBrowser.nodes.GPTaskNode;
             import com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent;
+            import com.esri.builder.model.Model;
             import com.esri.builder.model.RecentlyUsedURLsModel;
             import com.esri.builder.supportClasses.LabelUtil;
             import com.esri.builder.views.BuilderAlert;
@@ -262,6 +263,16 @@
         <graphics:green_check width="20" height="20"
                               layoutDirection="ltr"
                               visible="{hasValidPrintTask}"/>
+
+        <s:CheckBox includeInLayout="{printModel.willUseExportWebMap}"
+                    label="{resourceManager.getString('BuilderStrings', 'configLayerView.useProxy')}"
+                    selected="@{printModel.useProxy}"
+                    visible="{printModel.willUseExportWebMap}"/>
+
+        <s:Group toolTip="{resourceManager.getString('BuilderStrings', 'httpProxyMissing')}" visible="{printModel.useProxy
+                                        &amp;&amp; !Model.instance.proxyURL}">
+            <graphics:warning width="20" height="20"/>
+        </s:Group>
     </s:FormItem>
 
     <s:FormItem excludeFrom="browsingTasks"
