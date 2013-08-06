@@ -277,7 +277,7 @@
 
     <s:FormItem excludeFrom="browsingTasks"
                 label="{resourceManager.getString('BuilderStrings', 'print.title')}"
-                toolTip="{resourceManager.getString('BuilderStrings', 'print.titleToolTip')}">
+                toolTip="{resourceManager.getString('BuilderStrings', 'print.titleTooltip')}">
         <s:layout>
             <s:HorizontalLayout/>
         </s:layout>
@@ -292,7 +292,7 @@
 
     <s:FormItem excludeFrom="webPrint,browsingTasks"
                 label="{resourceManager.getString('BuilderStrings', 'print.subtitle')}"
-                toolTip="{resourceManager.getString('BuilderStrings', 'print.subtitleToolTip')}">
+                toolTip="{resourceManager.getString('BuilderStrings', 'print.subtitleTooltip')}">
         <s:TextInput width="400" text="@{printModel.subtitle}"/>
     </s:FormItem>
 
@@ -310,7 +310,7 @@
 
     <s:FormItem excludeFrom="browsingTasks"
                 label="{resourceManager.getString('BuilderStrings', 'print.copyright')}"
-                toolTip="{resourceManager.getString('BuilderStrings', 'print.copyrightToolTip')}">
+                toolTip="{resourceManager.getString('BuilderStrings', 'print.copyrightTooltip')}">
         <s:layout>
             <s:HorizontalLayout/>
         </s:layout>
