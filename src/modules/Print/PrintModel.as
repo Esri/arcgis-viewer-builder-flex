@@ -52,6 +52,7 @@ public final class PrintModel implements IWidgetModel
     public var isAuthorVisible:Boolean = true;
 
     public var willUseExportWebMap:Boolean = false;
+    public var useProxy:Boolean;
 
     public function importXML(doc:XML):void
     {
@@ -90,6 +91,10 @@ public final class PrintModel implements IWidgetModel
         if (doc.layouttemplates.@defaultvalue[0])
         {
             defaultLayoutTemplate = doc.layouttemplates.@defaultvalue[0];
+        }
+        if(doc.useproxy[0] == "true")
+        {
+            useProxy = true;
         }
     }
 
@@ -156,6 +161,11 @@ public final class PrintModel implements IWidgetModel
         if (defaultLayoutTemplate)
         {
             configXML.appendChild(<layouttemplates defaultvalue={defaultLayoutTemplate}/>)
+        }
+
+        if(useProxy)
+        {
+            configXML.appendChild(<useproxy>{useProxy}</useproxy>);
         }
 
         return configXML;
