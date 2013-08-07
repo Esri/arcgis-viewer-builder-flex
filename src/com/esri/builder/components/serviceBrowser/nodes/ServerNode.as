@@ -29,6 +29,17 @@ public class ServerNode extends ServiceDirectoryNode
         return _type;
     }
 
+    public function get shorthandType():String
+    {
+        return ""; //subclasses must implement
+    }
+
+    override public function get displayLabel():String
+    {
+        return StringUtil.substitute("{0} \u202A({1})\u202C",
+                                     super.displayLabel, shorthandType);
+    }
+
     public function ServerNode(parent:ServiceDirectoryNode, name:String, type:String)
     {
         const parentDirectory:String = parent.name + "/";
