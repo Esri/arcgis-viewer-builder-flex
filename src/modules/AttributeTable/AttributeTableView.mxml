@@ -233,6 +233,8 @@
                 {
                     layerSettingsPopUp = new LayerSettingsPopUp();
                     layerSettingsPopUp.layerName = featureConfigLayer.label;
+                    layerSettingsPopUp.showAttachmentsEnabled = true;
+                    layerSettingsPopUp.showRelatedRecordsEnabled = true;
                     layerSettingsPopUp.overrideLayerSettings(attributeTableModel.findLayerSettings(featureConfigLayer.label));
                     var featureLayer:FeatureLayer = featureConfigLayer.createLayer() as FeatureLayer;
                     featureLayer.addEventListener(LayerEvent.LOAD, featureLayer_loadHandler);

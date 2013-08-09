@@ -21,13 +21,13 @@ public class LayerSettings
 {
     public var name:String;
     public var fields:Array = [];
+    public var showAttachments:Boolean;
+    public var showRelatedRecords:Boolean;
 
     //preserve
     private var showObjectId:XML;
     private var showGlobalId:XML;
     private var exportLocation:XML;
-    private var showAttachments:XML;
-    private var showRelatedRecords:XML;
     private var columnsOrder:XML;
     private var sublayer:XML;
 
@@ -46,11 +46,12 @@ public class LayerSettings
             }
         }
 
+        showAttachments = layerSettingsXML.showattachments[0] == "true";
+        showRelatedRecords = layerSettingsXML.showrelatedrecords[0] == "true";
+
         showObjectId = layerSettingsXML.showobjectid[0];
         showGlobalId = layerSettingsXML.showglobalid[0];
         exportLocation = layerSettingsXML.exportlocation[0];
-        showAttachments = layerSettingsXML.showattachments[0];
-        showRelatedRecords = layerSettingsXML.showrelatedrecords[0];
         columnsOrder = layerSettingsXML.columnsorder[0];
         sublayer = layerSettingsXML.sublayer[0];
     }
@@ -72,6 +73,16 @@ public class LayerSettings
             }
         }
 
+        if (showAttachments)
+        {
+            configXML.appendChild(<showattachments>{showAttachments}</showattachments>);
+        }
+
+        if (showRelatedRecords)
+        {
+            configXML.appendChild(<showrelatedrecords>{showRelatedRecords}</showrelatedrecords>);
+        }
+
         if (showObjectId)
         {
             configXML.appendChild(showObjectId);
@@ -84,14 +95,6 @@ public class LayerSettings
         if (exportLocation)
         {
             configXML.appendChild(exportLocation);
-        }
-        if (showAttachments)
-        {
-            configXML.appendChild(showAttachments);
-        }
-        if (showRelatedRecords)
-        {
-            configXML.appendChild(showRelatedRecords);
         }
         if (columnsOrder)
         {

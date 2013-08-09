@@ -18,6 +18,7 @@
 -->
 <s:SkinnablePopUpContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
                            xmlns:s="library://ns.adobe.com/flex/spark"
+                           xmlns:components="com.esri.builder.components.*"
                            width="100%"
                            creationComplete="this_creationCompleteHandler(event)"
                            minHeight="85"
@@ -36,6 +37,21 @@
             import mx.events.CollectionEventKind;
             import mx.events.FlexEvent;
             import mx.managers.PopUpManager;
+
+            [Bindable]
+            public var showAttachmentsEnabled:Boolean;
+            [Bindable]
+            public var showRelatedRecordsEnabled:Boolean;
+
+            [Bindable]
+            public var supportsAttachments:Boolean;
+            [Bindable]
+            public var supportsRelatedRecords:Boolean;
+
+            [Bindable]
+            private var showRelatedRecords:Boolean;
+            [Bindable]
+            private var showAttachments:Boolean;
 
             public var originalLayerSettings:LayerSettings;
 
@@ -184,7 +200,14 @@
                             }
                         }
                     }
+
+                    showAttachments = originalLayerSettings.showAttachments;
+                    showRelatedRecords = originalLayerSettings.showRelatedRecords;
                 }
+
+                supportsAttachments = layerDetails.hasAttachments;
+                supportsRelatedRecords = layerDetails.relationships
+                    && layerDetails.relationships.length > 0;
 
                 availableFieldItems.source = fields;
                 updatePopUpPosition();
@@ -201,6 +224,8 @@
                 var layerSettings:LayerSettings = new LayerSettings();
                 layerSettings.name = layerName;
                 layerSettings.fields = getIncludedFieldSettings();
+                layerSettings.showAttachments = showAttachments;
+                layerSettings.showRelatedRecords = showRelatedRecords;
 
                 close(true, { originalLayerSettings: originalLayerSettings, layerSettings: layerSettings });
             }
@@ -414,6 +439,22 @@
                     </s:ArrayList>
                 </s:columns>
             </s:DataGrid>
+        </s:FormItem>
+
+        <s:FormItem includeInLayout="{showAttachmentsEnabled &amp;&amp; supportsAttachments}"
+                    label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.showAttachments')}"
+                    visible="{showAttachmentsEnabled &amp;&amp; supportsAttachments}">
+            <components:SliderToggleButton deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                           selected="@{showAttachments}"
+                                           selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
+        </s:FormItem>
+
+        <s:FormItem includeInLayout="{showRelatedRecordsEnabled &amp;&amp; supportsRelatedRecords}"
+                    label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.showRelatedRecords')}"
+                    visible="{showRelatedRecordsEnabled &amp;&amp; supportsRelatedRecords}">
+            <components:SliderToggleButton deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                           selected="@{showRelatedRecords}"
+                                           selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
         </s:FormItem>
 
         <s:FormItem>
