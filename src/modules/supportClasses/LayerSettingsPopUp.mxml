@@ -39,9 +39,14 @@
             import mx.managers.PopUpManager;
 
             [Bindable]
-            private var supportsAttachments:Boolean;
+            public var showAttachmentsEnabled:Boolean;
             [Bindable]
-            private var supportsRelatedRecords:Boolean;
+            public var showRelatedRecordsEnabled:Boolean;
+
+            [Bindable]
+            public var supportsAttachments:Boolean;
+            [Bindable]
+            public var supportsRelatedRecords:Boolean;
 
             [Bindable]
             private var showRelatedRecords:Boolean;
@@ -436,17 +441,17 @@
             </s:DataGrid>
         </s:FormItem>
 
-        <s:FormItem includeInLayout="{supportsAttachments}"
+        <s:FormItem includeInLayout="{showAttachmentsEnabled &amp;&amp; supportsAttachments}"
                     label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.showAttachments')}"
-                    visible="{supportsAttachments}">
+                    visible="{showAttachmentsEnabled &amp;&amp; supportsAttachments}">
             <components:SliderToggleButton deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
                                            selected="@{showAttachments}"
                                            selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
         </s:FormItem>
 
-        <s:FormItem includeInLayout="{supportsRelatedRecords}"
+        <s:FormItem includeInLayout="{showRelatedRecordsEnabled &amp;&amp; supportsRelatedRecords}"
                     label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.showRelatedRecords')}"
-                    visible="{supportsRelatedRecords}">
+                    visible="{showRelatedRecordsEnabled &amp;&amp; supportsRelatedRecords}">
             <components:SliderToggleButton deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
                                            selected="@{showRelatedRecords}"
                                            selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
