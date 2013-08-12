@@ -30,13 +30,21 @@
             import com.esri.ags.layers.supportClasses.FeatureLayerDetails;
             import com.esri.ags.layers.supportClasses.Field;
             import com.esri.ags.layers.supportClasses.LayerDetails;
+            import com.esri.ags.portal.supportClasses.PopUpFieldFormat;
+            import com.esri.builder.components.ModifyItemEvent;
+            import com.esri.builder.renderers.MovableEditableGridItemRenderer;
+            import com.esri.builder.renderers.MovableGridItemRenderer;
             import com.esri.builder.supportClasses.FieldUtil;
+            import com.esri.builder.views.popups.FieldFormatPopUp;
 
             import mx.collections.ArrayList;
+            import mx.core.FlexGlobals;
             import mx.events.CollectionEvent;
             import mx.events.CollectionEventKind;
             import mx.events.FlexEvent;
             import mx.managers.PopUpManager;
+
+            import spark.events.PopUpEvent;
 
             [Bindable]
             public var showAttachmentsEnabled:Boolean;
@@ -52,6 +60,8 @@
             private var showRelatedRecords:Boolean;
             [Bindable]
             private var showAttachments:Boolean;
+
+            private var availableFields:Array;
 
             public var originalLayerSettings:LayerSettings;
 
@@ -135,81 +145,98 @@
                     return;
                 }
 
-                var serverVersion:Number = layerDetails.version;
-                var isRequiredEditable:Boolean;
-
-                var isEditorTrackingField:Boolean;
-                var editorTrackingFieldNames:Array = getEditorTrackingFieldNames(layerDetails);
-
-                var fields:Array = [];
-                var filteredFields:Array;
-                filteredFields = FieldUtil.getValidFields(layerDetails.fields);
-                for each (var field:Field in filteredFields)
-                {
-                    isEditorTrackingField = editorTrackingFieldNames.indexOf(field.name) > -1;
-                    isRequiredEditable = serverVersion < 10.1 || field.nullable;
-
-                    fields.push({
-                                    id: field.name,
-                                    name: field.alias,
-                                    tooltip: "",
-                                    editable: field.editable,
-                                    required: !isRequiredEditable,
-                                    isRequiredEditable: isRequiredEditable,
-                                    isEditorTrackingField: isEditorTrackingField,
-                                    selected: true
-                                });
-                }
-
+                var fieldNameToUserDefinedFieldSettings:Dictionary = new Dictionary();
                 if (originalLayerSettings)
                 {
-                    var fieldItem:Object;
-                    var atLeastOneFieldMatched:Boolean = false;
-                    var definedFieldNames:Dictionary = new Dictionary();
                     for each (var fieldSettings:FieldSettings in originalLayerSettings.fields)
                     {
-                        if (!definedFieldNames[fieldSettings.name])
-                        {
-                            definedFieldNames[fieldSettings.name] = true;
-                        }
-                        for each (fieldItem in fields)
-                        {
-                            if (fieldItem.id == fieldSettings.name)
-                            {
-                                fieldItem.name = fieldSettings.alias;
-                                fieldItem.tooltip = fieldSettings.tooltip;
-
-                                if (fieldItem.isRequiredEditable && !fieldItem.isEditorTrackingField)
-                                {
-                                    fieldItem.required = fieldSettings.required;
-                                }
-
-                                atLeastOneFieldMatched = true;
-                            }
-                        }
-                    }
-
-                    if (atLeastOneFieldMatched)
-                    {
-                        //deselect non-defined fields
-                        for each (fieldItem in fields)
-                        {
-                            if (!definedFieldNames[fieldItem.id])
-                            {
-                                fieldItem.selected = false;
-                            }
-                        }
+                        fieldNameToUserDefinedFieldSettings[fieldSettings.name] = fieldSettings;
                     }
 
                     showAttachments = originalLayerSettings.showAttachments;
                     showRelatedRecords = originalLayerSettings.showRelatedRecords;
                 }
 
+                var serverVersion:Number = layerDetails.version;
+                var isRequiredEditable:Boolean;
+
+                var isEditorTrackingField:Boolean;
+                var editorTrackingFieldNames:Array = getEditorTrackingFieldNames(layerDetails);
+
+                availableFields = FieldUtil.getValidFields(layerDetails.fields);
+                var atLeastOneFieldMatched:Boolean;
+
+                var fieldNameToFieldSettingsOption:Dictionary = new Dictionary();
+
+                for each (var field:Field in availableFields)
+                {
+                    isEditorTrackingField = editorTrackingFieldNames.indexOf(field.name) > -1;
+                    isRequiredEditable = serverVersion < 10.1 || field.nullable;
+
+                    var fieldSettings:FieldSettings = new FieldSettings();
+                    var originalFieldSettings:FieldSettings = fieldNameToUserDefinedFieldSettings[field.name];
+
+                    if (originalFieldSettings)
+                    {
+                        atLeastOneFieldMatched = true;
+
+                        fieldSettings.name = originalFieldSettings.name;
+                        fieldSettings.alias = originalFieldSettings.alias;
+                        fieldSettings.tooltip = originalFieldSettings.tooltip;
+                        fieldSettings.dateFormat = originalFieldSettings.dateFormat;
+                        fieldSettings.useUTC = originalFieldSettings.useUTC;
+                        if (isRequiredEditable && !isEditorTrackingField)
+                        {
+                            fieldSettings.required = originalFieldSettings.required;
+                        }
+                    }
+                    else
+                    {
+                        fieldSettings.name = field.name;
+                        fieldSettings.alias = field.alias;
+                        fieldSettings.required = !isRequiredEditable;
+                    }
+
+                    fieldNameToFieldSettingsOption[field.name] =
+                        {
+                            settings: fieldSettings,
+                            isRequiredEditable: isRequiredEditable,
+                            isEditorTrackingField: isEditorTrackingField,
+                            selected: true,
+                            editable: field.editable
+                        };
+                }
+
+                var fieldSettingsOptions:Array = [];
+                if (originalLayerSettings)
+                {
+                    for each (var fieldSettings:FieldSettings in originalLayerSettings.fields)
+                    {
+                        fieldSettingsOptions.push(fieldNameToFieldSettingsOption[fieldSettings.name]);
+                    }
+                }
+
+                var fieldSettingsOption:Object;
+                for each (var field:Field in availableFields)
+                {
+                    fieldSettingsOption = fieldNameToFieldSettingsOption[field.name];
+
+                    if (atLeastOneFieldMatched)
+                    {
+                        fieldSettingsOption.selected = fieldNameToUserDefinedFieldSettings[field.name] != null;
+                    }
+
+                    if (!fieldNameToUserDefinedFieldSettings[field.name])
+                    {
+                        fieldSettingsOptions.push(fieldSettingsOption);
+                    }
+                }
+
                 supportsAttachments = layerDetails.hasAttachments;
                 supportsRelatedRecords = layerDetails.relationships
                     && layerDetails.relationships.length > 0;
 
-                availableFieldItems.source = fields;
+                availableFieldItems.source = fieldSettingsOptions;
                 updatePopUpPosition();
             }
 
@@ -246,16 +273,11 @@
                 var allFieldSettings:Array = [];
 
                 var fieldItems:Array = availableFieldItems.source;
-                var fieldSettings:FieldSettings;
-                for each (var inclusionItem:Object in fieldItems)
+                for each (var fieldItem:Object in fieldItems)
                 {
-                    if (inclusionItem.selected)
+                    if (fieldItem.selected)
                     {
-                        fieldSettings = new FieldSettings();
-                        fieldSettings.name = inclusionItem.id;
-                        fieldSettings.alias = inclusionItem.name;
-                        fieldSettings.required = inclusionItem.required;
-                        allFieldSettings.push(fieldSettings);
+                        allFieldSettings.push(fieldItem.settings);
                     }
                 }
 
@@ -283,6 +305,87 @@
                 }
 
                 return editorTrackingFieldNames;
+            }
+
+            private function actionsItemRenderer(fieldItem:Object, column:GridColumn):IFactory
+            {
+                var isDateField:Boolean;
+
+                var field:Field = findMatchingField(fieldItem.settings.name);
+                isDateField = field && (field.type == Field.TYPE_DATE);
+
+                var itemRendererClass:Class =
+                    (isDateField) ? MovableEditableGridItemRenderer : MovableGridItemRenderer;
+
+                return new ClassFactory(itemRendererClass);
+            }
+
+            private function findMatchingField(name:String):Field
+            {
+                var matchingField:Field;
+
+                for each (var field:Field in availableFields)
+                {
+                    if (field.name == name)
+                    {
+                        matchingField = field;
+                        break;
+                    }
+                }
+
+                return matchingField;
+            }
+
+            private function fieldItemsDataGrid_editItemHandler(event:ModifyItemEvent):void
+            {
+                var fieldFormatPopUp:FieldFormatPopUp = new FieldFormatPopUp();
+                var fieldItem:Object = event.item;
+                var fieldName:String = fieldItem.settings.name;
+
+                var fieldSettings:FieldSettings = findMatchingFieldSettings(fieldName);
+                if (fieldSettings)
+                {
+                    //we create a fake field format
+                    //since it's not a part of FieldSettings
+                    //but required by FieldFormatPopUp
+                    var fieldFormat:PopUpFieldFormat = new PopUpFieldFormat();
+                    fieldFormat.dateFormat = fieldSettings.dateFormat;
+                    fieldFormat.useUTC = fieldSettings.useUTC;
+                    fieldFormatPopUp.overrideFieldFormat(fieldFormat);
+                }
+
+                fieldFormatPopUp.field = findMatchingField(fieldName);
+                fieldFormatPopUp.addEventListener(PopUpEvent.CLOSE, fieldFormatPopUp_closeHandler);
+                fieldFormatPopUp.open(FlexGlobals.topLevelApplication as DisplayObjectContainer, true);
+            }
+
+            private function findMatchingFieldSettings(fieldName:String):FieldSettings
+            {
+                var settings:FieldSettings;
+
+                for each (var fieldItem:Object in availableFieldItems.source)
+                {
+                    if (fieldItem.settings.name == fieldName)
+                    {
+                        settings = fieldItem.settings;
+                        break;
+                    }
+                }
+
+                return settings;
+            }
+
+            private function fieldFormatPopUp_closeHandler(event:PopUpEvent):void
+            {
+                var fieldFormatPopUp:FieldFormatPopUp = event.currentTarget as FieldFormatPopUp;
+                fieldFormatPopUp.removeEventListener(PopUpEvent.CLOSE, fieldFormatPopUp_closeHandler);
+                if (event.commit)
+                {
+                    var fieldFormat:PopUpFieldFormat = event.data.fieldFormat as PopUpFieldFormat;
+                    var fieldSettings:FieldSettings = findMatchingFieldSettings(fieldFormatPopUp.field.name);
+                    fieldSettings.dateFormat = fieldFormat.dateFormat;
+                    fieldSettings.useUTC = fieldFormat.useUTC;
+                }
             }
         ]]>
     </fx:Script>
@@ -349,12 +452,14 @@
                      text="{resourceManager.getString('BuilderStrings', 'noFieldsAvailable')}"
                      visible="{availableFieldItems.length == 0}"/>
 
-            <s:DataGrid width="100%" height="250"
-                        dataProvider="{availableFieldItems}"
-                        editable="true"
-                        includeInLayout="{availableFieldItems.length &gt; 0}"
-                        visible="{availableFieldItems.length &gt; 0}">
-                <s:columns>
+            <components:ItemModifierDataGrid width="100%" height="250"
+                                             dataProvider="{availableFieldItems}"
+                                             doubleClickEnabled="false"
+                                             editItem="fieldItemsDataGrid_editItemHandler(event)"
+                                             editable="true"
+                                             includeInLayout="{availableFieldItems.length &gt; 0}"
+                                             visible="{availableFieldItems.length &gt; 0}">
+                <components:columns>
                     <s:ArrayList>
                         <s:GridColumn width="60"
                                       dataField="selected"
@@ -365,18 +470,18 @@
                                       maxWidth="60"/>
 
                         <s:GridColumn width="100"
-                                      dataField="id"
+                                      dataField="settings.name"
                                       headerText="{resourceManager.getString('BuilderStrings', 'displayFields.name')}"
                                       maxWidth="200"/>
 
                         <s:GridColumn width="100"
-                                      dataField="name"
+                                      dataField="settings.alias"
                                       editable="true"
                                       headerText="{resourceManager.getString('BuilderStrings', 'displayFields.alias')}"
                                       maxWidth="200"/>
 
                         <s:GridColumn width="100"
-                                      dataField="required"
+                                      dataField="settings.required"
                                       editable="false"
                                       headerText="{resourceManager.getString('BuilderStrings', 'geoprocessing.required')}"
                                       includeIn="showRequired"
@@ -436,9 +541,14 @@
                                 </fx:Component>
                             </s:itemRenderer>
                         </s:GridColumn>
+
+                        <s:GridColumn width="100"
+                                      editable="false"
+                                      headerText="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.media.actions')}"
+                                      itemRendererFunction="actionsItemRenderer"/>
                     </s:ArrayList>
-                </s:columns>
-            </s:DataGrid>
+                </components:columns>
+            </components:ItemModifierDataGrid>
         </s:FormItem>
 
         <s:FormItem includeInLayout="{showAttachmentsEnabled &amp;&amp; supportsAttachments}"
