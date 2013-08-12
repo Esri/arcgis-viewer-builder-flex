@@ -38,7 +38,7 @@ public class FieldSettings
 
     public function toXML():XML
     {
-        var configXML:XML = <field name={name} required={required} useutc={useUTC}/>
+        var configXML:XML = <field name={name}/>
 
         if (alias)
         {
@@ -51,6 +51,14 @@ public class FieldSettings
         if (dateFormat)
         {
             configXML.@dateformat = dateFormat;
+        }
+        if (required)
+        {
+            configXML.@required = required;
+        }
+        if (useUTC)
+        {
+            configXML.@useutc = useUTC;
         }
 
         return configXML;
