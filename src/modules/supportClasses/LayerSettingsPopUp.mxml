@@ -471,6 +471,7 @@
 
                         <s:GridColumn width="100"
                                       dataField="settings.name"
+                                      editable="false"
                                       headerText="{resourceManager.getString('BuilderStrings', 'displayFields.name')}"
                                       maxWidth="200"/>
 
