@@ -98,11 +98,11 @@
             public var layerName:String;
 
             [Bindable]
-            private var availableFieldItems:ArrayList = new ArrayList();
+            private var availableFieldSettingsOptions:ArrayList = new ArrayList();
 
             protected function this_creationCompleteHandler(event:FlexEvent):void
             {
-                availableFieldItems.addEventListener(CollectionEvent.COLLECTION_CHANGE, availableItems_collectionChangeHandler);
+                availableFieldSettingsOptions.addEventListener(CollectionEvent.COLLECTION_CHANGE, availableItems_collectionChangeHandler);
             }
 
             protected function availableItems_collectionChangeHandler(event:CollectionEvent):void
@@ -118,7 +118,7 @@
             [Bindable(event="itemInclusionChanged")]
             private function get hasValidLayerSettingsOptions():Boolean
             {
-                return hasAtLeastOneSelectedItem(availableFieldItems.source);
+                return hasAtLeastOneSelectedItem(availableFieldSettingsOptions.source);
             }
 
             private function hasAtLeastOneSelectedItem(items:Array):Boolean
@@ -157,7 +157,7 @@
 
                 availableFields = FieldUtil.getValidFields(layerDetails.fields);
                 var originalFieldSettings:Array = originalLayerSettings ? originalLayerSettings.fields : [];
-                availableFieldItems.source =
+                availableFieldSettingsOptions.source =
                     createFieldSettings(availableFields, originalFieldSettings,
                                         layerDetails.version, getEditorTrackingFieldNames(layerDetails));
             }
@@ -247,7 +247,7 @@
 
             private function resetOptions():void
             {
-                availableFieldItems.removeAll();
+                availableFieldSettingsOptions.removeAll();
                 updatePopUpPosition();
             }
 
@@ -264,7 +264,7 @@
 
             override public function close(commit:Boolean = false, data:* = null):void
             {
-                availableFieldItems.removeEventListener(CollectionEvent.COLLECTION_CHANGE, availableItems_collectionChangeHandler);
+                availableFieldSettingsOptions.removeEventListener(CollectionEvent.COLLECTION_CHANGE, availableItems_collectionChangeHandler);
                 super.close(commit, data);
             }
 
@@ -277,12 +277,12 @@
             {
                 var allFieldSettings:Array = [];
 
-                var fieldItems:Array = availableFieldItems.source;
-                for each (var fieldItem:Object in fieldItems)
+                var fieldSettingsOptions:Array = availableFieldSettingsOptions.source;
+                for each (var fieldSettingsOption:Object in fieldSettingsOptions)
                 {
-                    if (fieldItem.selected)
+                    if (fieldSettingsOption.selected)
                     {
-                        allFieldSettings.push(fieldItem.settings);
+                        allFieldSettings.push(fieldSettingsOption.settings);
                     }
                 }
 
@@ -309,9 +309,9 @@
                 return editorTrackingFieldNames;
             }
 
-            private function actionsItemRenderer(fieldItem:Object, column:GridColumn):IFactory
+            private function actionsItemRenderer(fieldSettingsOption:Object, column:GridColumn):IFactory
             {
-                var field:Field = findMatchingField(fieldItem.settings.name);
+                var field:Field = findMatchingField(fieldSettingsOption.settings.name);
                 var isDateField:Boolean = field && (field.type == Field.TYPE_DATE);
 
                 var itemRendererClass:Class =
@@ -336,11 +336,11 @@
                 return matchingField;
             }
 
-            private function fieldItemsDataGrid_editItemHandler(event:ModifyItemEvent):void
+            private function fieldSettingsOptionsDataGrid_editItemHandler(event:ModifyItemEvent):void
             {
                 var fieldFormatPopUp:FieldFormatPopUp = new FieldFormatPopUp();
-                var fieldItem:Object = event.item;
-                var fieldName:String = fieldItem.settings.name;
+                var fieldSettingOption:Object = event.item;
+                var fieldName:String = fieldSettingOption.settings.name;
 
                 var fieldSettings:FieldSettings = findMatchingFieldSettings(fieldName);
                 if (fieldSettings)
@@ -363,11 +363,11 @@
             {
                 var settings:FieldSettings;
 
-                for each (var fieldItem:Object in availableFieldItems.source)
+                for each (var fieldSettingOption:Object in availableFieldSettingsOptions.source)
                 {
-                    if (fieldItem.settings.name == fieldName)
+                    if (fieldSettingOption.settings.name == fieldName)
                     {
-                        settings = fieldItem.settings;
+                        settings = fieldSettingOption.settings;
                         break;
                     }
                 }
@@ -388,14 +388,14 @@
                 }
             }
 
-            private function fieldItemsDataGrid_moveItemDownHandler(event:ModifyItemEvent):void
+            private function fieldSettingsOptionsDataGrid_moveItemDownHandler(event:ModifyItemEvent):void
             {
-                ItemModifierDataGrid.moveItemDown(event.item, availableFieldItems);
+                ItemModifierDataGrid.moveItemDown(event.item, availableFieldSettingsOptions);
             }
 
-            private function fieldItemsDataGrid_moveItemUpHandler(event:ModifyItemEvent):void
+            private function fieldSettingsOptionsDataGrid_moveItemUpHandler(event:ModifyItemEvent):void
             {
-                ItemModifierDataGrid.moveItemUp(event.item, availableFieldItems);
+                ItemModifierDataGrid.moveItemUp(event.item, availableFieldSettingsOptions);
             }
         ]]>
     </fx:Script>
@@ -458,19 +458,19 @@
         </s:layout>
 
         <s:FormItem width="100%" label="{resourceManager.getString('BuilderStrings', 'edit.fields')}">
-            <s:Label includeInLayout="{availableFieldItems.length == 0}"
+            <s:Label includeInLayout="{availableFieldSettingsOptions.length == 0}"
                      text="{resourceManager.getString('BuilderStrings', 'noFieldsAvailable')}"
-                     visible="{availableFieldItems.length == 0}"/>
+                     visible="{availableFieldSettingsOptions.length == 0}"/>
 
             <components:ItemModifierDataGrid width="100%" height="250"
-                                             dataProvider="{availableFieldItems}"
+                                             dataProvider="{availableFieldSettingsOptions}"
                                              doubleClickEnabled="false"
-                                             editItem="fieldItemsDataGrid_editItemHandler(event)"
+                                             editItem="fieldSettingsOptionsDataGrid_editItemHandler(event)"
                                              editable="true"
-                                             includeInLayout="{availableFieldItems.length &gt; 0}"
-                                             moveItemDown="fieldItemsDataGrid_moveItemDownHandler(event)"
-                                             moveItemUp="fieldItemsDataGrid_moveItemUpHandler(event)"
-                                             visible="{availableFieldItems.length &gt; 0}">
+                                             includeInLayout="{availableFieldSettingsOptions.length &gt; 0}"
+                                             moveItemDown="fieldSettingsOptionsDataGrid_moveItemDownHandler(event)"
+                                             moveItemUp="fieldSettingsOptionsDataGrid_moveItemUpHandler(event)"
+                                             visible="{availableFieldSettingsOptions.length &gt; 0}">
                 <components:columns>
                     <s:ArrayList>
                         <s:GridColumn width="60"
