@@ -387,6 +387,16 @@
                     fieldSettings.useUTC = fieldFormat.useUTC;
                 }
             }
+
+            private function fieldItemsDataGrid_moveItemDownHandler(event:ModifyItemEvent):void
+            {
+                ItemModifierDataGrid.moveItemDown(event.item, availableFieldItems);
+            }
+
+            private function fieldItemsDataGrid_moveItemUpHandler(event:ModifyItemEvent):void
+            {
+                ItemModifierDataGrid.moveItemUp(event.item, availableFieldItems);
+            }
         ]]>
     </fx:Script>
 
@@ -458,6 +468,8 @@
                                              editItem="fieldItemsDataGrid_editItemHandler(event)"
                                              editable="true"
                                              includeInLayout="{availableFieldItems.length &gt; 0}"
+                                             moveItemDown="fieldItemsDataGrid_moveItemDownHandler(event)"
+                                             moveItemUp="fieldItemsDataGrid_moveItemUpHandler(event)"
                                              visible="{availableFieldItems.length &gt; 0}">
                 <components:columns>
                     <s:ArrayList>
