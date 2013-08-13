@@ -78,6 +78,7 @@
                 {
                     _layerDetails = value;
                     setOptions(value);
+                    updatePopUpPosition();
                 }
             }
 
@@ -135,7 +136,12 @@
 
             public function overrideLayerSettings(layerSettings:LayerSettings):void
             {
-                originalLayerSettings = layerSettings;
+                if (layerSettings)
+                {
+                    originalLayerSettings = layerSettings;
+                    showAttachments = layerSettings.showAttachments;
+                    showRelatedRecords = layerSettings.showRelatedRecords;
+                }
             }
 
             private function setOptions(layerDetails:LayerDetails):void
@@ -145,61 +151,65 @@
                     return;
                 }
 
-                var fieldNameToUserDefinedFieldSettings:Dictionary = new Dictionary();
-                if (originalLayerSettings)
-                {
-                    for each (var fieldSettings:FieldSettings in originalLayerSettings.fields)
-                    {
-                        fieldNameToUserDefinedFieldSettings[fieldSettings.name] = fieldSettings;
-                    }
-
-                    showAttachments = originalLayerSettings.showAttachments;
-                    showRelatedRecords = originalLayerSettings.showRelatedRecords;
-                }
-
-                var serverVersion:Number = layerDetails.version;
-                var isRequiredEditable:Boolean;
-
-                var isEditorTrackingField:Boolean;
-                var editorTrackingFieldNames:Array = getEditorTrackingFieldNames(layerDetails);
+                supportsAttachments = layerDetails.hasAttachments;
+                supportsRelatedRecords = layerDetails.relationships
+                    && layerDetails.relationships.length > 0;
 
                 availableFields = FieldUtil.getValidFields(layerDetails.fields);
+                var originalFieldSettings:Array = originalLayerSettings ? originalLayerSettings.fields : [];
+                availableFieldItems.source =
+                    createFieldSettings(availableFields, originalFieldSettings,
+                                        layerDetails.version, getEditorTrackingFieldNames(layerDetails));
+            }
+
+            private function createFieldSettings(fields:Array, originalFieldSettings:Array, serverVersion:Number, editorTrackingFieldNames:Array):Array
+            {
+                //store user-defined settings
+                var fieldNameToUserDefinedFieldSettings:Dictionary = new Dictionary();
+                for each (var fieldSettings:FieldSettings in originalFieldSettings)
+                {
+                    fieldNameToUserDefinedFieldSettings[fieldSettings.name] = fieldSettings;
+                }
+
+                var isRequiredEditable:Boolean;
+                var isEditorTrackingField:Boolean;
                 var atLeastOneFieldMatched:Boolean;
-
                 var fieldNameToFieldSettingsOption:Dictionary = new Dictionary();
+                var editableFieldSettings:FieldSettings;
 
-                for each (var field:Field in availableFields)
+                //init field settings options
+                for each (var field:Field in fields)
                 {
                     isEditorTrackingField = editorTrackingFieldNames.indexOf(field.name) > -1;
                     isRequiredEditable = serverVersion < 10.1 || field.nullable;
 
-                    var fieldSettings:FieldSettings = new FieldSettings();
-                    var originalFieldSettings:FieldSettings = fieldNameToUserDefinedFieldSettings[field.name];
+                    editableFieldSettings = new FieldSettings();
+                    var userDefinedFieldSettings:FieldSettings = fieldNameToUserDefinedFieldSettings[field.name];
 
-                    if (originalFieldSettings)
+                    if (userDefinedFieldSettings)
                     {
                         atLeastOneFieldMatched = true;
 
-                        fieldSettings.name = originalFieldSettings.name;
-                        fieldSettings.alias = originalFieldSettings.alias;
-                        fieldSettings.tooltip = originalFieldSettings.tooltip;
-                        fieldSettings.dateFormat = originalFieldSettings.dateFormat;
-                        fieldSettings.useUTC = originalFieldSettings.useUTC;
+                        editableFieldSettings.name = userDefinedFieldSettings.name;
+                        editableFieldSettings.alias = userDefinedFieldSettings.alias;
+                        editableFieldSettings.tooltip = userDefinedFieldSettings.tooltip;
+                        editableFieldSettings.dateFormat = userDefinedFieldSettings.dateFormat;
+                        editableFieldSettings.useUTC = userDefinedFieldSettings.useUTC;
                         if (isRequiredEditable && !isEditorTrackingField)
                         {
-                            fieldSettings.required = originalFieldSettings.required;
+                            editableFieldSettings.required = userDefinedFieldSettings.required;
                         }
                     }
                     else
                     {
-                        fieldSettings.name = field.name;
-                        fieldSettings.alias = field.alias;
-                        fieldSettings.required = !isRequiredEditable;
+                        editableFieldSettings.name = field.name;
+                        editableFieldSettings.alias = field.alias;
+                        editableFieldSettings.required = !isRequiredEditable;
                     }
 
                     fieldNameToFieldSettingsOption[field.name] =
                         {
-                            settings: fieldSettings,
+                            settings: editableFieldSettings,
                             isRequiredEditable: isRequiredEditable,
                             isEditorTrackingField: isEditorTrackingField,
                             selected: true,
@@ -207,37 +217,32 @@
                         };
                 }
 
+                //add user-defined field settings first
                 var fieldSettingsOptions:Array = [];
-                if (originalLayerSettings)
+                for each (var fieldSettings:FieldSettings in originalFieldSettings)
                 {
-                    for each (var fieldSettings:FieldSettings in originalLayerSettings.fields)
-                    {
-                        fieldSettingsOptions.push(fieldNameToFieldSettingsOption[fieldSettings.name]);
-                    }
+                    fieldSettingsOptions.push(fieldNameToFieldSettingsOption[fieldSettings.name]);
                 }
 
                 var fieldSettingsOption:Object;
-                for each (var field:Field in availableFields)
+                for each (var field:Field in fields)
                 {
                     fieldSettingsOption = fieldNameToFieldSettingsOption[field.name];
 
+                    //override selection if we have user-defined fields
                     if (atLeastOneFieldMatched)
                     {
                         fieldSettingsOption.selected = fieldNameToUserDefinedFieldSettings[field.name] != null;
                     }
 
+                    //add extra field settings (not user-defined)
                     if (!fieldNameToUserDefinedFieldSettings[field.name])
                     {
                         fieldSettingsOptions.push(fieldSettingsOption);
                     }
                 }
 
-                supportsAttachments = layerDetails.hasAttachments;
-                supportsRelatedRecords = layerDetails.relationships
-                    && layerDetails.relationships.length > 0;
-
-                availableFieldItems.source = fieldSettingsOptions;
-                updatePopUpPosition();
+                return fieldSettingsOptions;
             }
 
             private function resetOptions():void
@@ -288,20 +293,17 @@
             {
                 var editorTrackingFieldNames:Array = [];
 
-                var editFieldsInfo:EditFieldsInfo;
-
                 var featureLayerDetails:FeatureLayerDetails = layerDetails as FeatureLayerDetails;
                 if (featureLayerDetails)
                 {
-                    editFieldsInfo = featureLayerDetails.editFieldsInfo;
-                }
-
-                if (editFieldsInfo)
-                {
-                    editorTrackingFieldNames.push(editFieldsInfo.creatorField);
-                    editorTrackingFieldNames.push(editFieldsInfo.creationDateField);
-                    editorTrackingFieldNames.push(editFieldsInfo.editorField);
-                    editorTrackingFieldNames.push(editFieldsInfo.editDateField);
+                    var editFieldsInfo:EditFieldsInfo = featureLayerDetails.editFieldsInfo;
+                    if (editFieldsInfo)
+                    {
+                        editorTrackingFieldNames.push(editFieldsInfo.creatorField);
+                        editorTrackingFieldNames.push(editFieldsInfo.creationDateField);
+                        editorTrackingFieldNames.push(editFieldsInfo.editorField);
+                        editorTrackingFieldNames.push(editFieldsInfo.editDateField);
+                    }
                 }
 
                 return editorTrackingFieldNames;
@@ -309,10 +311,8 @@
 
             private function actionsItemRenderer(fieldItem:Object, column:GridColumn):IFactory
             {
-                var isDateField:Boolean;
-
                 var field:Field = findMatchingField(fieldItem.settings.name);
-                isDateField = field && (field.type == Field.TYPE_DATE);
+                var isDateField:Boolean = field && (field.type == Field.TYPE_DATE);
 
                 var itemRendererClass:Class =
                     (isDateField) ? MovableEditableGridItemRenderer : MovableGridItemRenderer;
