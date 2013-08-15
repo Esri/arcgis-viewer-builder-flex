@@ -70,8 +70,8 @@ public final class ConfigLayer
     public static const KML_LABEL:String = "kml layer";
     public static const WEB_TILED_LABEL:String = "web tiled layer";
 
-    private const MAP_SERVER_SOURCE:String = "(MS)";
-    private const FEATURE_SERVER_SOURCE:String = "(FS)";
+    private const MAP_SERVER_SOURCE:String = "\u202A(MS)\u202C";
+    private const FEATURE_SERVER_SOURCE:String = "\u202A(FS)\u202C";
 
     [Transient]
     public var layerXML:XML; // The original XML
