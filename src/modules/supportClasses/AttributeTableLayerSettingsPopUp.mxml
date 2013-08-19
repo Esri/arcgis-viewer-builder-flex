@@ -171,7 +171,8 @@
             {
                 //store user-defined settings
                 var fieldNameToUserDefinedFieldSettings:Dictionary = new Dictionary();
-                for each (var fieldSettings:FieldSettings in originalFieldSettings)
+                var fieldSettings:FieldSettings;
+                for each (fieldSettings in originalFieldSettings)
                 {
                     fieldNameToUserDefinedFieldSettings[fieldSettings.name] = fieldSettings;
                 }
@@ -182,8 +183,9 @@
                 var fieldNameToFieldSettingsOption:Dictionary = new Dictionary();
                 var editableFieldSettings:FieldSettings;
 
+                var field:Field;
                 //init field settings options
-                for each (var field:Field in fields)
+                for each (field in fields)
                 {
                     isEditorTrackingField = editorTrackingFieldNames.indexOf(field.name) > -1;
                     isRequiredEditable = serverVersion < 10.1 || field.nullable;
@@ -224,13 +226,13 @@
 
                 //add user-defined field settings first
                 var fieldSettingsOptions:Array = [];
-                for each (var fieldSettings:FieldSettings in originalFieldSettings)
+                for each (fieldSettings in originalFieldSettings)
                 {
                     fieldSettingsOptions.push(fieldNameToFieldSettingsOption[fieldSettings.name]);
                 }
 
                 var fieldSettingsOption:Object;
-                for each (var field:Field in fields)
+                for each (field in fields)
                 {
                     fieldSettingsOption = fieldNameToFieldSettingsOption[field.name];
 
