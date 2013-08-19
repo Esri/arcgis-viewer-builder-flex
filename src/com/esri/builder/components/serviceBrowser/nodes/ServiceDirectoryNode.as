@@ -16,11 +16,11 @@
 package com.esri.builder.components.serviceBrowser.nodes
 {
 
-import com.esri.builder.supportClasses.URLUtil;
 import com.esri.builder.components.serviceBrowser.filters.INodeFilter;
 import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryNodeFetchEvent;
 import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryNodeFetcher;
 import com.esri.builder.components.serviceBrowser.supportClasses.URLNodeTraversalEvent;
+import com.esri.builder.supportClasses.URLUtil;
 
 import flash.events.Event;
 import flash.events.EventDispatcher;

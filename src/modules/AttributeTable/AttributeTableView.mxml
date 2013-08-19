@@ -38,9 +38,9 @@
             import com.esri.builder.model.Model;
 
             import modules.IWidgetModel;
+            import modules.supportClasses.AttributeTableLayerSettingsPopUp;
             import modules.supportClasses.ExcludeLayerListEvent;
             import modules.supportClasses.ExcludeLayerListItem;
-            import modules.supportClasses.LayerSettingsPopUp;
 
             import mx.collections.ArrayList;
             import mx.core.FlexGlobals;
@@ -62,7 +62,7 @@
 
             private var layerListItemToConfigLayerMap:Dictionary = new Dictionary(true);
 
-            private var layerSettingsPopUp:LayerSettingsPopUp;
+            private var layerSettingsPopUp:AttributeTableLayerSettingsPopUp;
 
             [Bindable]
             private var attributeTableModel:AttributeTableModel;
@@ -231,7 +231,7 @@
                 var featureConfigLayer:ConfigLayer = layerListItemToConfigLayerMap[event.item];
                 if (featureConfigLayer)
                 {
-                    layerSettingsPopUp = new LayerSettingsPopUp();
+                    layerSettingsPopUp = new AttributeTableLayerSettingsPopUp();
                     layerSettingsPopUp.layerName = featureConfigLayer.label;
                     layerSettingsPopUp.showAttachmentsEnabled = true;
                     layerSettingsPopUp.showRelatedRecordsEnabled = true;

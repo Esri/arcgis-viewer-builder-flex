@@ -23,9 +23,9 @@ public class ImageServerNode extends ServerNode
         super(parent, name, type);
     }
 
-    override public function get displayLabel():String
+    override public function get shorthandType():String
     {
-        return super.displayLabel + " (IS)";
+        return "IS";
     }
 
     override public function get hasChildren():Boolean

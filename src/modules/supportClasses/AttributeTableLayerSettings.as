@@ -13,29 +13,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////
-package com.esri.builder.components.serviceBrowser.nodes
+package modules.supportClasses
 {
 
-public class GeocodeServerNode extends ServerNode
+public class AttributeTableLayerSettings extends LayerSettings
 {
-    public function GeocodeServerNode(parent:ServiceDirectoryNode, name:String, type:String)
+    public var showAttachments:Boolean = true;
+    public var showRelatedRecords:Boolean = true;
+
+    override public function fromXML(layerSettingsXML:XML):void
     {
-        super(parent, name, type);
+        super.fromXML(layerSettingsXML);
+        showAttachments = layerSettingsXML.showattachments[0] != "false";
+        showRelatedRecords = layerSettingsXML.showrelatedrecords[0] != "false";
     }
 
-    override public function get shorthandType():String
+    override public function toXML():XML
     {
-        return "GS";
-    }
+        var configXML:XML = super.toXML();
 
-    override public function get hasChildren():Boolean
-    {
-        return false;
-    }
+        configXML.appendChild(<showattachments>{showAttachments}</showattachments>);
+        configXML.appendChild(<showrelatedrecords>{showRelatedRecords}</showrelatedrecords>);
 
-    override public function get isBranch():Boolean
-    {
-        return false;
+        return configXML;
     }
 }
 }
