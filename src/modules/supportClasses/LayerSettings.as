@@ -21,8 +21,6 @@ public class LayerSettings
 {
     public var name:String;
     public var fields:Array = [];
-    public var showAttachments:Boolean;
-    public var showRelatedRecords:Boolean;
 
     //preserve
     private var showObjectId:XML;
@@ -46,9 +44,6 @@ public class LayerSettings
             }
         }
 
-        showAttachments = layerSettingsXML.showattachments[0] == "true";
-        showRelatedRecords = layerSettingsXML.showrelatedrecords[0] == "true";
-
         showObjectId = layerSettingsXML.showobjectid[0];
         showGlobalId = layerSettingsXML.showglobalid[0];
         exportLocation = layerSettingsXML.exportlocation[0];
@@ -71,16 +66,6 @@ public class LayerSettings
             {
                 configXML.appendChild(fieldsXML);
             }
-        }
-
-        if (showAttachments)
-        {
-            configXML.appendChild(<showattachments>{showAttachments}</showattachments>);
-        }
-
-        if (showRelatedRecords)
-        {
-            configXML.appendChild(<showrelatedrecords>{showRelatedRecords}</showrelatedrecords>);
         }
 
         if (showObjectId)

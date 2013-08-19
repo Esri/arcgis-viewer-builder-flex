@@ -49,11 +49,11 @@
             public var supportsRelatedRecords:Boolean;
 
             [Bindable]
-            private var showRelatedRecords:Boolean;
+            private var showRelatedRecords:Boolean = true;
             [Bindable]
-            private var showAttachments:Boolean;
+            private var showAttachments:Boolean = true;
 
-            public var originalLayerSettings:LayerSettings;
+            public var originalLayerSettings:AttributeTableLayerSettings;
 
             private var _layerDetails:LayerDetails;
 
@@ -123,7 +123,7 @@
                 return false;
             }
 
-            public function overrideLayerSettings(layerSettings:LayerSettings):void
+            public function overrideLayerSettings(layerSettings:AttributeTableLayerSettings):void
             {
                 originalLayerSettings = layerSettings;
             }
@@ -200,6 +200,9 @@
                             }
                         }
                     }
+
+                    showAttachments = originalLayerSettings.showAttachments;
+                    showRelatedRecords = originalLayerSettings.showRelatedRecords;
                 }
 
                 supportsAttachments = layerDetails.hasAttachments;
@@ -218,9 +221,11 @@
 
             private function commitAndClose():void
             {
-                var layerSettings:LayerSettings = new LayerSettings();
+                var layerSettings:AttributeTableLayerSettings = new AttributeTableLayerSettings();
                 layerSettings.name = layerName;
                 layerSettings.fields = getIncludedFieldSettings();
+                layerSettings.showAttachments = supportsAttachments && showAttachments;
+                layerSettings.showRelatedRecords = supportsRelatedRecords && showRelatedRecords;
 
                 close(true, { originalLayerSettings: originalLayerSettings, layerSettings: layerSettings });
             }

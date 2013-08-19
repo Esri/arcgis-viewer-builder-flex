@@ -20,7 +20,7 @@ import com.esri.builder.model.Model;
 import com.esri.builder.model.WidgetContainer;
 
 import modules.IWidgetModel;
-import modules.supportClasses.LayerSettings;
+import modules.supportClasses.AttributeTableLayerSettings;
 
 import mx.collections.ArrayList;
 
@@ -53,10 +53,10 @@ public final class AttributeTableModel implements IWidgetModel
             excludedLayers.addItem(excludedLayerNameXML.toString());
         }
 
-        var parsedLayerSettings:LayerSettings;
+        var parsedLayerSettings:AttributeTableLayerSettings;
         for each (var settings:XML in doc.layersettings.layer)
         {
-            parsedLayerSettings = new LayerSettings();
+            parsedLayerSettings = new AttributeTableLayerSettings();
             parsedLayerSettings.fromXML(settings);
             if (parsedLayerSettings.name)
             {
@@ -82,7 +82,7 @@ public final class AttributeTableModel implements IWidgetModel
         {
             var layerSettingsXML:XML = <layersettings/>;
 
-            for each (var layerSetting:LayerSettings in layerSettings)
+            for each (var layerSetting:AttributeTableLayerSettings in layerSettings)
             {
                 layerSettingsXML.appendChild(layerSetting.toXML());
             }
@@ -105,11 +105,11 @@ public final class AttributeTableModel implements IWidgetModel
         }
     }
 
-    public function findLayerSettings(layerName:String):LayerSettings
+    public function findLayerSettings(layerName:String):AttributeTableLayerSettings
     {
-        var matchingLayerSettings:LayerSettings;
+        var matchingLayerSettings:AttributeTableLayerSettings;
 
-        for each (var layerSettingsItem:LayerSettings in layerSettings)
+        for each (var layerSettingsItem:AttributeTableLayerSettings in layerSettings)
         {
             if (layerSettingsItem.name == layerName)
             {
