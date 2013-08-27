@@ -88,29 +88,29 @@ public class LocaleModel
     {
         localeIdToLabel = new Dictionary();
 
-        localeIdToLabel[ARABIC_LOCALE_ID] = "Arabic-عربي"
-        localeIdToLabel[DANISH_LOCALE_ID] = "Danish-Dansk"
-        localeIdToLabel[GERMAN_LOCALE_ID] = "German-Deutsch"
-        localeIdToLabel[ESTONIAN_LOCALE_ID] = "Estonian-Eesti"
-        localeIdToLabel[ENGLISH_LOCALE_ID] = "English-English"
-        localeIdToLabel[SPANISH_LOCALE_ID] = "Spanish-Español"
-        localeIdToLabel[FINNISH_LOCALE_ID] = "Finnish-Suomi"
-        localeIdToLabel[FRENCH_LOCALE_ID] = "French-Français"
-        localeIdToLabel[HEBREW_LOCALE_ID] = "Hebrew-עברית"
-        localeIdToLabel[ITALIAN_LOCALE_ID] = "Italian-Italiano"
-        localeIdToLabel[JAPANESE_LOCALE_ID] = "Japanese-日本語"
-        localeIdToLabel[KOREAN_LOCALE_ID] = "Korean-한국어"
-        localeIdToLabel[LATVIAN_LOCALE_ID] = "Latvian-Latviešu"
-        localeIdToLabel[LITHUANIAN_LOCALE_ID] = "Lithuanian-Lietuvių"
-        localeIdToLabel[NORWEGIAN_LOCALE_ID] = "Norwegian-Norsk"
-        localeIdToLabel[DUTCH_LOCALE_ID] = "Dutch-Nederlands"
-        localeIdToLabel[POLISH_LOCALE_ID] = "Polish-Polski"
-        localeIdToLabel[PORTUGUESE_BRAZIL_LOCALE_ID] = "Portuguese (Brazil)-Português (Brasil)"
-        localeIdToLabel[PORTUGUESE_PORTUGAL_LOCALE_ID] = "Portuguese (Portugal)-Português (Portugal)"
-        localeIdToLabel[ROMANIAN_LOCALE_ID] = "Romanian-Română"
-        localeIdToLabel[RUSSIAN_LOCALE_ID] = "Russian-Русский"
-        localeIdToLabel[SWEDISH_LOCALE_ID] = "Swedish-Svenska"
-        localeIdToLabel[CHINESE_SIMPLIFIED_HAN_LOCALE_ID] = "Chinese (Simplified Han)-简体中文"
+        localeIdToLabel[ARABIC_LOCALE_ID] = "Arabic-عربي";
+        localeIdToLabel[DANISH_LOCALE_ID] = "Danish-Dansk";
+        localeIdToLabel[GERMAN_LOCALE_ID] = "German-Deutsch";
+        localeIdToLabel[ESTONIAN_LOCALE_ID] = "Estonian-Eesti";
+        localeIdToLabel[ENGLISH_LOCALE_ID] = "English-English";
+        localeIdToLabel[SPANISH_LOCALE_ID] = "Spanish-Español";
+        localeIdToLabel[FINNISH_LOCALE_ID] = "Finnish-Suomi";
+        localeIdToLabel[FRENCH_LOCALE_ID] = "French-Français";
+        localeIdToLabel[HEBREW_LOCALE_ID] = "Hebrew-עברית";
+        localeIdToLabel[ITALIAN_LOCALE_ID] = "Italian-Italiano";
+        localeIdToLabel[JAPANESE_LOCALE_ID] = "Japanese-日本語";
+        localeIdToLabel[KOREAN_LOCALE_ID] = "Korean-한국어";
+        localeIdToLabel[LATVIAN_LOCALE_ID] = "Latvian-Latviešu";
+        localeIdToLabel[LITHUANIAN_LOCALE_ID] = "Lithuanian-Lietuvių";
+        localeIdToLabel[NORWEGIAN_LOCALE_ID] = "Norwegian-Norsk";
+        localeIdToLabel[DUTCH_LOCALE_ID] = "Dutch-Nederlands";
+        localeIdToLabel[POLISH_LOCALE_ID] = "Polish-Polski";
+        localeIdToLabel[PORTUGUESE_BRAZIL_LOCALE_ID] = "Portuguese (Brazil)-Português (Brasil)";
+        localeIdToLabel[PORTUGUESE_PORTUGAL_LOCALE_ID] = "Portuguese (Portugal)-Português (Portugal)";
+        localeIdToLabel[ROMANIAN_LOCALE_ID] = "Romanian-Română";
+        localeIdToLabel[RUSSIAN_LOCALE_ID] = "Russian-Русский";
+        localeIdToLabel[SWEDISH_LOCALE_ID] = "Swedish-Svenska";
+        localeIdToLabel[CHINESE_SIMPLIFIED_HAN_LOCALE_ID] = "Chinese (Simplified Han)-简体中文";
     }
 
     private function initLocaleOptions():void
