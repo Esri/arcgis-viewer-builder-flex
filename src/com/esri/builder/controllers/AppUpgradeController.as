@@ -88,7 +88,7 @@ public class AppUpgradeController
         upgradeArbiter.addProcess(new BackupDirectoryProcess(viewerAppDirectory, backupDirectory));
         upgradeArbiter.addProcess(new RemoveRootFilesByExtensionProcess(backupDirectory, "swz"));
         upgradeArbiter.addProcess(new CopyRootFilesProcess(bundledViewerDirectory, backupDirectory, rootFileNames));
-        upgradeArbiter.addProcess(new CopyRootFilesProcess(bundledLocalesDirectory, backupLocalesDirectory, localeFileNames));
+        upgradeArbiter.addProcess(new CopyRootFilesProcess(bundledLocalesDirectory, backupLocalesDirectory, localeFileNames, false));
         upgradeArbiter.addProcess(new UpdateWebPageFilesProcess(bundledViewerDirectory, backupDirectory, new XMLFileReader(new FileStream())));
         upgradeArbiter.addProcess(new CopyWidgetsProcess(bundledViewerDirectory, backupDirectory));
         upgradeArbiter.addProcess(new CopyCustomWidgetsProcess(customViewerDirectory, backupDirectory));
@@ -140,6 +140,7 @@ public class AppUpgradeController
                  "en_US.swf",
                  "es_ES.swf",
                  "et_EE.swf",
+                 "fi_FI.swf",
                  "fr_FR.swf",
                  "he_IL.swf",
                  "it_IT.swf",
