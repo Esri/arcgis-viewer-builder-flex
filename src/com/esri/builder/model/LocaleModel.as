@@ -29,6 +29,7 @@ public class LocaleModel
     private static const ENGLISH_LOCALE_ID:String = 'en_US';
     private static const ESTONIAN_LOCALE_ID:String = 'et_EE';
     private static const SPANISH_LOCALE_ID:String = 'es_ES';
+    private static const FINNISH_LOCALE_ID:String = 'fi_FI';
     private static const FRENCH_LOCALE_ID:String = 'fr_FR';
     private static const HEBREW_LOCALE_ID:String = 'he_IL';
     private static const ITALIAN_LOCALE_ID:String = 'it_IT';
@@ -93,6 +94,7 @@ public class LocaleModel
         localeIdToLabel[ESTONIAN_LOCALE_ID] = "Estonian-Eesti"
         localeIdToLabel[ENGLISH_LOCALE_ID] = "English-English"
         localeIdToLabel[SPANISH_LOCALE_ID] = "Spanish-Español"
+        localeIdToLabel[FINNISH_LOCALE_ID] = "Finnish-Suomi"
         localeIdToLabel[FRENCH_LOCALE_ID] = "French-Français"
         localeIdToLabel[HEBREW_LOCALE_ID] = "Hebrew-עברית"
         localeIdToLabel[ITALIAN_LOCALE_ID] = "Italian-Italiano"
@@ -149,6 +151,7 @@ public class LocaleModel
         DUTCH_LOCALE_ID,
         ENGLISH_LOCALE_ID,
         ESTONIAN_LOCALE_ID,
+        FINNISH_LOCALE_ID,
         FRENCH_LOCALE_ID,
         GERMAN_LOCALE_ID,
         HEBREW_LOCALE_ID,
