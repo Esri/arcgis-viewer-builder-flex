@@ -16,8 +16,6 @@
 package com.esri.builder.controllers.supportClasses.processes
 {
 
-import com.esri.builder.controllers.supportClasses.*;
-
 import flash.filesystem.File;
 
 import mx.resources.ResourceManager;

@@ -16,6 +16,8 @@
 package com.esri.builder.controllers
 {
 
+import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
+import com.esri.builder.controllers.supportClasses.XMLFileReader;
 import com.esri.builder.controllers.supportClasses.processes.BackupDirectoryProcess;
 import com.esri.builder.controllers.supportClasses.processes.CleanUpProcess;
 import com.esri.builder.controllers.supportClasses.processes.CopyCustomWidgetsProcess;
@@ -27,10 +29,8 @@ import com.esri.builder.controllers.supportClasses.processes.ProcessArbiterEvent
 import com.esri.builder.controllers.supportClasses.processes.RemoveRootFilesByExtensionProcess;
 import com.esri.builder.controllers.supportClasses.processes.TestMoveDirectoryProcess;
 import com.esri.builder.controllers.supportClasses.processes.UpdateWebPageFilesProcess;
-import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
 import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.model.ViewerApp;
-import com.esri.builder.controllers.supportClasses.XMLFileReader;
 import com.esri.builder.views.popups.ApplicationUpgradePopUp;
 
 import flash.display.DisplayObjectContainer;
