@@ -27,12 +27,14 @@ public class CopyRootFilesProcess extends Process
     private var sourceAppDirectory:File;
     private var destinationAppDirectory:File;
     private var rootFileNames:Array;
+    private var strict:Boolean;
 
-    public function CopyRootFilesProcess(sourceAppDirectory:File, destinationAppDirectory:File, rootFileNames:Array)
+    public function CopyRootFilesProcess(sourceAppDirectory:File, destinationAppDirectory:File, rootFileNames:Array, strict:Boolean = true)
     {
         this.sourceAppDirectory = sourceAppDirectory;
         this.destinationAppDirectory = destinationAppDirectory;
         this.rootFileNames = rootFileNames;
+        this.strict = strict;
     }
 
     override public function execute():void
@@ -59,7 +61,18 @@ public class CopyRootFilesProcess extends Process
     {
         var sourceFile:File = sourceAppDirectory.resolvePath(fileName);
         var destinationFile:File = destinationAppDirectory.resolvePath(fileName);
-        sourceFile.copyTo(destinationFile, true);
+
+        try
+        {
+            sourceFile.copyTo(destinationFile, true);
+        }
+        catch (e:Error)
+        {
+            if (strict || e.errorID != 3003) //file not found
+            {
+                throw e;
+            }
+        }
     }
 }
 }
