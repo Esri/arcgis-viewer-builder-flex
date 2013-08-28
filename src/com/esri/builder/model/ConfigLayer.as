@@ -38,6 +38,7 @@ import com.esri.ags.symbols.SimpleLineSymbol;
 import com.esri.ags.symbols.SimpleMarkerSymbol;
 import com.esri.ags.symbols.Symbol;
 import com.esri.ags.virtualearth.VETiledLayer;
+import com.esri.builder.supportClasses.URLUtil;
 
 import flash.utils.ByteArray;
 
@@ -165,7 +166,22 @@ public final class ConfigLayer
 
     public var token:String;
 
-    public var url:String;
+    public var _url:String;
+
+    public function get url():String
+    {
+        return _url;
+    }
+
+    public function set url(value:String):void
+    {
+        var urlToken:String = URLUtil.extractToken(value);
+        if (urlToken)
+        {
+            token = urlToken;
+        }
+        _url = URLUtil.removeToken(value);
+    }
 
     public var useProxy:Boolean;
 
