@@ -38,6 +38,7 @@
             import com.esri.builder.model.Model;
             import com.esri.builder.model.RecentlyUsedURLsModel;
             import com.esri.builder.supportClasses.FieldUtil;
+            import com.esri.builder.supportClasses.URLUtil;
             import com.esri.builder.views.BuilderAlert;
             import com.esri.builder.views.popups.ErrorPopUp;
 
@@ -381,7 +382,7 @@
             {
                 //TODO: use regEx validator
                 var urlRE:RegExp = /https?:\/\/([^\s.]+.)+([^\s.]+)/;
-                var layerURL:String = layerURL;
+                var layerURL:String = URLUtil.removeToken(layerURL);
                 if (urlRE.test(layerURL))
                 {
                     var detailsTask:DetailsTask = new DetailsTask();

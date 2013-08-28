@@ -70,7 +70,7 @@ public class PortalURLInputChecker extends URLInputCheckerBase
 
     override protected function prepareURLChecker(url:String):void
     {
-        portal.url = url;
+        portal.url = URLUtil.removeToken(url);
     }
 
     override protected function addURLCheckerListeners():void

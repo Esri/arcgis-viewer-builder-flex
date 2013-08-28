@@ -35,6 +35,7 @@
             import com.esri.builder.model.Model;
             import com.esri.builder.model.RecentlyUsedURLsModel;
             import com.esri.builder.supportClasses.FieldUtil;
+            import com.esri.builder.supportClasses.URLUtil;
             import com.esri.builder.views.BuilderAlert;
 
             import modules.IWidgetModel;
@@ -180,15 +181,15 @@
                     var layerURLAndLayerIndex:Array = endsWithLayerIndex.exec(layerURL) as Array;
                     if (layerURLAndLayerIndex)
                     {
-                        detailsTask.url = layerURLAndLayerIndex[1];
-                        detailsTask.getDetails(Number(layerURLAndLayerIndex[2]), new AsyncResponder(getDetailsResultHandler, getDetailsFaultHandler, detailsTask));
+                        detailsTask.url = URLUtil.removeToken(layerURLAndLayerIndex[1]);
+                        detailsTask.getDetails(Number(layerURLAndLayerIndex[2]), new AsyncResponder(getDetailsResultHandler, getDetailsFaultHandler, layerURLAndLayerIndex[1]));
                     }
                 }
             }
 
-            private function getDetailsResultHandler(layerDetails:LayerDetails, detailsTask:DetailsTask):void
+            private function getDetailsResultHandler(layerDetails:LayerDetails, originalDetailsURL:String):void
             {
-                const currentLoadedURL:String = detailsTask.url + "/" + layerDetails.id;
+                const currentLoadedURL:String = originalDetailsURL + "/" + layerDetails.id;
                 if (lastLoadedURL != currentLoadedURL)
                 {
                     lastLoadedURL = currentLoadedURL;

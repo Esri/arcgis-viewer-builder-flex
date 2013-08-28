@@ -31,6 +31,7 @@
             import com.esri.builder.model.Model;
             import com.esri.builder.model.RecentlyUsedURLsModel;
             import com.esri.builder.supportClasses.LabelUtil;
+            import com.esri.builder.supportClasses.URLUtil;
             import com.esri.builder.views.BuilderAlert;
 
             import modules.IWidgetModel;
@@ -66,6 +67,7 @@
 
             private function requestServiceInfo():void
             {
+                printTask.url = URLUtil.removeToken(printTaskURL);
                 printTask.getServiceInfo(new AsyncResponder(printTask_getServiceInfoCompleteHandler,
                                                             printTask_getServiceInfoFaultHandler));
             }
@@ -218,7 +220,7 @@
     </fx:Script>
 
     <fx:Declarations>
-        <esri:PrintTask id="printTask" url="{printModel.taskURL}"/>
+        <esri:PrintTask id="printTask"/>
     </fx:Declarations>
 
     <s:states>
