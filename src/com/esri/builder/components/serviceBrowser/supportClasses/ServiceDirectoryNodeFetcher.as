@@ -146,7 +146,7 @@ public class ServiceDirectoryNodeFetcher extends EventDispatcher
         {
             urlVars = new URLVariables();
             urlVars.f = "json";
-            layerInfoRequest = new JSONTask(layerNode.url);
+            layerInfoRequest = new JSONTask(layerNode.internalURL);
             layerInfoRequest.requestTimeout = getValidRequestTimeout();
             layerInfoRequest.token = token;
             layerInfoRequest.execute(urlVars,

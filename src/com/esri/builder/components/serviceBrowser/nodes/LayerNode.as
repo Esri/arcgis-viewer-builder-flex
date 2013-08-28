@@ -36,9 +36,9 @@ public class LayerNode extends ServiceDirectoryNode
         return id.toString();
     }
 
-    override public function get url():String
+    override public function get baseURL():String
     {
-        return parent.url + '/' + id;
+        return parent.baseURL + '/' + id;
     }
 
     override public function get hasChildren():Boolean
