@@ -18,7 +18,6 @@
 -->
 <s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
          xmlns:s="library://ns.adobe.com/flex/spark"
-         xmlns:mx="library://ns.adobe.com/flex/mx"
          xmlns:views="com.esri.builder.views.*"
          xmlns:components="com.esri.builder.components.*"
          width="100%" height="100%"
@@ -30,8 +29,8 @@
             import com.esri.ags.portal.Portal;
             import com.esri.builder.controllers.supportClasses.Settings;
             import com.esri.builder.eventbus.AppEvent;
+            import com.esri.builder.model.Locale;
             import com.esri.builder.model.LocaleModel;
-            import com.esri.builder.model.LocaleOption;
             import com.esri.builder.model.Model;
             import com.esri.builder.model.PortalModel;
             import com.esri.builder.supportClasses.LabelUtil;
@@ -146,7 +145,7 @@
             private function localeInput_creationCompleteHandler(event:FlexEvent):void
             {
                 resourceManager.addEventListener(Event.CHANGE, resourceManager_changeHandler);
-                localeInput.dataProvider = new ArrayList(LocaleModel.getInstance().getAvailableLocaleOptions());
+                localeInput.dataProvider = new ArrayList(LocaleModel.getInstance().locales);
                 localeInput.typicalItem =
                     LabelUtil.findLongestLabelItem(localeInput.dataProvider.toArray(), "label");
                 preselectLocale();
@@ -155,7 +154,7 @@
             private function resourceManager_changeHandler(event:Event):void
             {
                 //hack to address selected item not updating when locale option labels change.
-                var selectedLocaleOption:LocaleOption = localeInput.selectedItem;
+                var selectedLocaleOption:Locale = localeInput.selectedItem;
                 localeInput.selectedIndex = -1;
                 localeInput.selectedItem = selectedLocaleOption;
             }
@@ -169,7 +168,7 @@
 
                 var appLocale:String = settings.locale;
                 var availableLocaleOptions:Array = localeInput.dataProvider.toArray();
-                for each (var localeOption:LocaleOption in availableLocaleOptions)
+                for each (var localeOption:Locale in availableLocaleOptions)
                 {
                     if (localeOption.id == appLocale)
                     {

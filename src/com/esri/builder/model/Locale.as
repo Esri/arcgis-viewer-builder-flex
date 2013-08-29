@@ -17,18 +17,26 @@ package com.esri.builder.model
 {
 
 [Bindable]
-public class LocaleOption
+public class Locale
 {
-    public var id:String;
+    private var _id:String;
+
+    public function get id():String
+    {
+        return _id;
+    }
+
+    private var _label:String;
 
     public function get label():String
     {
-        return LocaleModel.getInstance().getLabel(id);
+        return _label;
     }
 
-    public function LocaleOption(id:String)
+    public function Locale(id:String, label:String)
     {
-        this.id = id;
+        _id = id;
+        _label = label;
     }
 }
 }

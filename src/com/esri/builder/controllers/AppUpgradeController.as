@@ -16,6 +16,8 @@
 package com.esri.builder.controllers
 {
 
+import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
+import com.esri.builder.controllers.supportClasses.XMLFileReader;
 import com.esri.builder.controllers.supportClasses.processes.BackupDirectoryProcess;
 import com.esri.builder.controllers.supportClasses.processes.CleanUpProcess;
 import com.esri.builder.controllers.supportClasses.processes.CopyCustomWidgetsProcess;
@@ -27,10 +29,8 @@ import com.esri.builder.controllers.supportClasses.processes.ProcessArbiterEvent
 import com.esri.builder.controllers.supportClasses.processes.RemoveRootFilesByExtensionProcess;
 import com.esri.builder.controllers.supportClasses.processes.TestMoveDirectoryProcess;
 import com.esri.builder.controllers.supportClasses.processes.UpdateWebPageFilesProcess;
-import com.esri.builder.controllers.supportClasses.WellKnownDirectories;
 import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.model.ViewerApp;
-import com.esri.builder.controllers.supportClasses.XMLFileReader;
 import com.esri.builder.views.popups.ApplicationUpgradePopUp;
 
 import flash.display.DisplayObjectContainer;
@@ -88,7 +88,7 @@ public class AppUpgradeController
         upgradeArbiter.addProcess(new BackupDirectoryProcess(viewerAppDirectory, backupDirectory));
         upgradeArbiter.addProcess(new RemoveRootFilesByExtensionProcess(backupDirectory, "swz"));
         upgradeArbiter.addProcess(new CopyRootFilesProcess(bundledViewerDirectory, backupDirectory, rootFileNames));
-        upgradeArbiter.addProcess(new CopyRootFilesProcess(bundledLocalesDirectory, backupLocalesDirectory, localeFileNames));
+        upgradeArbiter.addProcess(new CopyRootFilesProcess(bundledLocalesDirectory, backupLocalesDirectory, localeFileNames, false));
         upgradeArbiter.addProcess(new UpdateWebPageFilesProcess(bundledViewerDirectory, backupDirectory, new XMLFileReader(new FileStream())));
         upgradeArbiter.addProcess(new CopyWidgetsProcess(bundledViewerDirectory, backupDirectory));
         upgradeArbiter.addProcess(new CopyCustomWidgetsProcess(customViewerDirectory, backupDirectory));
@@ -140,6 +140,7 @@ public class AppUpgradeController
                  "en_US.swf",
                  "es_ES.swf",
                  "et_EE.swf",
+                 "fi_FI.swf",
                  "fr_FR.swf",
                  "he_IL.swf",
                  "it_IT.swf",
