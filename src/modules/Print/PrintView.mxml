@@ -67,7 +67,7 @@
 
             private function requestServiceInfo():void
             {
-                printTask.url = URLUtil.removeToken(printTaskURL);
+                printTask.url = URLUtil.ensureValidKeyValuePairs(URLUtil.removeToken(printTaskURL));
                 printTask.getServiceInfo(new AsyncResponder(printTask_getServiceInfoCompleteHandler,
                                                             printTask_getServiceInfoFaultHandler));
             }

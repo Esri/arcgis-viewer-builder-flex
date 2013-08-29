@@ -151,7 +151,8 @@
 
             private function validateLocator():void
             {
-                var locatorMetadataRequest:JSONTask = new JSONTask(URLUtil.removeToken(locatorURL));
+                var url:String = URLUtil.ensureValidKeyValuePairs(URLUtil.removeToken(locatorURL));
+                var locatorMetadataRequest:JSONTask = new JSONTask(url);
                 var urlVars:URLVariables = new URLVariables();
                 urlVars.f = 'json';
                 locatorMetadataRequest.execute(urlVars, new AsyncResponder(locatorMetadataRequest_resultHandler, locatorMetadataRequest_faultHandler));

@@ -120,7 +120,7 @@ public class URLInputChecker extends URLInputCheckerBase
 
     override protected function prepareURLChecker(url:String):void
     {
-        urlRequest.url = URLUtil.removeToken(url);
+        urlRequest.url = URLUtil.ensureValidKeyValuePairs(URLUtil.removeToken(url));
     }
 
     override protected function addURLCheckerListeners():void

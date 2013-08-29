@@ -168,7 +168,7 @@
 
             private function validateRouteURL():void
             {
-                var routeURLMetadataRequest:JSONTask = new JSONTask(URLUtil.removeToken(routeURL));
+                var routeURLMetadataRequest:JSONTask = new JSONTask(URLUtil.ensureValidKeyValuePairs(URLUtil.removeToken(routeURL)));
                 var urlVars:URLVariables = new URLVariables();
                 urlVars.f = 'json';
                 routeURLMetadataRequest.execute(
