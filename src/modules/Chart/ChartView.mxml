@@ -369,7 +369,7 @@
                 {
                     var detailsTask:DetailsTask = new DetailsTask();
                     var endsWithLayerIndex:RegExp = /^\s*(.+)\/(\d+)\s*$/;
-                    var layerURLAndLayerIndex:Array = endsWithLayerIndex.exec(selectedFeatureLayer.url) as Array;
+                    var layerURLAndLayerIndex:Array = endsWithLayerIndex.exec(URLUtil.removeQueryString(selectedFeatureLayer.url)) as Array;
                     if (layerURLAndLayerIndex)
                     {
                         detailsTask.url = layerURLAndLayerIndex[1];
@@ -387,7 +387,7 @@
                 {
                     var detailsTask:DetailsTask = new DetailsTask();
                     var endsWithLayerIndex:RegExp = /^\s*(.+)\/(\d+)\s*$/;
-                    var layerURLAndLayerIndex:Array = endsWithLayerIndex.exec(layerURL) as Array;
+                    var layerURLAndLayerIndex:Array = endsWithLayerIndex.exec(URLUtil.removeQueryString(layerURL)) as Array;
                     if (layerURLAndLayerIndex)
                     {
                         detailsTask.url = layerURLAndLayerIndex[1];
@@ -552,7 +552,7 @@
             private function hasLayerEndPoint():Boolean
             {
                 const layerEndPoint:RegExp = / \/ [a-z]* Server \/ [0-9]+ $ /ix;
-                return layerEndPoint.test(layerURL);
+                return layerEndPoint.test(URLUtil.removeQueryString(layerURL));
             }
 
             private function processServiceLayerURL():void

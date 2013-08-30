@@ -114,7 +114,7 @@
             private function hasMapServerEndPoint():Boolean
             {
                 const endsWithMapServer:RegExp = / \/ MapServer \/? $ /ix;
-                return endsWithMapServer.test(mapServiceURL);
+                return endsWithMapServer.test(URLUtil.removeQueryString(mapServiceURL));
             }
 
             private function getAllDetails():void

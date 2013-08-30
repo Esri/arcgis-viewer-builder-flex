@@ -201,7 +201,7 @@
             private function hasGeocodeServerEndPoint():Boolean
             {
                 const endsWithGeocodeServer:RegExp = / \/ GeocodeServer \/? $ /ix;
-                return endsWithGeocodeServer.test(locatorURL);
+                return endsWithGeocodeServer.test(URLUtil.removeQueryString(locatorURL));
             }
 
             protected function linkDataGrid_moveItemDownHandler(event:ModifyItemEvent):void

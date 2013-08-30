@@ -250,7 +250,7 @@
             private function hasGPTaskEndPoint():Boolean
             {
                 const endsWithGPServerAndTaskName:RegExp = / \/ GPServer \/ .+ $ /ix;
-                return endsWithGPServerAndTaskName.test(taskURL);
+                return endsWithGPServerAndTaskName.test(URLUtil.removeQueryString(taskURL));
             }
 
             override public function set currentState(value:String):void

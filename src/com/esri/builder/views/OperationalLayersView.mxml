@@ -37,6 +37,7 @@
             import com.esri.builder.model.PortalLayer;
             import com.esri.builder.supportClasses.ErrorMessageUtil;
             import com.esri.builder.supportClasses.LogUtil;
+            import com.esri.builder.supportClasses.URLUtil;
             import com.esri.builder.views.supportClasses.LayerSelectionEvent;
 
             import mx.collections.ArrayList;
@@ -334,7 +335,7 @@
             private function pointsToLayer(url:String):Boolean
             {
                 var endsWithLayerId:RegExp = /\/[0-9]+$/;
-                return endsWithLayerId.test(url);
+                return endsWithLayerId.test(URLUtil.removeQueryString(url));
             }
 
             private function getConfigLayerType(type:String, url:String = null):String

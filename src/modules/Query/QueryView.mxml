@@ -129,7 +129,7 @@
             private function loadFields():void
             {
                 const re:RegExp = /^\s*(.+)\/(\d+)\s*$/;
-                const result:Array = re.exec(queryModel.layer) as Array;
+                const result:Array = re.exec(URLUtil.removeQueryString(queryModel.layer)) as Array;
                 if (result)
                 {
                     detailsTask.url = URLUtil.removeToken(result[1]);
@@ -145,7 +145,7 @@
             private function hasLayerEndPointURL():Boolean
             {
                 const layerEndPoint:RegExp = / \/ [a-z]+ Server \/ [0-9]+ $ /ix;
-                return layerEndPoint.test(queryModel.layer);
+                return layerEndPoint.test(URLUtil.removeQueryString(queryModel.layer));
             }
 
             private function detailsTask_faultHandler(fault:Fault, token:Object):void

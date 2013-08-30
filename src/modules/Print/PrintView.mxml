@@ -191,7 +191,7 @@
             private function hasGPTaskEndPoint():Boolean
             {
                 const endsWithGPServerAndTaskName:RegExp = / \/ GPServer \/ .+ $ /ix;
-                return endsWithGPServerAndTaskName.test(printTaskURL);
+                return endsWithGPServerAndTaskName.test(URLUtil.removeQueryString(printTaskURL));
             }
 
             private function serviceBrowser_selectionChangeHandler(event:ServiceBrowserEvent):void

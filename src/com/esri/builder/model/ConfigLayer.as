@@ -136,11 +136,11 @@ public final class ConfigLayer
 
         var label:String;
 
-        if (mapServerLayer.test(url))
+        if (mapServerLayer.test(URLUtil.removeQueryString(url)))
         {
             label = MAP_SERVER_SOURCE;
         }
-        else if (featureServerLayer.test(url))
+        else if (featureServerLayer.test(URLUtil.removeQueryString(url)))
         {
             label = FEATURE_SERVER_SOURCE;
         }
