@@ -18,7 +18,6 @@
 -->
 <s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
           xmlns:s="library://ns.adobe.com/flex/spark"
-          xmlns:mx="library://ns.adobe.com/flex/mx"
           xmlns:esri="http://www.esri.com/2008/ags"
           xmlns:components="com.esri.builder.components.*"
           xmlns:supportClasses="modules.supportClasses.*"
@@ -30,7 +29,6 @@
           implements="modules.IWidgetView">
     <fx:Script>
         <![CDATA[
-            import com.esri.ags.events.DetailsEvent;
             import com.esri.ags.layers.supportClasses.Field;
             import com.esri.ags.layers.supportClasses.LayerDetails;
             import com.esri.builder.components.serviceBrowser.nodes.LayerNode;
@@ -45,10 +43,8 @@
             import modules.supportClasses.NoneOptionArrayList;
 
             import mx.collections.ArrayCollection;
-            import mx.collections.ArrayList;
             import mx.controls.Alert;
             import mx.events.FlexEvent;
-            import mx.rpc.events.FaultEvent;
             import mx.rpc.AsyncResponder;
             import mx.rpc.Fault;
 
