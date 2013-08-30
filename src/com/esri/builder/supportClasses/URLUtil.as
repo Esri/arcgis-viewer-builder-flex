@@ -54,7 +54,7 @@ public class URLUtil
 
     public static function removeToken(url:String):String
     {
-        const tokenKeyValue:RegExp = / &? token = [a-zA-Z0-9]* /igx;
+        const tokenKeyValue:RegExp = / &? token = [^&]* /igx;
         var cleanURL:String = url ? url.replace(tokenKeyValue, "") : "";
 
         const invalidQueryStringCharSequence:RegExp = / (\?) & /x;
@@ -70,7 +70,7 @@ public class URLUtil
 
         if (url)
         {
-            const tokenKeyValue:RegExp = / &? token = ([a-zA-Z0-9]*) /ix;
+            const tokenKeyValue:RegExp = / &? token = ([^&]*) /ix;
             var matches:Array = tokenKeyValue.exec(url);
             if (matches && matches.length > 1) //want the first captured group (the token value)
             {
