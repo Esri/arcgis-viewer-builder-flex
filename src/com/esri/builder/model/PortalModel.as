@@ -63,10 +63,16 @@ public class PortalModel extends EventDispatcher
         var cleanURL:String = url;
         cleanURL = StringUtil.trim(cleanURL);
         cleanURL = replacePreviousDefaultPortalURL(cleanURL);
+        cleanURL = ensureHTTPSOnArcGISDomains(cleanURL);
         cleanURL = cleanURL.replace(/\/sharing\/content\/items\/?$/i, '');
         cleanURL = URLUtil.ensureTrailingForwardSlash(cleanURL);
         cleanURL = URLUtil.encode(cleanURL);
         return cleanURL;
+    }
+
+    private function ensureHTTPSOnArcGISDomains(url:String):String
+    {
+        return isAGO(url) ? mx.utils.URLUtil.replaceProtocol(url, "https") : url;
     }
 
     private function replacePreviousDefaultPortalURL(url:String):String
