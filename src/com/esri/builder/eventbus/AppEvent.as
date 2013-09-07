@@ -122,7 +122,6 @@ public class AppEvent extends Event
     public static const REMOVE_CUSTOM_WIDGET:String = "REMOVE_CUSTOM_WIDGET";
     public static const REMOVE_CUSTOM_WIDGET_SUCCESS:String = "REMOVE_CUSTOM_WIDGET_SUCCESS";
     public static const REMOVE_CUSTOM_WIDGET_FAILURE:String = "REMOVE_CUSTOM_WIDGET_FAILURE";
-    public static const IDENTITY_MANAGER_SIGN_IN_SUCCESS:String = "IDENTITY_MANAGER_SIGN_IN_SUCCESS";
 
     //--------------------------------------------------------------------------
     //
