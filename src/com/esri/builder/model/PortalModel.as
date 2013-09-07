@@ -18,6 +18,7 @@ package com.esri.builder.model
 
 import com.esri.ags.components.IdentityManager;
 import com.esri.ags.components.supportClasses.Credential;
+import com.esri.ags.components.supportClasses.OAuthInfo;
 import com.esri.ags.portal.Portal;
 import com.esri.builder.supportClasses.PortalUtil;
 import com.esri.builder.supportClasses.URLUtil;
@@ -36,6 +37,8 @@ public class PortalModel extends EventDispatcher
     //--------------------------------------------------------------------------
 
     public static const DEFAULT_PORTAL_URL:String = "https://www.arcgis.com/";
+
+    private static const BUILDER_APP_ID:String = "flexappbuilder";
 
     private static var instance:PortalModel;
 
@@ -89,6 +92,19 @@ public class PortalModel extends EventDispatcher
         var portalServerNameWithPort:String = mx.utils.URLUtil.getServerNameWithPort(portalURL);
 
         return (serverURLServerNameWithPort == portalServerNameWithPort);
+    }
+
+    public function registerOAuthPortal(url:String):void
+    {
+        var oAuthInfo:OAuthInfo = new OAuthInfo(BUILDER_APP_ID);
+        oAuthInfo.portalURL = url;
+        IdentityManager.instance.registerOAuthInfos([ oAuthInfo ]);
+    }
+
+    public function isAGO(url:String):Boolean
+    {
+        const isAGO:RegExp = /^https?:\/\/.*arcgis\.com/gi;
+        return isAGO.test(url);
     }
 
     //--------------------------------------------------------------------------
