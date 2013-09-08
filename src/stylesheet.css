@@ -163,8 +163,3 @@ s|DataGrid
     skinClass: ClassReference("com.esri.builder.skins.DataGridSkin");
     stretchCursor: ClassReference("assets.graphics.stretch_cursor");
 }
-
-components|SignInWindow
-{
-    skinClass: ClassReference("com.esri.builder.skins.TitleWindowSkin");
-}

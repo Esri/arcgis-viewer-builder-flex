@@ -18,6 +18,7 @@ package com.esri.builder.controllers
 
 import com.esri.ags.components.IdentityManager;
 import com.esri.ags.components.supportClasses.Credential;
+import com.esri.ags.events.IdentityManagerEvent;
 import com.esri.ags.events.PortalEvent;
 import com.esri.ags.portal.Portal;
 import com.esri.builder.eventbus.AppEvent;
@@ -44,13 +45,12 @@ public class PortalController
         AppEvent.addListener(AppEvent.SETTINGS_SAVED, settingsChangeHandler);
         AppEvent.addListener(AppEvent.PORTAL_SIGN_IN, portalSignInHandler);
         AppEvent.addListener(AppEvent.PORTAL_SIGN_OUT, portalSignOutHandler);
-        AppEvent.addListener(AppEvent.IDENTITY_MANAGER_SIGN_IN_SUCCESS, identityManager_signInSuccessHandler);
+        IdentityManager.instance.addEventListener(IdentityManagerEvent.SIGN_IN, identityManager_signInHandler);
     }
 
-    private function identityManager_signInSuccessHandler(event:AppEvent):void
+    private function identityManager_signInHandler(event:IdentityManagerEvent):void
     {
-        var credential:Credential = event.data as Credential;
-        if (PortalModel.getInstance().hasSameOrigin(credential.server)
+        if (PortalModel.getInstance().hasSameOrigin(event.credential.server)
             && !PortalModel.getInstance().portal.signedIn)
         {
             AppEvent.dispatch(AppEvent.PORTAL_SIGN_IN);
@@ -83,7 +83,15 @@ public class PortalController
 
     private function settingsChangeHandler(event:AppEvent):void
     {
-        loadPortal(PortalModel.getInstance().portalURL, Model.instance.cultureCode);
+        //optimization: AGO uses OAuth, so we register the OAuth info upfront
+        var portalModel:PortalModel = PortalModel.getInstance();
+        var portalURL:String = portalModel.portalURL;
+        if (portalModel.isAGO(portalURL))
+        {
+            portalModel.registerOAuthPortal(portalURL);
+        }
+
+        loadPortal(portalURL, Model.instance.cultureCode);
     }
 
     private function loadPortal(url:String, cultureCode:String):void

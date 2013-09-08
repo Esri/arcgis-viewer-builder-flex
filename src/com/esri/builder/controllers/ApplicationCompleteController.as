@@ -17,8 +17,8 @@ package com.esri.builder.controllers
 {
 
 import com.esri.ags.components.IdentityManager;
+import com.esri.ags.events.IdentityManagerEvent;
 import com.esri.builder.components.LogFileTarget;
-import com.esri.builder.components.SignInWindow;
 import com.esri.builder.components.ToolTip;
 import com.esri.builder.controllers.supportClasses.MachineDisplayName;
 import com.esri.builder.controllers.supportClasses.Settings;
@@ -45,6 +45,7 @@ import mx.logging.Log;
 import mx.managers.ToolTipManager;
 import mx.resources.ResourceManager;
 import mx.rpc.AsyncResponder;
+import mx.rpc.Responder;
 
 import spark.components.WindowedApplication;
 
@@ -85,10 +86,32 @@ public final class ApplicationCompleteController
         XML.ignoreWhitespace = true;
         XML.prettyIndent = 4;
 
-        IdentityManager.instance.enabled = true;
-        IdentityManager.instance.signInWindowClass = SignInWindow;
+        var portalURL:String = PortalModel.getInstance().portalURL;
+        var idManager:IdentityManager = IdentityManager.instance;
 
-        ToolTipManager.toolTipClass = com.esri.builder.components.ToolTip;
+        idManager.enabled = true;
+
+        if (PortalModel.getInstance().isAGO(portalURL))
+        {
+            idManager.addEventListener(IdentityManagerEvent.SHOW_OAUTH_WEB_VIEW, showOAuthWebViewHandler);
+            PortalModel.getInstance().registerOAuthPortal(portalURL);
+            idManager.getCredential(portalURL, false, new Responder(getCredentialOutcomeHandler,
+                                                                    getCredentialOutcomeHandler));
+
+            function getCredentialOutcomeHandler(outcome:Object):void
+            {
+                idManager.removeEventListener(IdentityManagerEvent.SHOW_OAUTH_WEB_VIEW, showOAuthWebViewHandler);
+            }
+
+            function showOAuthWebViewHandler(event:IdentityManagerEvent):void
+            {
+                idManager.removeEventListener(IdentityManagerEvent.SHOW_OAUTH_WEB_VIEW, showOAuthWebViewHandler);
+                event.preventDefault();
+                idManager.setCredentialForCurrentSignIn(null);
+            }
+        }
+
+        ToolTipManager.toolTipClass = ToolTip;
 
         // Can only have access to 'loaderInfo' when the app is complete.
         app.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, uncaughtErrorHandler);
