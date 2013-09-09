@@ -86,31 +86,6 @@ public final class ApplicationCompleteController
         XML.ignoreWhitespace = true;
         XML.prettyIndent = 4;
 
-        var portalURL:String = PortalModel.getInstance().portalURL;
-        var idManager:IdentityManager = IdentityManager.instance;
-
-        idManager.enabled = true;
-
-        if (PortalModel.getInstance().isAGO(portalURL))
-        {
-            idManager.addEventListener(IdentityManagerEvent.SHOW_OAUTH_WEB_VIEW, showOAuthWebViewHandler);
-            PortalModel.getInstance().registerOAuthPortal(portalURL);
-            idManager.getCredential(portalURL, false, new Responder(getCredentialOutcomeHandler,
-                                                                    getCredentialOutcomeHandler));
-
-            function getCredentialOutcomeHandler(outcome:Object):void
-            {
-                idManager.removeEventListener(IdentityManagerEvent.SHOW_OAUTH_WEB_VIEW, showOAuthWebViewHandler);
-            }
-
-            function showOAuthWebViewHandler(event:IdentityManagerEvent):void
-            {
-                idManager.removeEventListener(IdentityManagerEvent.SHOW_OAUTH_WEB_VIEW, showOAuthWebViewHandler);
-                event.preventDefault();
-                idManager.setCredentialForCurrentSignIn(null);
-            }
-        }
-
         ToolTipManager.toolTipClass = ToolTip;
 
         // Can only have access to 'loaderInfo' when the app is complete.
@@ -354,7 +329,41 @@ public final class ApplicationCompleteController
     protected function widgetTypeLoader_completeHandler(event:Event):void
     {
         (event.currentTarget as StartupWidgetTypeLoader).removeEventListener(Event.COMPLETE, widgetTypeLoader_completeHandler);
-        validateSettings();
+        initIdentityManager();
+    }
+
+    private function initIdentityManager():void
+    {
+        var portalURL:String = PortalModel.getInstance().portalURL;
+        var idManager:IdentityManager = IdentityManager.instance;
+
+        idManager.enabled = true;
+
+        if (PortalModel.getInstance().isAGO(portalURL))
+        {
+            idManager.addEventListener(IdentityManagerEvent.SHOW_OAUTH_WEB_VIEW, showOAuthWebViewHandler);
+            PortalModel.getInstance().registerOAuthPortal(portalURL);
+            idManager.getCredential(portalURL, false, new Responder(getCredentialOutcomeHandler,
+                                                                    getCredentialOutcomeHandler));
+
+            function getCredentialOutcomeHandler(outcome:Object):void
+            {
+                idManager.removeEventListener(IdentityManagerEvent.SHOW_OAUTH_WEB_VIEW, showOAuthWebViewHandler);
+                validateSettings();
+            }
+
+            function showOAuthWebViewHandler(event:IdentityManagerEvent):void
+            {
+                idManager.removeEventListener(IdentityManagerEvent.SHOW_OAUTH_WEB_VIEW, showOAuthWebViewHandler);
+                event.preventDefault();
+                idManager.setCredentialForCurrentSignIn(null);
+                validateSettings();
+            }
+        }
+        else
+        {
+            validateSettings();
+        }
     }
 
     private function validateSettings():void
