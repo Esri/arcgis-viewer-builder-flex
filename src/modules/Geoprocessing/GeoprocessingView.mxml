@@ -34,6 +34,7 @@
             import com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent;
             import com.esri.builder.model.Model;
             import com.esri.builder.model.RecentlyUsedURLsModel;
+            import com.esri.builder.supportClasses.URLUtil;
             import com.esri.builder.views.BuilderAlert;
 
             import modules.Geoprocessing.parameters.BaseParameter;
@@ -100,7 +101,7 @@
                 urlVars.f = "json";
 
                 var inspectService:JSONTask = new JSONTask();
-                inspectService.url = url;
+                inspectService.url = URLUtil.removeToken(url);
                 inspectService.execute(urlVars, new AsyncResponder(inspectService_resultHandler, inspectService_faultHandler));
             }
 
@@ -249,7 +250,7 @@
             private function hasGPTaskEndPoint():Boolean
             {
                 const endsWithGPServerAndTaskName:RegExp = / \/ GPServer \/ .+ $ /ix;
-                return endsWithGPServerAndTaskName.test(taskURL);
+                return endsWithGPServerAndTaskName.test(URLUtil.removeQueryString(taskURL));
             }
 
             override public function set currentState(value:String):void

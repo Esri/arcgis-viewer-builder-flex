@@ -25,6 +25,7 @@ import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.model.Model;
 import com.esri.builder.model.PortalModel;
 import com.esri.builder.supportClasses.LogUtil;
+import com.esri.builder.supportClasses.URLUtil;
 
 import mx.logging.ILogger;
 import mx.logging.Log;
@@ -119,7 +120,7 @@ public class PortalController
 
                 lastUsedCultureCode = cultureCode;
                 portal.culture = cultureCode;
-                portal.url = url;
+                portal.url = URLUtil.removeToken(url);
 
                 portal.addEventListener(PortalEvent.LOAD, portal_loadHandler);
                 portal.addEventListener(FaultEvent.FAULT, portal_faultHandler);

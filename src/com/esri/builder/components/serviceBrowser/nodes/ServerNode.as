@@ -63,9 +63,9 @@ public class ServerNode extends ServiceDirectoryNode
                                      type);
     }
 
-    override public function get url():String
+    override public function get baseURL():String
     {
-        return parent.url + '/' + path;
+        return parent.baseURL + '/' + path;
     }
 
     private var _isBranch:Boolean;

@@ -18,7 +18,6 @@
 -->
 <s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
           xmlns:s="library://ns.adobe.com/flex/spark"
-          xmlns:mx="library://ns.adobe.com/flex/mx"
           xmlns:esri="http://www.esri.com/2008/ags"
           xmlns:components="com.esri.builder.components.*"
           xmlns:supportClasses="modules.supportClasses.*"
@@ -30,23 +29,24 @@
           implements="modules.IWidgetView">
     <fx:Script>
         <![CDATA[
-            import com.esri.ags.events.DetailsEvent;
             import com.esri.ags.layers.supportClasses.Field;
+            import com.esri.ags.layers.supportClasses.LayerDetails;
             import com.esri.builder.components.serviceBrowser.nodes.LayerNode;
             import com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent;
             import com.esri.builder.model.Model;
             import com.esri.builder.model.RecentlyUsedURLsModel;
             import com.esri.builder.supportClasses.FieldUtil;
+            import com.esri.builder.supportClasses.URLUtil;
             import com.esri.builder.views.BuilderAlert;
 
             import modules.IWidgetModel;
             import modules.supportClasses.NoneOptionArrayList;
 
             import mx.collections.ArrayCollection;
-            import mx.collections.ArrayList;
             import mx.controls.Alert;
             import mx.events.FlexEvent;
-            import mx.rpc.events.FaultEvent;
+            import mx.rpc.AsyncResponder;
+            import mx.rpc.Fault;
 
             import spark.events.GridEvent;
 
@@ -129,11 +129,11 @@
             private function loadFields():void
             {
                 const re:RegExp = /^\s*(.+)\/(\d+)\s*$/;
-                const result:Array = re.exec(queryModel.layer) as Array;
+                const result:Array = re.exec(URLUtil.removeQueryString(queryModel.layer)) as Array;
                 if (result)
                 {
-                    detailsTask.url = result[1];
-                    detailsTask.getDetails(Number(result[2]));
+                    detailsTask.url = URLUtil.removeToken(result[1]);
+                    detailsTask.getDetails(Number(result[2]), new AsyncResponder(detailsTask_getDetailsCompleteHandler, detailsTask_faultHandler, result[1]));
                     Model.instance.status = resourceManager.getString('BuilderStrings', 'loadingFields');
                 }
                 else
@@ -145,24 +145,24 @@
             private function hasLayerEndPointURL():Boolean
             {
                 const layerEndPoint:RegExp = / \/ [a-z]+ Server \/ [0-9]+ $ /ix;
-                return layerEndPoint.test(queryModel.layer);
+                return layerEndPoint.test(URLUtil.removeQueryString(queryModel.layer));
             }
 
-            private function detailsTask_faultHandler(event:FaultEvent):void
+            private function detailsTask_faultHandler(fault:Fault, token:Object):void
             {
-                BuilderAlert.show(event.fault.toString(), resourceManager.getString('BuilderStrings', 'error'));
+                BuilderAlert.show(fault.toString(), resourceManager.getString('BuilderStrings', 'error'));
             }
 
-            private function detailsTask_getDetailsCompleteHandler(event:DetailsEvent):void
+            private function detailsTask_getDetailsCompleteHandler(layerDetails:LayerDetails, originalDetailsURL:String):void
             {
                 Model.instance.status = '';
                 fieldsDataGridDataProvider.removeAll();
-                if (!event.layerDetails.fields)
+                if (!layerDetails.fields)
                 {
                     return;
                 }
 
-                const fields:Array = FieldUtil.getValidFields(event.layerDetails.fields);
+                const fields:Array = FieldUtil.getValidFields(layerDetails.fields);
                 queryModel.names = new NoneOptionArrayList();
 
                 for each (var field:Field in fields)
@@ -171,7 +171,7 @@
                 }
                 fieldsDataGridDataProvider.source = fields;
 
-                const currentLoadedURL:String = detailsTask.url + "/" + event.layerDetails.id;
+                const currentLoadedURL:String = originalDetailsURL + "/" + layerDetails.id;
                 if (currentLoadedURL != lastLoadedURL)
                 {
                     lastLoadedURL = currentLoadedURL;
@@ -238,9 +238,7 @@
     </fx:Script>
 
     <fx:Declarations>
-        <esri:DetailsTask id="detailsTask"
-                          fault="detailsTask_faultHandler(event)"
-                          getDetailsComplete="detailsTask_getDetailsCompleteHandler(event)"/>
+        <esri:DetailsTask id="detailsTask"/>
     </fx:Declarations>
 
     <s:states>

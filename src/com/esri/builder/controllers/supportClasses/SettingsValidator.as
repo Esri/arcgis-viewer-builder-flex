@@ -106,7 +106,9 @@ public final class SettingsValidator extends EventDispatcher
 
         if (settings.geometryServiceURL)
         {
-            if (!/^https?:\/\/.+\/GeometryServer$/.test(settings.geometryServiceURL))
+            if (!/^https?:\/\/.+\/GeometryServer$/.test(
+                com.esri.builder.supportClasses.URLUtil.removeQueryString(
+                settings.geometryServiceURL)))
             {
                 if (Log.isDebug())
                 {

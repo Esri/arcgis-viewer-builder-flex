@@ -51,5 +51,102 @@ public class URLUtil
         const SIMPLE_URL_EXPR:RegExp = /^ (?: f|ht)tps? :\/\/ .+ $/ix;
         return SIMPLE_URL_EXPR.test(url);
     }
+
+    public static function removeToken(url:String):String
+    {
+        const tokenKeyValue:RegExp = / &? token = [^&]* /igx;
+        var cleanURL:String = url ? url.replace(tokenKeyValue, "") : "";
+
+        const invalidQueryStringCharSequence:RegExp = / (\?) & /x;
+        cleanURL = cleanURL.replace(invalidQueryStringCharSequence, "$1");
+
+        const endingQueryDelimiter:RegExp = / \? \s* $ /x;
+        return cleanURL.replace(endingQueryDelimiter, "");
+    }
+
+    public static function extractToken(url:String):String
+    {
+        var token:String = "";
+
+        if (url)
+        {
+            const tokenKeyValue:RegExp = / &? token = ([^&]*) /ix;
+            var matches:Array = tokenKeyValue.exec(url);
+            if (matches && matches.length > 1) //want the first captured group (the token value)
+            {
+                token = matches[1];
+            }
+        }
+
+        return token;
+    }
+
+    public static function ensureValidKeyValuePairs(url:String):String
+    {
+        if (url == null)
+        {
+            url = "";
+        }
+
+        var queryDelimiterIndex:int = url.indexOf("?");
+        if (queryDelimiterIndex == -1)
+        {
+            return url;
+        }
+
+        var queryString:String = url.substr(queryDelimiterIndex + 1);
+        url = url.substr(0, queryDelimiterIndex);
+
+        var key:String;
+        var value:String;
+        var validKVPairs:Array = [];
+        var kvPairs:Array = queryString.split("&");
+        var kvPair:Array;
+
+        for each (var kv:String in kvPairs)
+        {
+            kvPair = kv.split("=");
+
+            if (kvPair.length < 2)
+            {
+                continue;
+            }
+
+            key = kvPair[0];
+            value = kvPair[1];
+
+            if (key && value)
+            {
+                validKVPairs.push(key + "=" + value);
+            }
+        }
+
+        queryString = validKVPairs.length > 0 ?
+            "?" + validKVPairs.join("&") : "";
+
+        return url + queryString;
+    }
+
+    public static function removeQueryString(url:String):String
+    {
+        if (url == null)
+        {
+            url = "";
+        }
+
+        var queryDelimiterIndex:int = url.indexOf("?");
+        return (queryDelimiterIndex > -1) ? url.substr(0, queryDelimiterIndex) : url;
+    }
+
+    public static function extractQueryString(url:String):String
+    {
+        if (url == null)
+        {
+            url = "";
+        }
+
+        var queryDelimiterIndex:int = url.indexOf("?");
+        return (queryDelimiterIndex > -1) ? url.substr(queryDelimiterIndex) : "";
+    }
 }
 }

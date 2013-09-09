@@ -26,6 +26,7 @@ import com.esri.builder.model.ConfigLayerStore;
 import com.esri.builder.model.Model;
 import com.esri.builder.supportClasses.ErrorMessageUtil;
 import com.esri.builder.supportClasses.LogUtil;
+import com.esri.builder.supportClasses.URLUtil;
 
 import flash.net.URLVariables;
 
@@ -72,7 +73,7 @@ public final class AddConfigLayerController
 
         const urlVars:URLVariables = new URLVariables();
         urlVars.f = 'json';
-        const serviceMetadataRequest:JSONTask = new JSONTask(layerServer.url);
+        const serviceMetadataRequest:JSONTask = new JSONTask(URLUtil.removeToken(layerServer.url));
         serviceMetadataRequest.requestTimeout = Model.REQUEST_TIMEOUT;
         serviceMetadataRequest.showBusyCursor = true;
         serviceMetadataRequest.execute(urlVars,
@@ -200,7 +201,7 @@ public final class AddConfigLayerController
 
             const urlVars:URLVariables = new URLVariables();
             urlVars.f = 'json';
-            const serviceMetadataRequest:JSONTask = new JSONTask(mapServer.url);
+            const serviceMetadataRequest:JSONTask = new JSONTask(URLUtil.removeToken(mapServer.url));
             serviceMetadataRequest.requestTimeout = Model.REQUEST_TIMEOUT;
             serviceMetadataRequest.showBusyCursor = true;
             serviceMetadataRequest.execute(urlVars,

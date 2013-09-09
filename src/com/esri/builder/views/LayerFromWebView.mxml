@@ -209,7 +209,7 @@
             private function findAppropriateLabel(url:String):String
             {
                 const labelToken:RegExp = /( [^\/.]+ ) (?: \.[a-zA-Z0-9]+ )? $/x;
-                const labelMatches:Array = labelToken.exec(url);
+                const labelMatches:Array = labelToken.exec(URLUtil.removeQueryString(url));
                 return (labelMatches && labelMatches.length > 0) ? labelMatches[1] : url;
             }
 
