@@ -320,12 +320,6 @@ public final class ApplicationCompleteController
         errorPopUp.open(FlexGlobals.topLevelApplication as DisplayObjectContainer, true);
     }
 
-    private function setStatusAndAlert(text:String):void
-    {
-        Model.instance.status = text;
-        BuilderAlert.show(text, ResourceManager.getInstance().getString('BuilderStrings', 'error'));
-    }
-
     protected function widgetTypeLoader_completeHandler(event:Event):void
     {
         (event.currentTarget as StartupWidgetTypeLoader).removeEventListener(Event.COMPLETE, widgetTypeLoader_completeHandler);
