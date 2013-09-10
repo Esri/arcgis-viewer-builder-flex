@@ -44,9 +44,6 @@ public class PortalController
     public function PortalController()
     {
         AppEvent.addListener(AppEvent.SETTINGS_SAVED, settingsChangeHandler);
-        AppEvent.addListener(AppEvent.PORTAL_SIGN_IN, portalSignInHandler);
-        AppEvent.addListener(AppEvent.PORTAL_SIGN_OUT, portalSignOutHandler);
-        IdentityManager.instance.addEventListener(IdentityManagerEvent.SIGN_IN, identityManager_signInHandler);
     }
 
     private function identityManager_signInHandler(event:IdentityManagerEvent):void
@@ -54,7 +51,7 @@ public class PortalController
         if (PortalModel.getInstance().hasSameOrigin(event.credential.server)
             && !PortalModel.getInstance().portal.signedIn)
         {
-            AppEvent.dispatch(AppEvent.PORTAL_SIGN_IN);
+            signIntoPortalInternally();
         }
     }
 
@@ -65,6 +62,7 @@ public class PortalController
             LOG.info("Portal sign out requested");
         }
 
+        IdentityManager.instance.removeEventListener(IdentityManagerEvent.SIGN_IN, identityManager_signInHandler);
         portal.addEventListener(PortalEvent.LOAD, portal_loadHandler);
         portal.addEventListener(FaultEvent.FAULT, portal_faultHandler);
         portal.signOut();
@@ -77,6 +75,12 @@ public class PortalController
             LOG.info("Portal sign in requested");
         }
 
+        signIntoPortalInternally();
+    }
+
+    private function signIntoPortalInternally():void
+    {
+        IdentityManager.instance.removeEventListener(IdentityManagerEvent.SIGN_IN, identityManager_signInHandler);
         portal.addEventListener(PortalEvent.LOAD, portal_loadHandler);
         portal.addEventListener(FaultEvent.FAULT, portal_faultHandler);
         portal.signIn();
@@ -122,6 +126,7 @@ public class PortalController
                 portal.culture = cultureCode;
                 portal.url = URLUtil.removeToken(url);
 
+                IdentityManager.instance.removeEventListener(IdentityManagerEvent.SIGN_IN, identityManager_signInHandler);
                 portal.addEventListener(PortalEvent.LOAD, portal_loadHandler);
                 portal.addEventListener(FaultEvent.FAULT, portal_faultHandler);
                 portal.load();
@@ -130,7 +135,7 @@ public class PortalController
         else
         {
             unloadPortal();
-            AppEvent.dispatch(AppEvent.PORTAL_STATUS_UPDATED);
+            dispatchPortalStatusUpdate();
         }
     }
 
@@ -145,6 +150,28 @@ public class PortalController
         portal.unload();
     }
 
+    private function dispatchPortalStatusUpdate():void
+    {
+        updatePortalHandlersBasedOnStatus();
+        AppEvent.dispatch(AppEvent.PORTAL_STATUS_UPDATED);
+    }
+
+    private function updatePortalHandlersBasedOnStatus():void
+    {
+        if (portal.signedIn)
+        {
+            AppEvent.addListener(AppEvent.PORTAL_SIGN_OUT, portalSignOutHandler);
+            AppEvent.removeListener(AppEvent.PORTAL_SIGN_IN, portalSignInHandler);
+            IdentityManager.instance.removeEventListener(IdentityManagerEvent.SIGN_IN, identityManager_signInHandler);
+        }
+        else
+        {
+            AppEvent.addListener(AppEvent.PORTAL_SIGN_IN, portalSignInHandler);
+            IdentityManager.instance.addEventListener(IdentityManagerEvent.SIGN_IN, identityManager_signInHandler);
+            AppEvent.removeListener(AppEvent.PORTAL_SIGN_OUT, portalSignOutHandler);
+        }
+    }
+
     private function portal_loadHandler(event:PortalEvent):void
     {
         if (Log.isDebug())
@@ -156,7 +183,7 @@ public class PortalController
         portal.removeEventListener(PortalEvent.LOAD, portal_loadHandler);
         portal.removeEventListener(FaultEvent.FAULT, portal_faultHandler);
 
-        AppEvent.dispatch(AppEvent.PORTAL_STATUS_UPDATED);
+        dispatchPortalStatusUpdate();
     }
 
     private function portal_faultHandler(event:FaultEvent):void
@@ -184,7 +211,7 @@ public class PortalController
         }
         else
         {
-            AppEvent.dispatch(AppEvent.PORTAL_STATUS_UPDATED);
+            dispatchPortalStatusUpdate();
         }
     }
 }
