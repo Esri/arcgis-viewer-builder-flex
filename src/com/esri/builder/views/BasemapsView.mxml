@@ -35,7 +35,6 @@
             import com.esri.builder.model.ConfigLayerStore;
             import com.esri.builder.model.Model;
             import com.esri.builder.model.PortalLayer;
-            import com.esri.builder.model.PortalModel;
             import com.esri.builder.supportClasses.ConfigLayerIconHandler;
             import com.esri.builder.supportClasses.ErrorMessageUtil;
             import com.esri.builder.supportClasses.LogUtil;
@@ -609,15 +608,11 @@
                                    listTitle="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsView.listTitle')}"
                                    noLayerText="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsView.noBasemapSelected')}"/>
 
-        <s:Group toolTip="{PortalModel.getInstance().portal.loaded ?
-                 '' : resourceManager.getString('BuilderStrings', 'agsPortal.requiresPortal')}">
-            <s:CheckBox id="addArcGISBasemapsCheckBox"
-                        change="updateAddArcGISBasemaps()"
-                        enabled="{PortalModel.getInstance().portal.loaded}"
-                        fontSize="14"
-                        label="{resourceManager.getString('BuilderStrings', 'mapsView.addArcGISBasemaps')}"
-                        selected="{Model.instance.config.configMap.addArcGISBasemaps}"
-                        styleName="boldText"/>
-        </s:Group>
+        <s:CheckBox id="addArcGISBasemapsCheckBox"
+                    change="updateAddArcGISBasemaps()"
+                    fontSize="14"
+                    label="{resourceManager.getString('BuilderStrings', 'mapsView.addArcGISBasemaps')}"
+                    selected="{Model.instance.config.configMap.addArcGISBasemaps}"
+                    styleName="boldText"/>
     </s:VGroup>
 </s:Group>
