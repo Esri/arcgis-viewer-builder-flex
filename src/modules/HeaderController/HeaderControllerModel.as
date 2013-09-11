@@ -343,18 +343,18 @@ public class HeaderControllerModel implements IWidgetModel
         }
         if (searchResultTitle || searchResultDescription)
         {
-            var resultsXML:XML = <results/>;
+            var resultXML:XML = <result/>;
 
             if (searchResultTitle)
             {
-                resultsXML.appendChild(<title>{searchResultTitle}</title>);
+                resultXML.appendChild(<title>{searchResultTitle}</title>);
             }
             if (searchResultDescription)
             {
-                resultsXML.appendChild(<description>{searchResultDescription}</description>);
+                resultXML.appendChild(<description>{searchResultDescription}</description>);
             }
 
-            geocoderXML.appendChild(resultsXML);
+            geocoderXML.appendChild(resultXML);
         }
 
         var labelsXML:XML = getLabelsXML();
