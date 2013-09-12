@@ -16,8 +16,8 @@
 package modules.Print
 {
 
-import com.esri.builder.supportClasses.URLUtil;
 import com.esri.builder.model.Model;
+import com.esri.builder.supportClasses.URLUtil;
 
 import modules.IWidgetModel;
 
@@ -106,7 +106,7 @@ public final class PrintModel implements IWidgetModel
         {
             defaultLayoutTemplate = doc.layouttemplates.@defaultvalue[0];
         }
-        if(doc.useproxy[0] == "true")
+        if (doc.useproxy[0] == "true")
         {
             useProxy = true;
         }
@@ -183,7 +183,7 @@ public final class PrintModel implements IWidgetModel
             configXML.appendChild(<layouttemplates defaultvalue={defaultLayoutTemplate}/>)
         }
 
-        if(useProxy)
+        if (useProxy)
         {
             configXML.appendChild(<useproxy>{useProxy}</useproxy>);
         }
