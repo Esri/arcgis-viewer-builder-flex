@@ -29,6 +29,7 @@
             import com.esri.builder.model.ViewerApp;
 
             import mx.core.FlexGlobals;
+            import mx.core.LayoutDirection;
 
             import spark.components.supportClasses.DropDownController;
             import spark.events.DropDownEvent;
@@ -88,18 +89,14 @@
 
             private function updateMenuPosition():void
             {
-                var appDisplay:DisplayObject = (FlexGlobals.topLevelApplication as DisplayObject);
-                var menuButtonCenterX:Number = menuButton.x + (menuButton.width >> 1);
+                var xOffset:Number = (layoutDirection == LayoutDirection.LTR) ? -appItemMenu.width : 0;
+                var menuButtonCenterX:Number = menuButton.x + (menuButton.width >> 1) + xOffset;
                 var menuButtonCenterY:Number = menuButton.y + (menuButton.height >> 1) + 3;
-                //TODO: better way of handling positioning based on locale
-                if (layoutDirection == 'ltr')
-                {
-                    menuButtonCenterX -= appItemMenu.width;
-                }
                 var menuGlobalButtonCenter:Point = localToGlobal(new Point(menuButtonCenterX, menuButtonCenterY));
                 appItemMenu.x = menuGlobalButtonCenter.x;
                 appItemMenu.y = menuGlobalButtonCenter.y;
 
+                var appDisplay:DisplayObject = FlexGlobals.topLevelApplication as DisplayObject;
                 var menuBottomY:Number = appItemMenu.y + appItemMenu.height;
                 if (menuBottomY > appDisplay.height)
                 {
