@@ -110,6 +110,7 @@ public class PortalController
 
     private function signIntoPortalInternally():void
     {
+        AppEvent.removeListener(AppEvent.PORTAL_SIGN_IN, portalSignInHandler);
         IdentityManager.instance.removeEventListener(IdentityManagerEvent.SIGN_IN, identityManager_signInHandler);
         portal.addEventListener(PortalEvent.LOAD, portal_loadHandler);
         portal.addEventListener(FaultEvent.FAULT, portal_faultHandler);
@@ -199,6 +200,7 @@ public class PortalController
             LOG.info("Portal sign out requested");
         }
 
+        AppEvent.removeListener(AppEvent.PORTAL_SIGN_OUT, portalSignOutHandler);
         IdentityManager.instance.removeEventListener(IdentityManagerEvent.SIGN_IN, identityManager_signInHandler);
         portal.addEventListener(PortalEvent.LOAD, portal_loadHandler);
         portal.addEventListener(FaultEvent.FAULT, portal_faultHandler);
