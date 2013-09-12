@@ -16,8 +16,8 @@
 package modules.Print
 {
 
-import com.esri.builder.supportClasses.URLUtil;
 import com.esri.builder.model.Model;
+import com.esri.builder.supportClasses.URLUtil;
 
 import modules.IWidgetModel;
 
@@ -26,6 +26,8 @@ import mx.resources.ResourceManager;
 [Bindable]
 public final class PrintModel implements IWidgetModel
 {
+    public static const DEFAULT_DPI:Number = 96;
+
     private var _taskURL:String = Model.instance.printTaskURL;
 
     public function get taskURL():String
@@ -36,6 +38,18 @@ public final class PrintModel implements IWidgetModel
     public function set taskURL(value:String):void
     {
         _taskURL = URLUtil.encode(value);
+    }
+
+    private var _dpi:Number = DEFAULT_DPI;
+
+    public function get dpi():Number
+    {
+        return _dpi;
+    }
+
+    public function set dpi(value:Number):void
+    {
+        _dpi = isNaN(value) ? DEFAULT_DPI : value;
     }
 
     public var title:String = ResourceManager.getInstance().getString('BuilderStrings', 'print.defaultTitle');
@@ -92,9 +106,13 @@ public final class PrintModel implements IWidgetModel
         {
             defaultLayoutTemplate = doc.layouttemplates.@defaultvalue[0];
         }
-        if(doc.useproxy[0] == "true")
+        if (doc.useproxy[0] == "true")
         {
             useProxy = true;
+        }
+        if (doc.dpi[0])
+        {
+            dpi = parseFloat(doc.dpi[0]);
         }
     }
 
@@ -148,6 +166,8 @@ public final class PrintModel implements IWidgetModel
         authorXML.@visible = isAuthorVisible;
         configXML.appendChild(authorXML);
 
+        configXML.appendChild(<dpi>{dpi}</dpi>);
+
         if (useScale)
         {
             configXML.appendChild(<usescale visible="true"/>);
@@ -163,7 +183,7 @@ public final class PrintModel implements IWidgetModel
             configXML.appendChild(<layouttemplates defaultvalue={defaultLayoutTemplate}/>)
         }
 
-        if(useProxy)
+        if (useProxy)
         {
             configXML.appendChild(<useproxy>{useProxy}</useproxy>);
         }
