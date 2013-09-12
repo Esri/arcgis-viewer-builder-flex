@@ -216,6 +216,17 @@
             {
                 printModel.defaultFormat = defaultFormatSelection.selectedItem;
             }
+
+            private function updateDPI():void
+            {
+                printModel.dpi = dpiSelection.selectedItem;
+            }
+
+            private function userInputToDPI(input:String):Object
+            {
+                var parsedDPI:Number = parseFloat(input);
+                return isNaN(parsedDPI) ? PrintModel.DEFAULT_DPI : parsedDPI;
+            }
         ]]>
     </fx:Script>
 
@@ -363,5 +374,24 @@
                  text="{resourceManager.getString('BuilderStrings', 'print.noLayoutTemplatesAvailable')}"
                  verticalCenter="0"
                  visible="{!hasLayoutTemplateOptions}"/>
+    </s:FormItem>
+
+    <s:FormItem id="dpiInput"
+                excludeFrom="basicPrint,browsingTasks"
+                label="{resourceManager.getString('BuilderStrings', 'print.dpi')}">
+        <s:ComboBox id="dpiSelection"
+                    change="updateDPI()"
+                    labelToItemFunction="userInputToDPI"
+                    openOnInput="false"
+                    requireSelection="true"
+                    restrict="0123456789"
+                    selectedItem="{printModel.dpi}"
+                    verticalCenter="0">
+            <s:ArrayList>
+                <fx:Number>96</fx:Number>
+                <fx:Number>300</fx:Number>
+                <fx:Number>600</fx:Number>
+            </s:ArrayList>
+        </s:ComboBox>
     </s:FormItem>
 </s:Form>

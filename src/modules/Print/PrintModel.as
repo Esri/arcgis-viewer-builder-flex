@@ -26,6 +26,8 @@ import mx.resources.ResourceManager;
 [Bindable]
 public final class PrintModel implements IWidgetModel
 {
+    public static const DEFAULT_DPI:Number = 96;
+
     private var _taskURL:String = Model.instance.printTaskURL;
 
     public function get taskURL():String
@@ -36,6 +38,18 @@ public final class PrintModel implements IWidgetModel
     public function set taskURL(value:String):void
     {
         _taskURL = URLUtil.encode(value);
+    }
+
+    private var _dpi:Number = DEFAULT_DPI;
+
+    public function get dpi():Number
+    {
+        return _dpi;
+    }
+
+    public function set dpi(value:Number):void
+    {
+        _dpi = isNaN(value) ? DEFAULT_DPI : value;
     }
 
     public var title:String = ResourceManager.getInstance().getString('BuilderStrings', 'print.defaultTitle');
@@ -96,6 +110,10 @@ public final class PrintModel implements IWidgetModel
         {
             useProxy = true;
         }
+        if (doc.dpi[0])
+        {
+            dpi = parseFloat(doc.dpi[0]);
+        }
     }
 
     public function exportXML():XML
@@ -147,6 +165,8 @@ public final class PrintModel implements IWidgetModel
         var authorXML:XML = <author>{author}</author>;
         authorXML.@visible = isAuthorVisible;
         configXML.appendChild(authorXML);
+
+        configXML.appendChild(<dpi>{dpi}</dpi>);
 
         if (useScale)
         {
