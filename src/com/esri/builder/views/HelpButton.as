@@ -59,8 +59,6 @@ public class HelpButton extends ButtonBase
         helpPopUp = new HelpPopUp();
         helpPopUp.title = title;
         helpPopUp.content = helpText;
-        helpPopUp.x = x;
-        helpPopUp.y = y;
         return helpPopUp;
     }
 
