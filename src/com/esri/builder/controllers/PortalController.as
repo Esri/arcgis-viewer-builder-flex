@@ -51,12 +51,13 @@ public class PortalController
         //optimization: AGO uses OAuth, so we register the OAuth info upfront
         var portalModel:PortalModel = PortalModel.getInstance();
         var portalURL:String = portalModel.portalURL;
+        var cultureCode:String = Model.instance.cultureCode;
         if (portalModel.isAGO(portalURL))
         {
-            portalModel.registerOAuthPortal(portalURL, Model.instance.cultureCode);
+            portalModel.registerOAuthPortal(portalURL, cultureCode);
         }
 
-        loadPortal(portalURL, Model.instance.cultureCode);
+        loadPortal(portalURL, cultureCode);
     }
 
     private function loadPortal(url:String, cultureCode:String):void
