@@ -33,17 +33,18 @@
             import com.esri.ags.layers.CSVLayer;
             import com.esri.ags.layers.FeatureLayer;
             import com.esri.ags.layers.Layer;
+            import com.esri.ags.layers.supportClasses.LayerInfo;
             import com.esri.ags.layers.supportClasses.TimeInfo;
-            import com.esri.builder.model.PopUpConfig;
-            import com.esri.builder.supportClasses.AssetImporter;
-            import com.esri.builder.supportClasses.FileUtil;
-            import com.esri.builder.supportClasses.URLUtil;
             import com.esri.builder.eventbus.AppEvent;
             import com.esri.builder.model.ClusterSymbol;
             import com.esri.builder.model.Clustering;
             import com.esri.builder.model.ConfigLayer;
             import com.esri.builder.model.Model;
+            import com.esri.builder.model.PopUpConfig;
+            import com.esri.builder.supportClasses.AssetImporter;
             import com.esri.builder.supportClasses.FieldUtil;
+            import com.esri.builder.supportClasses.FileUtil;
+            import com.esri.builder.supportClasses.URLUtil;
             import com.esri.builder.supportClasses.XMLUtil;
             import com.esri.builder.views.popups.PopUpConfigPopUp;
             import com.esri.builder.views.supportClasses.TextFlowUtil;
@@ -113,10 +114,52 @@
                     {
                         configLayerToEdit.subLayers = [];
                     }
-                    subLayersFormItem.visible = subLayersFormItem.includeInLayout = subLayersList.visible = subLayersList.includeInLayout = true;
-                    subLayersList.visible = subLayersList.includeInLayout = true;
-                    subLayersList.layer = layer;
+
+                    var layerInfos:Array = extractNonGroupLayerInfos(getSubLayerInfos(layer));
+                    if (layerInfos.length > 0)
+                    {
+                        subLayersList.dataProvider = new ArrayList(layerInfos);
+                        subLayersList.layer = layer;
+                        subLayersFormItem.visible = subLayersFormItem.includeInLayout = true;
+                        subLayersList.visible = subLayersList.includeInLayout = true;
+                    }
                 }
+            }
+
+            private function getSubLayerInfos(layer:Layer):Array
+            {
+                var layerInfos:Array;
+
+                if (layer is ArcGISDynamicMapServiceLayer)
+                {
+                    layerInfos = (layer as ArcGISDynamicMapServiceLayer).layerInfos;
+                }
+                else if (layer is ArcGISTiledMapServiceLayer)
+                {
+                    layerInfos = (layer as ArcGISTiledMapServiceLayer).layerInfos;
+                }
+                else
+                {
+                    layerInfos = [];
+                }
+
+                return layerInfos;
+            }
+
+            private function extractNonGroupLayerInfos(layerInfos:Array):Array
+            {
+                var nonGroupLayerInfos:Array = [];
+                var isGroupLayer:Boolean;
+                for each (var layerInfo:LayerInfo in layerInfos)
+                {
+                    isGroupLayer = (layerInfo.subLayerIds != null);
+                    if (!isGroupLayer)
+                    {
+                        nonGroupLayerInfos.push(layerInfo);
+                    }
+                }
+
+                return nonGroupLayerInfos;
             }
 
             private function showGDBVersionOptionsIfSupported():void

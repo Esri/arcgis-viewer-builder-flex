@@ -16,16 +16,10 @@
 package com.esri.builder.views
 {
 
-import com.esri.ags.layers.ArcGISDynamicMapServiceLayer;
-import com.esri.ags.layers.ArcGISTiledMapServiceLayer;
 import com.esri.ags.layers.Layer;
-import com.esri.ags.layers.supportClasses.LayerInfo;
-
-import mx.collections.ArrayList;
 
 import spark.components.List;
 
-[Exclude(kind="property", name="dataProvider")]
 public class SubLayerList extends List
 {
     private var _layer:Layer;
@@ -38,43 +32,6 @@ public class SubLayerList extends List
     public function set layer(layer:Layer):void
     {
         _layer = layer;
-        dataProvider = extractNonGroupLayerInfos(getSubLayerInfos(layer));
-    }
-
-    private function getSubLayerInfos(layer:Layer):Array
-    {
-        var layerInfos:Array;
-
-        if (layer is ArcGISDynamicMapServiceLayer)
-        {
-            layerInfos = (layer as ArcGISDynamicMapServiceLayer).layerInfos;
-        }
-        else if (layer is ArcGISTiledMapServiceLayer)
-        {
-            layerInfos = (layer as ArcGISTiledMapServiceLayer).layerInfos;
-        }
-        else
-        {
-            layerInfos = [];
-        }
-
-        return layerInfos;
-    }
-
-    private function extractNonGroupLayerInfos(layerInfos:Array):ArrayList
-    {
-        var nonGroupLayerInfos:ArrayList = new ArrayList();
-        var isGroupLayer:Boolean;
-        for each (var layerInfo:LayerInfo in layerInfos)
-        {
-            isGroupLayer = (layerInfo.subLayerIds != null);
-            if (!isGroupLayer)
-            {
-                nonGroupLayerInfos.addItem(layerInfo);
-            }
-        }
-
-        return nonGroupLayerInfos;
     }
 }
 }
