@@ -53,7 +53,7 @@ public class PortalController
         var portalURL:String = portalModel.portalURL;
         if (portalModel.isAGO(portalURL))
         {
-            portalModel.registerOAuthPortal(portalURL);
+            portalModel.registerOAuthPortal(portalURL, Model.instance.cultureCode);
         }
 
         loadPortal(portalURL, Model.instance.cultureCode);

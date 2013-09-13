@@ -93,11 +93,19 @@ public class PortalModel extends EventDispatcher
         return (serverURLServerNameWithPort == portalServerNameWithPort);
     }
 
-    public function registerOAuthPortal(url:String):void
+    public function registerOAuthPortal(url:String, cultureCode:String):void
     {
-        var oAuthInfo:OAuthInfo = new OAuthInfo(BUILDER_APP_ID);
-        oAuthInfo.portalURL = url;
-        IdentityManager.instance.registerOAuthInfos([ oAuthInfo ]);
+        var oAuthInfo:OAuthInfo = IdentityManager.instance.findOAuthInfo(url);
+        if (oAuthInfo)
+        {
+            oAuthInfo.locale = cultureCode;
+        }
+        else
+        {
+            oAuthInfo = new OAuthInfo(BUILDER_APP_ID);
+            oAuthInfo.portalURL = url;
+            IdentityManager.instance.registerOAuthInfos([ oAuthInfo ]);
+        }
     }
 
     public function isAGO(url:String):Boolean
