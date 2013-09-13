@@ -120,8 +120,8 @@
                     {
                         subLayersList.dataProvider = new ArrayList(layerInfos);
                         subLayersList.layer = layer;
+                        subLayersFormItem.visible = subLayersFormItem.includeInLayout = true;
                         subLayersList.visible = subLayersList.includeInLayout = true;
-                        subLayersFormItem.visible = subLayersFormItem.includeInLayout = subLayersList.visible = subLayersList.includeInLayout = true;
                     }
                 }
             }
