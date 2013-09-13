@@ -336,7 +336,7 @@ public final class ApplicationCompleteController
         if (PortalModel.getInstance().isAGO(portalURL))
         {
             idManager.addEventListener(IdentityManagerEvent.SHOW_OAUTH_WEB_VIEW, showOAuthWebViewHandler);
-            PortalModel.getInstance().registerOAuthPortal(portalURL);
+            PortalModel.getInstance().registerOAuthPortal(portalURL, Model.instance.cultureCode);
             idManager.getCredential(portalURL, false, new Responder(getCredentialOutcomeHandler,
                                                                     getCredentialOutcomeHandler));
 
