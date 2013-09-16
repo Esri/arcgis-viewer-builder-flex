@@ -29,7 +29,7 @@
     </fx:Script>
 
     <s:Path id="anchor"
-            width="12"
+            width="6"
             data="M 11.91 13.71 L 0.19 6.95 11.91 0.19 Z ">
         <s:fill>
             <s:SolidColor/>
