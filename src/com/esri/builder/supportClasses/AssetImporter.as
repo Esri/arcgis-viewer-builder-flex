@@ -17,7 +17,6 @@ package com.esri.builder.supportClasses
 {
 
 import com.esri.builder.model.Model;
-import com.esri.builder.supportClasses.LogUtil;
 
 import flash.filesystem.File;
 

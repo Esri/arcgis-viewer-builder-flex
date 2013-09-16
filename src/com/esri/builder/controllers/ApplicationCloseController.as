@@ -18,8 +18,8 @@ package com.esri.builder.controllers
 
 import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.model.Model;
-import com.esri.builder.supportClasses.LogUtil;
 import com.esri.builder.supportClasses.ApplicationCloseWarningEvent;
+import com.esri.builder.supportClasses.LogUtil;
 import com.esri.builder.views.popups.CloseApplicationConfirmPopUp;
 
 import flash.events.Event;

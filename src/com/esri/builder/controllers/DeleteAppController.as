@@ -30,7 +30,6 @@ import mx.events.CloseEvent;
 import mx.logging.ILogger;
 import mx.managers.PopUpManager;
 import mx.resources.ResourceManager;
-import mx.utils.StringUtil;
 
 public final class DeleteAppController
 {

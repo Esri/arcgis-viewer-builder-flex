@@ -17,9 +17,9 @@ package com.esri.builder.controllers
 {
 
 import com.esri.builder.controllers.supportClasses.LocalConnectionDelegate;
-import com.esri.builder.supportClasses.AssetImporter;
 import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.model.Model;
+import com.esri.builder.supportClasses.AssetImporter;
 import com.esri.builder.supportClasses.LogUtil;
 
 import flash.filesystem.File;

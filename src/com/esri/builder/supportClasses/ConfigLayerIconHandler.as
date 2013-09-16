@@ -16,12 +16,9 @@
 package com.esri.builder.supportClasses
 {
 
-import com.esri.builder.components.*;
-
 import com.esri.builder.model.ConfigLayer;
 import com.esri.builder.model.Model;
 import com.esri.builder.model.PortalLayer;
-import com.esri.builder.supportClasses.LogUtil;
 
 import flash.display.LoaderInfo;
 import flash.events.Event;
