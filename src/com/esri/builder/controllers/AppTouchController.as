@@ -18,15 +18,15 @@ package com.esri.builder.controllers
 
 import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.model.Model;
+import com.esri.builder.supportClasses.LogUtil;
 
 import flash.filesystem.File;
 
 import mx.logging.ILogger;
-import mx.logging.Log;
 
 public class AppTouchController
 {
-    private static const LOG:ILogger = Log.getLogger("com.esri.builder.controllers.AppTouchController");
+    private static const LOG:ILogger = LogUtil.createLogger(AppTouchController);
 
     public function AppTouchController()
     {
@@ -55,10 +55,7 @@ public class AppTouchController
         }
         catch (e:Error)
         {
-            if (Log.isError())
-            {
-                LOG.error("Error touching {0} directory.", currentAppDir.nativePath);
-            }
+            LOG.error("Error touching {0} directory.", currentAppDir.nativePath);
         }
     }
 }

@@ -48,7 +48,6 @@
 
             import mx.events.FlexEvent;
             import mx.logging.ILogger;
-            import mx.logging.Log;
             import mx.rpc.AsyncResponder;
             import mx.rpc.Fault;
             import mx.rpc.events.FaultEvent;
@@ -64,17 +63,11 @@
 
             protected function this_creationCompleteHandler(event:FlexEvent):void
             {
-                if (Log.isInfo())
-                {
-                    LOG.info("Configuring map extent");
-                }
+                LOG.info("Configuring map extent");
 
                 if (isWebMap)
                 {
-                    if (Log.isDebug())
-                    {
-                        LOG.debug("Creating WebMap");
-                    }
+                    LOG.debug("Creating WebMap");
 
                     webMapUtil.createMapById(Model.instance.config.configMap.itemId);
                 }
@@ -82,19 +75,13 @@
                 {
                     if (Model.instance.configBasemapsList.hasLayers)
                     {
-                        if (Log.isDebug())
-                        {
-                            LOG.debug("Configure extent from config layers");
-                        }
+                        LOG.debug("Configure extent from config layers");
 
                         configureMapFromConfigLayers();
                     }
                     else if (Model.instance.config.configMap.addArcGISBasemaps)
                     {
-                        if (Log.isDebug())
-                        {
-                            LOG.debug("Configure extent from Portal");
-                        }
+                        LOG.debug("Configure extent from Portal");
 
                         if (PortalModel.getInstance().portal.loaded)
                         {
@@ -102,20 +89,14 @@
                         }
                         else
                         {
-                            if (Log.isDebug())
-                            {
-                                LOG.debug("No basemap available");
-                            }
+                            LOG.debug("No basemap available");
 
                             currentState = "noBasemap";
                         }
                     }
                     else
                     {
-                        if (Log.isDebug())
-                        {
-                            LOG.debug("No basemap available");
-                        }
+                        LOG.debug("No basemap available");
 
                         currentState = "noBasemap";
                     }
@@ -155,10 +136,7 @@
 
                 if (!basemapFound)
                 {
-                    if (Log.isDebug())
-                    {
-                        LOG.debug("No basemap available");
-                    }
+                    LOG.debug("No basemap available");
 
                     currentState = "noBasemap";
                 }
@@ -196,10 +174,7 @@
                 }
                 else
                 {
-                    if (Log.isDebug())
-                    {
-                        LOG.debug("No basemap available");
-                    }
+                    LOG.debug("No basemap available");
 
                     currentState = "noBasemap";
                 }
@@ -265,29 +240,20 @@
 
             protected function map_loadHandler(event:MapEvent):void
             {
-                if (Log.isInfo())
-                {
-                    LOG.info("Map loaded");
-                }
+                LOG.info("Map loaded");
 
                 map.removeEventListener(MapEvent.LOAD, map_loadHandler);
                 map.removeEventListener(FaultEvent.FAULT, map_faultHandler);
 
                 if (Model.instance.config.configMap.initExtent)
                 {
-                    if (Log.isDebug())
-                    {
-                        LOG.debug("Setting previous extent");
-                    }
+                    LOG.debug("Setting previous extent");
 
                     assignPreviousExtentIfCompatible();
                 }
                 else
                 {
-                    if (Log.isDebug())
-                    {
-                        LOG.debug("Zooming to operational layer union");
-                    }
+                    LOG.debug("Zooming to operational layer union");
 
                     zoomToOpLayersUnion();
                 }
@@ -295,10 +261,7 @@
 
             private function zoomToOpLayersUnion():void
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug("Loading operational layers");
-                }
+                LOG.debug("Loading operational layers");
 
                 var configOpLayers:Array = Model.instance.configOpsLayerList.getAllLayers();
                 totalOpLayersToUnite = configOpLayers.length;
@@ -314,10 +277,7 @@
 
             private function layer_loadHandler(event:LayerEvent):void
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug("Layer loaded");
-                }
+                LOG.debug("Layer loaded");
 
                 var layer:Layer = event.layer;
                 layer.removeEventListener(LayerEvent.LOAD, layer_loadHandler);
@@ -340,10 +300,7 @@
                 }
                 else
                 {
-                    if (Log.isDebug())
-                    {
-                        LOG.debug("Need to project layer geometry");
-                    }
+                    LOG.debug("Need to project layer geometry");
 
                     var projectParams:ProjectParameters = new ProjectParameters();
                     projectParams.outSpatialReference = map.spatialReference;
@@ -362,10 +319,7 @@
 
             private function projectResultHandler(projectedGeometries:Array, token:Object = null):void
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug("Projected layer geometry success");
-                }
+                LOG.debug("Projected layer geometry success");
 
                 addToOpLayersExtent(projectedGeometries[0]);
                 decreaseTotalOpLayersToUnite();
@@ -373,10 +327,7 @@
 
             private function addToOpLayersExtent(extent:Extent):void
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug("Unioned layer extent");
-                }
+                LOG.debug("Unioned layer extent");
 
                 if (!unitedOpLayersExtent)
                 {
@@ -399,10 +350,7 @@
 
             private function commitUnitedOpLayersExtent():void
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug("Operational layer extent union complete");
-                }
+                LOG.debug("Operational layer extent union complete");
 
                 map.extent = unitedOpLayersExtent;
                 if (!map.extent.contains(unitedOpLayersExtent))
@@ -413,20 +361,14 @@
 
             private function projectFaultHandler(fault:Fault, token:Object = null):void
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug("Could not project layer geometry - fault: {0}", fault.toString());
-                }
+                LOG.debug("Could not project layer geometry - fault: {0}", fault.toString());
 
                 decreaseTotalOpLayersToUnite();
             }
 
             private function layer_loadErrorHandler(event:LayerEvent):void
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug("Could not load layer");
-                }
+                LOG.debug("Could not load layer");
 
                 decreaseTotalOpLayersToUnite();
                 var layer:Layer = event.layer;
@@ -449,10 +391,7 @@
                     return;
                 }
 
-                if (Log.isDebug())
-                {
-                    LOG.debug("Checking if previous extent compatible");
-                }
+                LOG.debug("Checking if previous extent compatible");
 
                 var previousSpatialReference:SpatialReference = previousExtent.spatialReference;
                 var currentSpatialReference:SpatialReference = currentExtent.spatialReference;
@@ -462,28 +401,19 @@
                     || (previousSpatialReference.wkt == currentSpatialReference.wkt));
                 if (canOverrideExtent)
                 {
-                    if (Log.isDebug())
-                    {
-                        LOG.debug("Spatial reference is compatible, assigning");
-                    }
+                    LOG.debug("Spatial reference is compatible, assigning");
 
                     map.extent = previousExtent;
                 }
                 else
                 {
-                    if (Log.isDebug())
-                    {
-                        LOG.debug("Incompatible spatial reference, will not assign");
-                    }
+                    LOG.debug("Incompatible spatial reference, will not assign");
                 }
             }
 
             protected function map_faultHandler(event:FaultEvent):void
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug("Map load fault: {0}", event.fault.toString());
-                }
+                LOG.debug("Map load fault: {0}", event.fault.toString());
 
                 map.removeEventListener(MapEvent.LOAD, map_loadHandler);
                 map.removeEventListener(FaultEvent.FAULT, map_faultHandler);
@@ -491,10 +421,7 @@
 
             protected function webMapUtil_createMapByIdCompleteHandler(event:WebMapEvent):void
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug("Map from ID complete");
-                }
+                LOG.debug("Map from ID complete");
 
                 map = event.map;
                 map.wrapAround180 = true;
@@ -502,10 +429,7 @@
 
                 if (Model.instance.config.configMap.initExtent)
                 {
-                    if (Log.isDebug())
-                    {
-                        LOG.debug("Setting initial extent");
-                    }
+                    LOG.debug("Setting initial extent");
 
                     map.extent = Model.instance.config.configMap.initExtent;
                 }
@@ -517,10 +441,7 @@
 
             protected function webMapUtil_faultHandler(event:FaultEvent):void
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug("Map from ID fault");
-                }
+                LOG.debug("Map from ID fault");
 
                 AppEvent.dispatch(AppEvent.SHOW_ERROR,
                                   ErrorMessageUtil.getKnownErrorCauseMessage(event.fault));
@@ -528,10 +449,7 @@
 
             private function restoreOriginalExtent():void
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug("Restoring original extent");
-                }
+                LOG.debug("Restoring original extent");
 
                 map.extent = Model.instance.lastSavedExtent;
             }

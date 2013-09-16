@@ -31,7 +31,6 @@ import com.esri.builder.supportClasses.LogUtil;
 import flash.net.SharedObject;
 
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.rpc.AsyncResponder;
 import mx.rpc.Fault;
 
@@ -100,10 +99,7 @@ public final class WebMapController
      */
     private function webMapSearchHandler(event:AppEvent):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("searching web map term");
-        }
+        LOG.info("searching web map term");
 
         if (event.data.queryParameters)
         {
@@ -251,10 +247,7 @@ public final class WebMapController
 
     private function getFeaturedContent(responder:CallResponder):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("getting featured content");
-        }
+        LOG.info("getting featured content");
 
         if (Model.instance.webmapState != 'mycontent')
         {
@@ -298,10 +291,7 @@ public final class WebMapController
 
     private function groupItems_resultHandler(queryResult:PortalQueryResult, responder:CallResponder):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("featured groups result");
-        }
+        LOG.info("featured groups result");
 
         // TODO remove webmapQuery & mapsView.esriFeaturedContent
         //Model.instance.webmapQuery = ResourceManager.getInstance().getString('BuilderStrings', 'mapsView.esriFeaturedContent');
@@ -322,10 +312,7 @@ public final class WebMapController
 
     private function portal_faultHandler(fault:Fault, responder:CallResponder):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("portal query fault {0}", fault.toString());
-        }
+        LOG.debug("portal query fault {0}", fault.toString());
 
         responder.lastResult = null;
 

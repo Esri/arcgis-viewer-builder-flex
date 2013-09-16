@@ -20,15 +20,15 @@ import com.esri.builder.controllers.supportClasses.LocalConnectionDelegate;
 import com.esri.builder.supportClasses.AssetImporter;
 import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.model.Model;
+import com.esri.builder.supportClasses.LogUtil;
 
 import flash.filesystem.File;
 
 import mx.logging.ILogger;
-import mx.logging.Log;
 
 public final class LogoController
 {
-    private const LOG:ILogger = Log.getLogger('com.esri.builder.controllers.LogoController');
+    private const LOG:ILogger = LogUtil.createLogger(LogoController);
 
     public var localConnectionDelegate:LocalConnectionDelegate;
 
@@ -46,10 +46,7 @@ public final class LogoController
     {
         const newLogo:File = AssetImporter.importImage(newLogo);
         const logo:String = 'assets/images/' + newLogo.name;
-        if (Log.isDebug())
-        {
-            LOG.debug('logo relative URL {0}', logo);
-        }
+        LOG.debug('logo relative URL {0}', logo);
 
         Model.instance.config.logo = logo;
         localConnectionDelegate.setLogo(logo);

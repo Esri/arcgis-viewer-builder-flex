@@ -27,7 +27,6 @@ import flash.filesystem.FileMode;
 import flash.filesystem.FileStream;
 
 import mx.logging.ILogger;
-import mx.logging.Log;
 
 public final class LoadWidgetConfigurations
 {
@@ -37,11 +36,7 @@ public final class LoadWidgetConfigurations
     {
         if (Model.instance.appDir)
         {
-            if (Log.isInfo())
-            {
-
-                LOG.info('Loading widget configurations...');
-            }
+            LOG.info('Loading widget configurations...');
 
             var widgetTypes:Array = WidgetTypeRegistryModel.getInstance().widgetTypeRegistry.widgetTypes.source;
             for each (var widgetType:WidgetType in widgetTypes)
@@ -61,15 +56,12 @@ public final class LoadWidgetConfigurations
     {
         const path:String = "widgets" + File.separator + widgetType.name;
         const dir:File = Model.instance.appDir.resolvePath(path);
-        if (Log.isDebug())
-        {
-            LOG.debug('Looking for xml files in {0}', dir.nativePath);
-        }
+        LOG.debug('Looking for xml files in {0}', dir.nativePath);
         if (dir.isDirectory)
         {
             loadWidgetTypeConfigurationList(widgetType, dir.getDirectoryListing());
         }
-        else if (Log.isWarn())
+        else
         {
             LOG.warn('{0} is not a directory', dir.nativePath);
         }
@@ -81,10 +73,7 @@ public final class LoadWidgetConfigurations
         const re:RegExp = new RegExp(widgetType.name + 'Widget_?(.*)\.xml');
         for each (var file:File in fileArr)
         {
-            if (Log.isDebug())
-            {
-                LOG.debug('Loading widget name={0}', file.name);
-            }
+            LOG.debug('Loading widget name={0}', file.name);
             const tokens:Array = re.exec(file.name);
             if (tokens && tokens.length === 2)
             {
@@ -98,10 +87,7 @@ public final class LoadWidgetConfigurations
                 widget.url = widgetType.url;
                 widget.config = 'widgets/' + widgetType.name + '/' + file.name;
                 widgetType.widgetList.addItem(widget);
-                if (Log.isDebug())
-                {
-                    LOG.debug('Loading widget: {0}', widget.toString());
-                }
+                LOG.debug('Loading widget: {0}', widget.toString());
             }
         }
     }
@@ -118,10 +104,7 @@ public final class LoadWidgetConfigurations
         }
         catch (e:Error)
         {
-            if (Log.isWarn())
-            {
-                LOG.warn('Error while reading or parsing {0}', file.nativePath);
-            }
+            LOG.warn('Error while reading or parsing {0}', file.nativePath);
         }
         finally
         {

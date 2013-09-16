@@ -19,6 +19,7 @@ package com.esri.builder.controllers
 import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.model.Model;
 import com.esri.builder.model.ViewerApp;
+import com.esri.builder.supportClasses.LogUtil;
 import com.esri.builder.views.BuilderAlert;
 import com.esri.builder.views.popups.ExportApplicationPopUp;
 
@@ -29,13 +30,12 @@ import mx.controls.Alert;
 import mx.core.FlexGlobals;
 import mx.events.CloseEvent;
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.managers.PopUpManager;
 import mx.resources.ResourceManager;
 
 public class ExportAppController
 {
-    private const LOG:ILogger = Log.getLogger('com.esri.builder.controllers.ExportController');
+    private const LOG:ILogger = LogUtil.createLogger(ExportAppController);
 
     private var selectedProjectFile:File;
     private var exportAppPopUp:ExportApplicationPopUp;
@@ -69,19 +69,13 @@ public class ExportAppController
 
     private function exportExecute(outputDirectory:File):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info('exportExecute::outputDirectory={0}', outputDirectory);
-        }
+        LOG.info('exportExecute::outputDirectory={0}', outputDirectory);
 
         var exportedAppDirectory:File = outputDirectory.resolvePath(selectedProjectFile.name);
 
         if (exportedAppDirectory.isDirectory === false)
         {
-            if (Log.isDebug())
-            {
-                LOG.debug('Creating application directory {0}', exportedAppDirectory.nativePath);
-            }
+            LOG.debug('Creating application directory {0}', exportedAppDirectory.nativePath);
             var success:Boolean = false;
             try
             {
@@ -90,10 +84,7 @@ public class ExportAppController
             }
             catch (e:Error)
             {
-                if (Log.isError())
-                {
-                    LOG.error('Cannot create directory: {0}', e.message);
-                }
+                LOG.error('Cannot create directory: {0}', e.message);
                 BuilderAlert.show(e.message.toString(), ResourceManager.getInstance().getString('BuilderStrings', 'error'));
             }
             if (success)
@@ -123,20 +114,14 @@ public class ExportAppController
         {
             if (exportedAppDirectory.nativePath !== selectedProjectFile.nativePath)
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug('Copying {0} to {1}', selectedProjectFile.nativePath, exportedAppDirectory.nativePath);
-                }
+                LOG.debug('Copying {0} to {1}', selectedProjectFile.nativePath, exportedAppDirectory.nativePath);
                 try
                 {
                     selectedProjectFile.copyTo(exportedAppDirectory, true);
                 }
                 catch (e:Error)
                 {
-                    if (Log.isError())
-                    {
-                        LOG.error('Problem copying directory: {0}', e.message);
-                    }
+                    LOG.error('Problem copying directory: {0}', e.message);
                     Model.instance.status = e.message.toString();
                     BuilderAlert.show(e.message.toString(), ResourceManager.getInstance().getString('BuilderStrings', 'error'));
                     return;

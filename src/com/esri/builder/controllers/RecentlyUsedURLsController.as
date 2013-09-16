@@ -25,7 +25,6 @@ import flash.net.SharedObject;
 
 import mx.core.FlexGlobals;
 import mx.logging.ILogger;
-import mx.logging.Log;
 
 public class RecentlyUsedURLsController
 {
@@ -41,10 +40,7 @@ public class RecentlyUsedURLsController
     private function registerURLHandler(event:AppEvent):void
     {
         var url:String = event.data as String;
-        if (Log.isDebug())
-        {
-            LOG.debug("Registering URL: {0}", url);
-        }
+        LOG.debug("Registering URL: {0}", url);
         RecentlyUsedURLsModel.getInstance().addURL(url);
     }
 
@@ -55,10 +51,7 @@ public class RecentlyUsedURLsController
 
     private function loadURLs():void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Loading URL history");
-        }
+        LOG.info("Loading URL history");
 
         var so:SharedObject = SharedObject.getLocal(RecentlyUsedURLsModel.SHARED_OBJECT_NAME);
         if (so.data.urls)
@@ -75,10 +68,7 @@ public class RecentlyUsedURLsController
 
     private function saveURLs():void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Saving URL history");
-        }
+        LOG.info("Saving URL history");
 
         var so:SharedObject = SharedObject.getLocal(RecentlyUsedURLsModel.SHARED_OBJECT_NAME);
         so.data.urls = RecentlyUsedURLsModel.getInstance().urls;

@@ -24,7 +24,6 @@ import com.esri.builder.supportClasses.LogUtil;
 
 import mx.core.FlexGlobals;
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.resources.ResourceManager;
 import mx.styles.CSSStyleDeclaration;
 import mx.styles.IStyleManager2;
@@ -53,10 +52,7 @@ public class LocaleController
         localeChain.splice(selectedLocaleIndex, 1);
         localeChain.unshift(selectedLocale);
 
-        if (Log.isDebug())
-        {
-            LOG.debug("Updating application locale: {0}", selectedLocale);
-        }
+        LOG.debug("Updating application locale: {0}", selectedLocale);
 
         ResourceManager.getInstance().update();
         applyLocaleLayoutDirection(selectedLocale);
@@ -107,10 +103,7 @@ public class LocaleController
             mainApp.setStyle('fontFamily', undefined);
         }
 
-        if (Log.isDebug())
-        {
-            LOG.debug("Current font family: {0}", mainApp.getStyle('fontFamily'));
-        }
+        LOG.debug("Current font family: {0}", mainApp.getStyle('fontFamily'));
     }
 
     private function toFontFamily(fontNames:Array):String

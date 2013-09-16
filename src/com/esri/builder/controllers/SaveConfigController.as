@@ -28,7 +28,6 @@ import flash.filesystem.FileMode;
 import flash.filesystem.FileStream;
 
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.resources.ResourceManager;
 
 public final class SaveConfigController
@@ -55,22 +54,13 @@ public final class SaveConfigController
 
     private function writeConfigXML(projectDir:File, configXML:XML):Boolean
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Writing config XML for {0}", projectDir.nativePath);
-        }
+        LOG.info("Writing config XML for {0}", projectDir.nativePath);
 
         var success:Boolean = false;
         const configText:String = "<?xml version=\"1.0\" ?>\n" + configXML.toXMLString() + "\n";
         const configFile:File = projectDir.resolvePath("config.xml");
-        if (Log.isInfo())
-        {
-            LOG.info('Saving configuration to {0}', configFile.nativePath);
-        }
-        if (Log.isDebug())
-        {
-            LOG.debug(configText);
-        }
+        LOG.info('Saving configuration to {0}', configFile.nativePath);
+        LOG.debug(configText);
 
         const fileStream:FileStream = new FileStream();
         try
@@ -78,10 +68,7 @@ public final class SaveConfigController
             fileStream.open(configFile, FileMode.WRITE);
             try
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug("Config XML write success");
-                }
+                LOG.debug("Config XML write success");
 
                 fileStream.writeUTFBytes(FileUtil.ensureOSLineEndings(configText));
                 success = true;
@@ -93,10 +80,7 @@ public final class SaveConfigController
         }
         catch (e:Error)
         {
-            if (Log.isError())
-            {
-                LOG.error('Problem writing config: {0}', e.message);
-            }
+            LOG.error('Problem writing config: {0}', e.message);
             BuilderAlert.show(e.message.toString(), ResourceManager.getInstance().getString('BuilderStrings', 'error'));
         }
         return success;

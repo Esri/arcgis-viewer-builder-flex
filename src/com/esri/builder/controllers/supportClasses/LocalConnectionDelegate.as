@@ -22,7 +22,6 @@ import flash.events.StatusEvent;
 import flash.net.LocalConnection;
 
 import mx.logging.ILogger;
-import mx.logging.Log;
 
 public final class LocalConnectionDelegate
 {
@@ -35,10 +34,7 @@ public final class LocalConnectionDelegate
     {
         if (_localConnection === null)
         {
-            if (Log.isDebug())
-            {
-                LOG.debug("Acquiring local connection");
-            }
+            LOG.debug("Acquiring local connection");
 
             _localConnection = new LocalConnection();
             _localConnection.addEventListener(StatusEvent.STATUS, localConnection_statusHandler);
@@ -50,10 +46,7 @@ public final class LocalConnectionDelegate
     {
         if (event.level == "error")
         {
-            if (Log.isDebug())
-            {
-                LOG.debug("Call failed: {0}", event.toString());
-            }
+            LOG.debug("Call failed: {0}", event.toString());
         }
     }
 
@@ -64,10 +57,7 @@ public final class LocalConnectionDelegate
 
     private function callViewerMethod(methodName:String, ... values):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Calling Viewer method: {0} with the following arguments: {1}", methodName, values);
-        }
+        LOG.debug("Calling Viewer method: {0} with the following arguments: {1}", methodName, values);
 
         try
         {
@@ -76,10 +66,7 @@ public final class LocalConnectionDelegate
         }
         catch (error:Error)
         {
-            if (Log.isDebug())
-            {
-                LOG.debug("Call to method {0} failed: {1}", methodName, error);
-            }
+            LOG.debug("Call to method {0} failed: {1}", methodName, error);
         }
     }
 

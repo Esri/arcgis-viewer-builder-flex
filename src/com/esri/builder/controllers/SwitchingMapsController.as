@@ -40,7 +40,6 @@ import mx.collections.ArrayCollection;
 import mx.core.FlexGlobals;
 import mx.events.CloseEvent;
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.managers.PopUpManager;
 import mx.resources.ResourceManager;
 import mx.utils.ObjectUtil;
@@ -130,10 +129,7 @@ public final class SwitchingMapsController
 
     private function createBasemapsAndOperationalLayersFromWebMap():void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("creating basemap & op layers from web map");
-        }
+        LOG.info("creating basemap & op layers from web map");
 
         var webMapId:String = Model.instance.config.configMap.itemId;
 
@@ -318,10 +314,7 @@ public final class SwitchingMapsController
 
     private function saveNewMapConfig2():void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("converting map XML {0}", mapConfigXML.toXMLString());
-        }
+        LOG.debug("converting map XML {0}", mapConfigXML.toXMLString());
 
         Model.instance.config.configMap = ConfigMap.decodeXML(mapConfigXML);
         Model.instance.configBasemapsList.importLayers(Model.instance.config.configMap.basemaps.getAllLayers());

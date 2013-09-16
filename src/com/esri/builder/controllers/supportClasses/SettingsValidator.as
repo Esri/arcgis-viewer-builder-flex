@@ -27,7 +27,6 @@ import flash.filesystem.FileStream;
 import flash.utils.getTimer;
 
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.resources.ResourceManager;
 import mx.rpc.events.FaultEvent;
 import mx.rpc.events.ResultEvent;
@@ -50,10 +49,7 @@ public final class SettingsValidator extends EventDispatcher
         const emptyRE:RegExp = /^\s*$/;
         if (!settings.webServerURL || emptyRE.test(settings.webServerURL))
         {
-            if (Log.isDebug())
-            {
-                LOG.debug('No web server URL');
-            }
+            LOG.debug('No web server URL');
 
             dispatchValidationFailure(getLocalizedMessage('settings.baseURLRequired'));
             return;
@@ -61,30 +57,21 @@ public final class SettingsValidator extends EventDispatcher
         if (!URLUtil.isHttpURL(settings.webServerURL)
             && !URLUtil.isHttpsURL(settings.webServerURL))
         {
-            if (Log.isDebug())
-            {
-                LOG.debug('Invalid URL');
-            }
+            LOG.debug('Invalid URL');
 
             dispatchValidationFailure(getLocalizedMessage('settings.invalidURL'));
             return;
         }
         if (!settings.webServerFolder || emptyRE.test(settings.webServerFolder))
         {
-            if (Log.isDebug())
-            {
-                LOG.debug('No web server folder');
-            }
+            LOG.debug('No web server folder');
 
             dispatchValidationFailure(getLocalizedMessage('settings.baseLocRequired'));
             return;
         }
         if (/^\\\\.+$/.test(settings.webServerFolder))
         {
-            if (Log.isDebug())
-            {
-                LOG.debug('Web server folder does not start with drive name');
-            }
+            LOG.debug('Web server folder does not start with drive name');
 
             dispatchValidationFailure(getLocalizedMessage('settings.baseLocShared'));
             return;
@@ -94,10 +81,7 @@ public final class SettingsValidator extends EventDispatcher
             const urlRE:RegExp = /https?:\/\/([^\s.]+.)+([^\s.]+)/; // TODO - make more robust
             if (!urlRE.test(settings.proxyURL))
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug('Invalid HTTP proxy');
-                }
+                LOG.debug('Invalid HTTP proxy');
 
                 dispatchValidationFailure(getLocalizedMessage('settings.httpProxyInvalid'));
                 return;
@@ -110,10 +94,7 @@ public final class SettingsValidator extends EventDispatcher
                 com.esri.builder.supportClasses.URLUtil.removeQueryString(
                 settings.geometryServiceURL)))
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug('Invalid geometry service URL');
-                }
+                LOG.debug('Invalid geometry service URL');
 
                 dispatchValidationFailure(getLocalizedMessage('settings.geometryServiceInvalidURL'));
                 return;
@@ -125,10 +106,7 @@ public final class SettingsValidator extends EventDispatcher
             const urlRE_portalURL:RegExp = /https?:\/\/([^\s.]+.)+([^\s.]+)/; // TODO - make more robust
             if (!urlRE_portalURL.test(settings.portalURL))
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug('Invalid Portal for ArcGIS URL');
-                }
+                LOG.debug('Invalid Portal for ArcGIS URL');
 
                 dispatchValidationFailure(getLocalizedMessage('settings.portalForArcGISURLInvalid'));
                 return;
@@ -141,10 +119,7 @@ public final class SettingsValidator extends EventDispatcher
         }
         catch (error:Error)
         {
-            if (Log.isDebug())
-            {
-                LOG.debug('Invalid base directory path {0}', settings.webServerFolder);
-            }
+            LOG.debug('Invalid base directory path {0}', settings.webServerFolder);
 
             dispatchValidationFailure(getLocalizedMessage('saveSettings.invalidBaseDir', settings.webServerFolder));
             return;
@@ -153,10 +128,7 @@ public final class SettingsValidator extends EventDispatcher
         var doesBaseDirectoryPointToExistingFile:Boolean = (baseDirectory.exists && !baseDirectory.isDirectory);
         if (doesBaseDirectoryPointToExistingFile)
         {
-            if (Log.isDebug())
-            {
-                LOG.debug('Base directory is not a directory {0}', settings.webServerFolder);
-            }
+            LOG.debug('Base directory is not a directory {0}', settings.webServerFolder);
 
             dispatchValidationFailure(getLocalizedMessage('saveSettings.builderIsNotDir', settings.webServerFolder));
             return;
@@ -164,10 +136,7 @@ public final class SettingsValidator extends EventDispatcher
 
         if (!canCreateBaseDirectory())
         {
-            if (Log.isDebug())
-            {
-                LOG.debug('Could not create {0}', settings.webServerFolder);
-            }
+            LOG.debug('Could not create {0}', settings.webServerFolder);
 
             dispatchValidationFailure(getLocalizedMessage('saveSettings.cannotCreate', settings.webServerFolder));
             return;
@@ -194,10 +163,7 @@ public final class SettingsValidator extends EventDispatcher
 
     private function dispatchValidationFailure(errorMessage:String = null):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Settings are not valid: {0}", errorMessage);
-        }
+        LOG.info("Settings are not valid: {0}", errorMessage);
 
         dispatchEvent(new SettingsValidationEvent(SettingsValidationEvent.INVALID_SETTINGS, settings, errorMessage));
     }
@@ -233,10 +199,7 @@ public final class SettingsValidator extends EventDispatcher
     private function canWriteToViewerDir(tempFile:File):Boolean
     {
         var canWrite:Boolean;
-        if (Log.isDebug())
-        {
-            LOG.debug('Checking if can write {0}', tempFile.nativePath);
-        }
+        LOG.debug('Checking if can write {0}', tempFile.nativePath);
         try
         {
             const fileStream:FileStream = new FileStream();
@@ -267,10 +230,7 @@ public final class SettingsValidator extends EventDispatcher
     private function canReadFromViewerDir(tempFile:File):Boolean
     {
         var canRead:Boolean;
-        if (Log.isDebug())
-        {
-            LOG.debug('Checking if can read {0}', tempFile.nativePath);
-        }
+        LOG.debug('Checking if can read {0}', tempFile.nativePath);
         try
         {
             const fileStream:FileStream = new FileStream();
@@ -299,10 +259,7 @@ public final class SettingsValidator extends EventDispatcher
 
     private function httpService_resultHandler(event:ResultEvent):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info('Valid {0}', settings.webServerURL);
-        }
+        LOG.info('Valid {0}', settings.webServerURL);
 
         (event.currentTarget as IEventDispatcher).removeEventListener(ResultEvent.RESULT, httpService_resultHandler);
         (event.currentTarget as IEventDispatcher).removeEventListener(FaultEvent.FAULT, httpService_faultHandler);
@@ -313,20 +270,14 @@ public final class SettingsValidator extends EventDispatcher
 
     private function dispatchValidationSuccess():void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Settings are valid");
-        }
+        LOG.info("Settings are valid");
 
         dispatchEvent(new SettingsValidationEvent(SettingsValidationEvent.VALID_SETTINGS, settings));
     }
 
     private function httpService_faultHandler(event:FaultEvent):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info('Problem with Web Server Base Folder URL: {0}', event.fault.toString());
-        }
+        LOG.info('Problem with Web Server Base Folder URL: {0}', event.fault.toString());
 
         (event.currentTarget as IEventDispatcher).removeEventListener(ResultEvent.RESULT, httpService_resultHandler);
         (event.currentTarget as IEventDispatcher).removeEventListener(FaultEvent.FAULT, httpService_faultHandler);

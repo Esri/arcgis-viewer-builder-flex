@@ -37,6 +37,7 @@
             import com.esri.builder.model.PopUpConfig;
             import com.esri.builder.supportClasses.FieldUtil;
             import com.esri.builder.supportClasses.FileUtil;
+            import com.esri.builder.supportClasses.LogUtil;
             import com.esri.builder.supportClasses.XMLUtil;
             import com.esri.builder.views.BuilderAlert;
             import com.esri.builder.views.SubLayerList;
@@ -44,13 +45,12 @@
 
             import mx.core.FlexGlobals;
             import mx.logging.ILogger;
-            import mx.logging.Log;
             import mx.rpc.AsyncResponder;
             import mx.rpc.Fault;
 
             import spark.events.PopUpEvent;
 
-            private const LOG:ILogger = Log.getLogger('com.esri.builder.renderers.SubLayerRenderer');
+            private const LOG:ILogger = LogUtil.createLogger(SubLayerRenderer);
 
             private var layerInfo:LayerInfo;
 
@@ -219,10 +219,7 @@
                 catch (e:Error)
                 {
                     //TODO: MOVE ELSEWHERE
-                    if (Log.isError())
-                    {
-                        LOG.error('Problem writing config: {0}', e.message);
-                    }
+                    LOG.error('Problem writing config: {0}', e.message);
                     BuilderAlert.show(e.message.toString(), resourceManager.getString('BuilderStrings', 'error'));
                 }
 

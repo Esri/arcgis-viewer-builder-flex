@@ -27,7 +27,6 @@ import flash.filesystem.File;
 
 import mx.core.FlexGlobals;
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.managers.PopUpManager;
 
 import spark.components.WindowedApplication;
@@ -48,17 +47,11 @@ public final class ApplicationCloseController
 
     private function nativeWindow_closingHandler(event:Event):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("App is closing");
-        }
+        LOG.info("App is closing");
 
         if (Model.instance.config.isDirty)
         {
-            if (Log.isDebug())
-            {
-                LOG.debug("Preventing application close");
-            }
+            LOG.debug("Preventing application close");
 
             event.preventDefault();
             if (closeApplicationConfirmPopUp)
@@ -104,10 +97,7 @@ public final class ApplicationCloseController
 
     private function closeApplication():void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Exiting application.");
-        }
+        LOG.info("Exiting application.");
 
         application.exit();
     }

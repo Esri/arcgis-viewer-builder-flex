@@ -30,7 +30,6 @@ import com.esri.builder.supportClasses.LogUtil;
 import flash.net.URLVariables;
 
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.rpc.AsyncResponder;
 import mx.rpc.Fault;
 
@@ -49,10 +48,7 @@ public class PortalBasemapGallerySearch extends PortalSearch
 
     override public function execute(queryParams:PortalQueryParameters):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Searching Portal basemap gallery: {0}", queryParams.toString());
-        }
+        LOG.info("Searching Portal basemap gallery: {0}", queryParams.toString());
 
         portal.queryGroups(queryParams,
                            new AsyncResponder(groups_resultHandler,
@@ -61,10 +57,7 @@ public class PortalBasemapGallerySearch extends PortalSearch
 
     protected function groups_resultHandler(queryResult:PortalQueryResult, token:Object = null):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Query groups success");
-        }
+        LOG.info("Query groups success");
 
         if (queryResult.results.length > 0)
         {
@@ -78,10 +71,7 @@ public class PortalBasemapGallerySearch extends PortalSearch
 
     private function getGroup(groupId:String):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Fetching Portal basemap group items");
-        }
+        LOG.debug("Fetching Portal basemap group items");
 
         const queryParams:PortalQueryParameters =
             PortalQueryParameters.forItemsInGroup(groupId).withLimit(50).withSortField("name");
@@ -93,10 +83,7 @@ public class PortalBasemapGallerySearch extends PortalSearch
 
     private function search_resultHandler(queryResult:PortalQueryResult, token:Object):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Basemap group items fetch success");
-        }
+        LOG.debug("Basemap group items fetch success");
 
         basemaps = [];
         resultItems = queryResult.results;
@@ -112,29 +99,20 @@ public class PortalBasemapGallerySearch extends PortalSearch
         const basemap:PortalLayer = new PortalLayer(item);
         if (item.type == PortalItem.TYPE_WEB_MAP)
         {
-            if (Log.isDebug())
-            {
-                LOG.debug("Fetching basemap {0} item", item.type);
-            }
+            LOG.debug("Fetching basemap {0} item", item.type);
 
             item.getJSONData(
                 new AsyncResponder(data_resultHandler, data_faultHandler, basemap));
         }
         else if (item.type == PortalItem.TYPE_MAP_SERVICE)
         {
-            if (Log.isDebug())
-            {
-                LOG.debug("Fetching basemap {0} item", item.type);
-            }
+            LOG.debug("Fetching basemap {0} item", item.type);
 
             processMapServicePortalItem(item, basemap);
         }
         else
         {
-            if (Log.isDebug())
-            {
-                LOG.debug("Unsupported basemap item type: {0}", item.type);
-            }
+            LOG.debug("Unsupported basemap item type: {0}", item.type);
 
             decrementTotalItemsToProcess();
         }
@@ -157,10 +135,7 @@ public class PortalBasemapGallerySearch extends PortalSearch
         var layerType:String = getLayerType(serviceMetadata, item);
         if (layerType)
         {
-            if (Log.isDebug())
-            {
-                LOG.debug("Adding basemap layer type: {0}", layerType);
-            }
+            LOG.debug("Adding basemap layer type: {0}", layerType);
 
             var basemap:PortalLayer = itemAndBasemap.basemap;
             basemap.serviceURL = item.url;
@@ -169,10 +144,7 @@ public class PortalBasemapGallerySearch extends PortalSearch
         }
         else
         {
-            if (Log.isDebug())
-            {
-                LOG.debug("Unsupported basemap layer type: {0}", layerType);
-            }
+            LOG.debug("Unsupported basemap layer type: {0}", layerType);
         }
 
         decrementTotalItemsToProcess();
@@ -204,20 +176,14 @@ public class PortalBasemapGallerySearch extends PortalSearch
 
     private function mapServiceMetadataRequest_faultHandler(response:Fault, token:Object = null):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Basemap item service metadata data fetch fault");
-        }
+        LOG.debug("Basemap item service metadata data fetch fault");
 
         decrementTotalItemsToProcess();
     }
 
     private function data_resultHandler(decodedObject:Object, basemap:PortalLayer):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Basemap item data fetch success");
-        }
+        LOG.debug("Basemap item data fetch success");
 
         if (decodedObject
             && decodedObject.baseMap
@@ -266,10 +232,7 @@ public class PortalBasemapGallerySearch extends PortalSearch
 
     private function data_faultHandler(fault:Fault, thumb:PortalLayer):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Basemap item data fetch fault");
-        }
+        LOG.debug("Basemap item data fetch fault");
 
         decrementTotalItemsToProcess();
     }
@@ -314,10 +277,7 @@ public class PortalBasemapGallerySearch extends PortalSearch
 
     private function portalQuery_faultHandler(fault:Fault, token:Object = null):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Portal query fault: {0}", fault.toString());
-        }
+        LOG.debug("Portal query fault: {0}", fault.toString());
 
         dispatchFaultEvent(fault);
     }

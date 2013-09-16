@@ -22,7 +22,6 @@ import com.esri.builder.supportClasses.LogUtil;
 import flash.filesystem.File;
 
 import mx.logging.ILogger;
-import mx.logging.Log;
 
 public final class AssetImporter
 {
@@ -30,10 +29,7 @@ public final class AssetImporter
 
     public static function importImage(image:File):File
     {
-        if (Log.isInfo())
-        {
-            LOG.info('Importing {0}', image.nativePath);
-        }
+        LOG.info('Importing {0}', image.nativePath);
         var importedImage:File = Model.instance.appDir.resolvePath('assets' + File.separator + 'images' + File.separator + image.name);
         copyAssetIfDoesNotExist(image, importedImage);
 
@@ -44,18 +40,12 @@ public final class AssetImporter
     {
         if (!importedAsset.exists)
         {
-            if (Log.isDebug())
-            {
-                LOG.debug('Does not exist, copying.');
-            }
+            LOG.debug('Does not exist, copying.');
             asset.copyTo(importedAsset, true);
         }
         else
         {
-            if (Log.isDebug())
-            {
-                LOG.debug('Already exists');
-            }
+            LOG.debug('Already exists');
         }
     }
 }
