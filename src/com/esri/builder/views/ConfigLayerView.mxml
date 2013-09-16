@@ -256,7 +256,7 @@
 
                 configLayerToEdit.label = editedConfigLayerLabel;
                 configLayerToEdit.visible = visibleCheckBox.selected;
-                configLayerToEdit.alpha = 1.0 - (alphaSlider.value / 100.0);
+                configLayerToEdit.alpha = (100 - alphaSlider.value) / 100;
                 configLayerToEdit.autoRefresh = Number(autoRefreshText.text);
                 configLayerToEdit.displayLevels = displayLevelsText.text;
                 configLayerToEdit.bandIds = bandIdsText.text;
