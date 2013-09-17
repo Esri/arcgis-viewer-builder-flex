@@ -37,14 +37,14 @@ public class SimpleLogDecorator implements ILogger
 
     public function log(level:int, message:String, ... rest):void
     {
-        logger.log.apply(null, [ level, message, rest ]);
+        logger.log.apply(null, [ level, message ].concat(rest));
     }
 
     public function debug(message:String, ... rest):void
     {
         if (Log.isDebug())
         {
-            logger.debug.apply(null, [ message, rest ]);
+            logger.debug.apply(null, [ message ].concat(rest));
         }
     }
 
@@ -52,7 +52,7 @@ public class SimpleLogDecorator implements ILogger
     {
         if (Log.isError())
         {
-            logger.error.apply(null, [ message, rest ]);
+            logger.error.apply(null, [ message ].concat(rest));
         }
     }
 
@@ -60,7 +60,7 @@ public class SimpleLogDecorator implements ILogger
     {
         if (Log.isFatal())
         {
-            logger.fatal.apply(null, [ message, rest ]);
+            logger.fatal.apply(null, [ message ].concat(rest));
         }
     }
 
@@ -68,7 +68,7 @@ public class SimpleLogDecorator implements ILogger
     {
         if (Log.isInfo())
         {
-            logger.info.apply(null, [ message, rest ]);
+            logger.info.apply(null, [ message ].concat(rest));
         }
     }
 
@@ -76,7 +76,7 @@ public class SimpleLogDecorator implements ILogger
     {
         if (Log.isWarn())
         {
-            logger.warn.apply(null, [ message, rest ]);
+            logger.warn.apply(null, [ message ].concat(rest));
         }
     }
 
