@@ -54,21 +54,14 @@
 
             private function changeStateBasedOnPortal():void
             {
-                if (portal.loaded)
+                if (portal.user)
                 {
-                    if (portal.user)
-                    {
-                        currentState = PortalModel.getInstance().canSignOut() ?
-                            "signedIntoPortal" : "signedIntoPortalFixed";
-                    }
-                    else
-                    {
-                        currentState = "normal";
-                    }
+                    currentState = PortalModel.getInstance().canSignOut() ?
+                        "signedIntoPortal" : "signedIntoPortalFixed";
                 }
                 else
                 {
-                    currentState = "portalNotLoaded";
+                    currentState = portal.url ? "normal" : "portalNotLoaded";
                 }
             }
 
