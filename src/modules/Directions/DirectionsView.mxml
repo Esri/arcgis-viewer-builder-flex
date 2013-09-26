@@ -36,6 +36,8 @@
             import com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent;
             import com.esri.builder.model.Model;
             import com.esri.builder.model.RecentlyUsedURLsModel;
+            import com.esri.builder.supportClasses.URLUtil;
+            import com.esri.builder.supportClasses.URLUtil;
             import com.esri.builder.views.BuilderAlert;
 
             import modules.HeaderController.MapService;
@@ -143,7 +145,7 @@
 
             private function validateLocator():void
             {
-                var locatorMetadataRequest:JSONTask = new JSONTask(locatorURL);
+                var locatorMetadataRequest:JSONTask = new JSONTask(URLUtil.removeToken(locatorURL));
                 var urlVars:URLVariables = new URLVariables();
                 urlVars.f = 'json';
                 locatorMetadataRequest.execute(urlVars, new AsyncResponder(locatorMetadataRequest_resultHandler, locatorMetadataRequest_faultHandler));
@@ -166,7 +168,7 @@
 
             private function validateRouteURL():void
             {
-                var routeURLMetadataRequest:JSONTask = new JSONTask(routeURL);
+                var routeURLMetadataRequest:JSONTask = new JSONTask(URLUtil.ensureValidKeyValuePairs(URLUtil.removeToken(routeURL)));
                 var urlVars:URLVariables = new URLVariables();
                 urlVars.f = 'json';
                 routeURLMetadataRequest.execute(
@@ -212,7 +214,7 @@
             private function hasGeocodeServerEndPoint():Boolean
             {
                 const endsWithGeocodeServer:RegExp = / \/ GeocodeServer \/? $ /ix;
-                return endsWithGeocodeServer.test(locatorURL);
+                return endsWithGeocodeServer.test(URLUtil.removeQueryString(locatorURL));
             }
 
             private function locatorBackButton_clickHandler(event:MouseEvent):void
@@ -298,7 +300,7 @@
             private function hasRouteServerEndPoint():Boolean
             {
                 const endsWithGeocodeServer:RegExp = / \/ NAServer \/? $ /ix;
-                return endsWithGeocodeServer.test(routeURL);
+                return endsWithGeocodeServer.test(URLUtil.removeQueryString(routeURL));
             }
 
             private function routeBackButton_clickHandler(event:MouseEvent):void

@@ -13,22 +13,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////
-package com.esri.builder.model
+package modules.supportClasses
 {
 
-[Bindable]
-public class LocaleOption
+public class AttributeTableLayerSettings extends LayerSettings
 {
-    public var id:String;
+    public var showAttachments:Boolean = true;
+    public var showRelatedRecords:Boolean = true;
 
-    public function get label():String
+    override public function fromXML(layerSettingsXML:XML):void
     {
-        return LocaleModel.getInstance().getLabel(id);
+        super.fromXML(layerSettingsXML);
+        showAttachments = layerSettingsXML.showattachments[0] != "false";
+        showRelatedRecords = layerSettingsXML.showrelatedrecords[0] != "false";
     }
 
-    public function LocaleOption(id:String)
+    override public function toXML():XML
     {
-        this.id = id;
+        var configXML:XML = super.toXML();
+
+        configXML.appendChild(<showattachments>{showAttachments}</showattachments>);
+        configXML.appendChild(<showrelatedrecords>{showRelatedRecords}</showrelatedrecords>);
+
+        return configXML;
     }
 }
 }

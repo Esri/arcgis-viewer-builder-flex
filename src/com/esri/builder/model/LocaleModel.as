@@ -16,36 +16,11 @@
 package com.esri.builder.model
 {
 
-import flash.utils.Dictionary;
-
 import mx.core.LayoutDirection;
 import mx.resources.ResourceManager;
 
 public class LocaleModel
 {
-    private static const ARABIC_LOCALE_ID:String = 'ar';
-    private static const DANISH_LOCALE_ID:String = 'da_DK';
-    private static const GERMAN_LOCALE_ID:String = 'de_DE';
-    private static const ENGLISH_LOCALE_ID:String = 'en_US';
-    private static const ESTONIAN_LOCALE_ID:String = 'et_EE';
-    private static const SPANISH_LOCALE_ID:String = 'es_ES';
-    private static const FRENCH_LOCALE_ID:String = 'fr_FR';
-    private static const HEBREW_LOCALE_ID:String = 'he_IL';
-    private static const ITALIAN_LOCALE_ID:String = 'it_IT';
-    private static const JAPANESE_LOCALE_ID:String = 'ja_JP';
-    private static const KOREAN_LOCALE_ID:String = 'ko_KR';
-    private static const LATVIAN_LOCALE_ID:String = 'lv_LV';
-    private static const LITHUANIAN_LOCALE_ID:String = 'lt_LT';
-    private static const NORWEGIAN_LOCALE_ID:String = 'nb_NO';
-    private static const DUTCH_LOCALE_ID:String = 'nl_NL';
-    private static const POLISH_LOCALE_ID:String = 'pl_PL';
-    private static const PORTUGUESE_BRAZIL_LOCALE_ID:String = 'pt_BR';
-    private static const PORTUGUESE_PORTUGAL_LOCALE_ID:String = 'pt_PT';
-    private static const ROMANIAN_LOCALE_ID:String = 'ro_RO';
-    private static const RUSSIAN_LOCALE_ID:String = 'ru_RU';
-    private static const SWEDISH_LOCALE_ID:String = 'sv_SE';
-    private static const CHINESE_SIMPLIFIED_HAN_LOCALE_ID:String = 'zh_CN';
-
     public static const PREFERRED_ARABIC_FONTS:Array = [ 'Tahoma' ];
 
     public static const PREFERRED_JAPANESE_FONTS:Array = [ 'メイリオ',
@@ -64,8 +39,12 @@ public class LocaleModel
 
     private static var instance:LocaleModel;
 
-    private var localeIdToLabel:Dictionary;
-    private var localeIdToLocaleOption:Dictionary;
+    private var _locales:Array;
+
+    public function get locales():Array
+    {
+        return _locales;
+    }
 
     public static function getInstance():LocaleModel
     {
@@ -79,100 +58,111 @@ public class LocaleModel
 
     public function LocaleModel(singletonEnforcer:SingletonEnforcer)
     {
-        initLocaleLabels();
-        initLocaleOptions();
+        initLocales();
     }
 
-    private function initLocaleLabels():void
+    private function initLocales():void
     {
-        localeIdToLabel = new Dictionary();
+        const appLocales:Array = ResourceManager.getInstance().localeChain;
+        var isLocaleSupported:Boolean;
+        _locales = [];
 
-        localeIdToLabel[ARABIC_LOCALE_ID] = "Arabic-عربي"
-        localeIdToLabel[DANISH_LOCALE_ID] = "Danish-Dansk"
-        localeIdToLabel[GERMAN_LOCALE_ID] = "German-Deutsch"
-        localeIdToLabel[ESTONIAN_LOCALE_ID] = "Estonian-Eesti"
-        localeIdToLabel[ENGLISH_LOCALE_ID] = "English-English"
-        localeIdToLabel[SPANISH_LOCALE_ID] = "Spanish-Español"
-        localeIdToLabel[FRENCH_LOCALE_ID] = "French-Français"
-        localeIdToLabel[HEBREW_LOCALE_ID] = "Hebrew-עברית"
-        localeIdToLabel[ITALIAN_LOCALE_ID] = "Italian-Italiano"
-        localeIdToLabel[JAPANESE_LOCALE_ID] = "Japanese-日本語"
-        localeIdToLabel[KOREAN_LOCALE_ID] = "Korean-한국어"
-        localeIdToLabel[LATVIAN_LOCALE_ID] = "Latvian-Latviešu"
-        localeIdToLabel[LITHUANIAN_LOCALE_ID] = "Lithuanian-Lietuvių"
-        localeIdToLabel[NORWEGIAN_LOCALE_ID] = "Norwegian-Norsk"
-        localeIdToLabel[DUTCH_LOCALE_ID] = "Dutch-Nederlands"
-        localeIdToLabel[POLISH_LOCALE_ID] = "Polish-Polski"
-        localeIdToLabel[PORTUGUESE_BRAZIL_LOCALE_ID] = "Portuguese (Brazil)-Português (Brasil)"
-        localeIdToLabel[PORTUGUESE_PORTUGAL_LOCALE_ID] = "Portuguese (Portugal)-Português (Portugal)"
-        localeIdToLabel[ROMANIAN_LOCALE_ID] = "Romanian-Română"
-        localeIdToLabel[RUSSIAN_LOCALE_ID] = "Russian-Русский"
-        localeIdToLabel[SWEDISH_LOCALE_ID] = "Swedish-Svenska"
-        localeIdToLabel[CHINESE_SIMPLIFIED_HAN_LOCALE_ID] = "Chinese (Simplified Han)-简体中文"
-    }
-
-    private function initLocaleOptions():void
-    {
-        var localeChain:Array = ResourceManager.getInstance().localeChain;
-        localeIdToLocaleOption = new Dictionary();
-        for each (var localeId:String in localeChain)
+        for each (var locale:Locale in WellKnownLocales.locales)
         {
-            localeIdToLocaleOption[localeId] = new LocaleOption(localeId);
-        }
-    }
-
-    public function getLabel(localeId:String):String
-    {
-        var localeLabel:String = localeIdToLabel[localeId];
-        return localeLabel ? localeLabel : "";
-    }
-
-    public function getAvailableLocaleOptions():Array
-    {
-        var availableLocaleOptions:Array = [];
-
-        for each (var localeId:String in supportedLocaleIds)
-        {
-            if (localeIdToLocaleOption[localeId])
+            isLocaleSupported = appLocales.indexOf(locale.id) > -1;
+            if (isLocaleSupported)
             {
-                availableLocaleOptions.push(localeIdToLocaleOption[localeId]);
+                _locales.push(locale);
             }
         }
-
-        return availableLocaleOptions;
     }
-
-    private const supportedLocaleIds:Array = [
-        ARABIC_LOCALE_ID,
-        CHINESE_SIMPLIFIED_HAN_LOCALE_ID,
-        DANISH_LOCALE_ID,
-        DUTCH_LOCALE_ID,
-        ENGLISH_LOCALE_ID,
-        ESTONIAN_LOCALE_ID,
-        FRENCH_LOCALE_ID,
-        GERMAN_LOCALE_ID,
-        HEBREW_LOCALE_ID,
-        ITALIAN_LOCALE_ID,
-        JAPANESE_LOCALE_ID,
-        KOREAN_LOCALE_ID,
-        LATVIAN_LOCALE_ID,
-        LITHUANIAN_LOCALE_ID,
-        NORWEGIAN_LOCALE_ID,
-        POLISH_LOCALE_ID,
-        PORTUGUESE_BRAZIL_LOCALE_ID,
-        PORTUGUESE_PORTUGAL_LOCALE_ID,
-        ROMANIAN_LOCALE_ID,
-        RUSSIAN_LOCALE_ID,
-        SPANISH_LOCALE_ID,
-        SWEDISH_LOCALE_ID
-        ];
 
     public function getLocaleLayoutDirection(localeId:String):String
     {
-        return (localeId == ARABIC_LOCALE_ID || localeId == HEBREW_LOCALE_ID) ?
+        return (localeId == WellKnownLocales.ARABIC_ID
+            || localeId == WellKnownLocales.HEBREW_ID) ?
             LayoutDirection.RTL : LayoutDirection.LTR;
     }
 }
+}
+
+import com.esri.builder.model.Locale;
+
+class WellKnownLocales
+{
+    public static const ARABIC_ID:String = 'ar';
+    public static const DANISH_ID:String = 'da_DK';
+    public static const GERMAN_ID:String = 'de_DE';
+    public static const ENGLISH_ID:String = 'en_US';
+    public static const ESTONIAN_ID:String = 'et_EE';
+    public static const SPANISH_ID:String = 'es_ES';
+    public static const FINNISH_ID:String = 'fi_FI';
+    public static const FRENCH_ID:String = 'fr_FR';
+    public static const HEBREW_ID:String = 'he_IL';
+    public static const ITALIAN_ID:String = 'it_IT';
+    public static const JAPANESE_ID:String = 'ja_JP';
+    public static const KOREAN_ID:String = 'ko_KR';
+    public static const LATVIAN_ID:String = 'lv_LV';
+    public static const LITHUANIAN_ID:String = 'lt_LT';
+    public static const NORWEGIAN_ID:String = 'nb_NO';
+    public static const DUTCH_ID:String = 'nl_NL';
+    public static const POLISH_ID:String = 'pl_PL';
+    public static const PORTUGUESE_BRAZIL_ID:String = 'pt_BR';
+    public static const PORTUGUESE_PORTUGAL_ID:String = 'pt_PT';
+    public static const ROMANIAN_ID:String = 'ro_RO';
+    public static const RUSSIAN_ID:String = 'ru_RU';
+    public static const SWEDISH_ID:String = 'sv_SE';
+    public static const CHINESE_SIMPLIFIED_HAN_ID:String = 'zh_CN';
+
+    private static const ARABIC_LABEL:String = "Arabic-عربي";
+    private static const DANISH_LABEL:String = "Danish-Dansk";
+    private static const GERMAN_LABEL:String = "German-Deutsch";
+    private static const ESTONIAN_LABEL:String = "Estonian-Eesti";
+    private static const ENGLISH_LABEL:String = "English-English";
+    private static const SPANISH_LABEL:String = "Spanish-Español";
+    private static const FINNISH_LABEL:String = "Finnish-Suomi";
+    private static const FRENCH_LABEL:String = "French-Français";
+    private static const HEBREW_LABEL:String = "Hebrew-עברית";
+    private static const ITALIAN_LABEL:String = "Italian-Italiano";
+    private static const JAPANESE_LABEL:String = "Japanese-日本語";
+    private static const KOREAN_LABEL:String = "Korean-한국어";
+    private static const LATVIAN_LABEL:String = "Latvian-Latviešu";
+    private static const LITHUANIAN_LABEL:String = "Lithuanian-Lietuvių";
+    private static const NORWEGIAN_LABEL:String = "Norwegian-Norsk";
+    private static const DUTCH_LABEL:String = "Dutch-Nederlands";
+    private static const POLISH_LABEL:String = "Polish-Polski";
+    private static const PORTUGUESE_BRAZIL_LABEL:String = "Portuguese (Brazil)-Português (Brasil)";
+    private static const PORTUGUESE_PORTUGAL_LABEL:String = "Portuguese (Portugal)-Português (Portugal)";
+    private static const ROMANIAN_LABEL:String = "Romanian-Română";
+    private static const RUSSIAN_LABEL:String = "Russian-Русский";
+    private static const SWEDISH_LABEL:String = "Swedish-Svenska";
+    private static const CHINESE_SIMPLIFIED_HAN_LABEL:String = "Chinese (Simplified Han)-简体中文";
+
+    public static const locales:Array = [
+        new Locale(ARABIC_ID, ARABIC_LABEL),
+        new Locale(CHINESE_SIMPLIFIED_HAN_ID, CHINESE_SIMPLIFIED_HAN_LABEL),
+        new Locale(DANISH_ID, DANISH_LABEL),
+        new Locale(DUTCH_ID, DUTCH_LABEL),
+        new Locale(GERMAN_ID, GERMAN_LABEL),
+        new Locale(ENGLISH_ID, ENGLISH_LABEL),
+        new Locale(ESTONIAN_ID, ESTONIAN_LABEL),
+        new Locale(FINNISH_ID, FINNISH_LABEL),
+        new Locale(FRENCH_ID, FRENCH_LABEL),
+        new Locale(HEBREW_ID, HEBREW_LABEL),
+        new Locale(ITALIAN_ID, ITALIAN_LABEL),
+        new Locale(JAPANESE_ID, JAPANESE_LABEL),
+        new Locale(KOREAN_ID, KOREAN_LABEL),
+        new Locale(LATVIAN_ID, LATVIAN_LABEL),
+        new Locale(LITHUANIAN_ID, LITHUANIAN_LABEL),
+        new Locale(NORWEGIAN_ID, NORWEGIAN_LABEL),
+        new Locale(POLISH_ID, POLISH_LABEL),
+        new Locale(PORTUGUESE_BRAZIL_ID, PORTUGUESE_BRAZIL_LABEL),
+        new Locale(PORTUGUESE_PORTUGAL_ID, PORTUGUESE_PORTUGAL_LABEL),
+        new Locale(ROMANIAN_ID, ROMANIAN_LABEL),
+        new Locale(RUSSIAN_ID, RUSSIAN_LABEL),
+        new Locale(SPANISH_ID, SPANISH_LABEL),
+        new Locale(SWEDISH_ID, SWEDISH_LABEL)
+        ];
 }
 
 class SingletonEnforcer

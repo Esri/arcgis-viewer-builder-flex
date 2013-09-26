@@ -37,13 +37,13 @@
             import com.esri.builder.model.PortalLayer;
             import com.esri.builder.supportClasses.ErrorMessageUtil;
             import com.esri.builder.supportClasses.LogUtil;
+            import com.esri.builder.supportClasses.URLUtil;
             import com.esri.builder.views.supportClasses.LayerSelectionEvent;
 
             import mx.collections.ArrayList;
             import mx.events.FlexEvent;
             import mx.logging.ILogger;
             import mx.logging.Log;
-            import mx.rpc.AsyncResponder;
             import mx.rpc.Fault;
             import mx.rpc.Responder;
 
@@ -171,8 +171,8 @@
                         jsonTask.url = layer.serviceURL;
                         jsonTask.requestTimeout = Model.REQUEST_TIMEOUT;
                         jsonTask.showBusyCursor = true;
-                        jsonTask.execute(param, new AsyncResponder(jsonTask_resultHandler, jsonTask_faultHandler, configLayer1));
-                        function jsonTask_resultHandler(resultObject:Object, token:Object = null):void
+                        jsonTask.execute(param, new mx.rpc.Responder(jsonTask_resultHandler, jsonTask_faultHandler));
+                        function jsonTask_resultHandler(resultObject:Object):void
                         {
                             if (Log.isDebug())
                             {
@@ -181,21 +181,21 @@
 
                             if (resultObject.bandCount)
                             {
-                                ConfigLayer(token).type = ConfigLayer.IMAGE;
+                                configLayer1.type = ConfigLayer.IMAGE;
                             }
                             else if (resultObject.singleFusedMapCache)
                             {
-                                ConfigLayer(token).type = ConfigLayer.TILED;
+                                configLayer1.type = ConfigLayer.TILED;
                             }
                             else
                             {
                                 if (pointsToLayer(layer.serviceURL))
                                 {
-                                    ConfigLayer(token).type = ConfigLayer.FEATURE;
+                                    configLayer1.type = ConfigLayer.FEATURE;
                                 }
                                 else
                                 {
-                                    ConfigLayer(token).type = ConfigLayer.DYNAMIC;
+                                    configLayer1.type = ConfigLayer.DYNAMIC;
                                 }
                             }
 
@@ -208,7 +208,7 @@
                             updateConfigLayerList();
                         }
 
-                        function jsonTask_faultHandler(fault:Fault, token:Object = null):void
+                        function jsonTask_faultHandler(fault:Fault):void
                         {
                             if (fault.faultString != "Sign in aborted")
                             {
@@ -242,6 +242,17 @@
                                 {
                                     if (Log.isDebug())
                                     {
+                                        LOG.debug("Add portal config layer - type: {0}, url: {1}", configLayer1.type, configLayer1.url);
+                                    }
+
+                                    configLayer1.url = layer.serviceURL;
+                                    Model.instance.configOpsLayerList.addLayer(configLayer1);
+                                    updateConfigLayerList();
+                                }
+                                else
+                                {
+                                    if (Log.isDebug())
+                                    {
                                         LOG.debug("Fetching feature service item");
                                     }
 
@@ -251,8 +262,8 @@
                                     jsonTask1.url = layer.serviceURL;
                                     jsonTask1.requestTimeout = Model.REQUEST_TIMEOUT;
                                     jsonTask1.showBusyCursor = true;
-                                    jsonTask1.execute(param1, new AsyncResponder(jsonTask1_resultHandler, jsonTask1_faultHandler));
-                                    function jsonTask1_resultHandler(resultObject:Object, token:Object = null):void
+                                    jsonTask1.execute(param1, new mx.rpc.Responder(jsonTask1_resultHandler, jsonTask1_faultHandler));
+                                    function jsonTask1_resultHandler(resultObject:Object):void
                                     {
                                         if (Log.isDebug())
                                         {
@@ -277,7 +288,7 @@
                                         }
                                     }
 
-                                    function jsonTask1_faultHandler(fault:Fault, token:Object = null):void
+                                    function jsonTask1_faultHandler(fault:Fault):void
                                     {
                                         if (fault.faultString != "Sign in aborted")
                                         {
@@ -304,17 +315,6 @@
                                         }
                                     }
                                 }
-                                else
-                                {
-                                    if (Log.isDebug())
-                                    {
-                                        LOG.debug("Add portal config layer - type: {0}, url: {1}", configLayer1.type, configLayer1.url);
-                                    }
-
-                                    configLayer1.url = layer.serviceURL;
-                                    Model.instance.configOpsLayerList.addLayer(configLayer1);
-                                    updateConfigLayerList();
-                                }
                             }
                             else
                             {
@@ -335,7 +335,7 @@
             private function pointsToLayer(url:String):Boolean
             {
                 var endsWithLayerId:RegExp = /\/[0-9]+$/;
-                return endsWithLayerId.test(url);
+                return endsWithLayerId.test(URLUtil.removeQueryString(url));
             }
 
             private function getConfigLayerType(type:String, url:String = null):String

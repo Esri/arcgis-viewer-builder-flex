@@ -59,31 +59,30 @@ public class HelpButton extends ButtonBase
         helpPopUp = new HelpPopUp();
         helpPopUp.title = title;
         helpPopUp.content = helpText;
-        helpPopUp.x = x;
-        helpPopUp.y = y;
         return helpPopUp;
     }
 
     private function positionHelpPopUp(button:UIComponent, popUp:UIComponent):void
     {
         var app:UIComponent = FlexGlobals.topLevelApplication as UIComponent;
-        var appBounds:Rectangle = app.getVisibleRect(this);
-        var buttonRect:Rectangle = button.getVisibleRect(this);
-        var popUpRect:Rectangle = popUp.getVisibleRect(this);
+        var appBounds:Rectangle = app.getVisibleRect();
+        var buttonRect:Rectangle = button.getBounds(app);
+        var popUpRect:Rectangle = new Rectangle(buttonRect.x, buttonRect.y, popUp.width, popUp.height);
 
         var isLTR:Boolean = (layoutDirection == LayoutDirection.LTR);
-        var leftOffset:Number = isLTR ? -popUpRect.width - anchorHalfWidth : anchorHalfWidth;
-        var rightOffset:Number = isLTR ? buttonRect.width + anchorHalfWidth : -buttonRect.width - popUpRect.width - anchorHalfWidth;
+        var anchorWidth:Number = helpPopUp.anchor.width;
+        var leftOffset:Number = isLTR ? -popUpRect.width - anchorWidth : buttonRect.width + anchorWidth;
+        var rightOffset:Number = isLTR ? buttonRect.width + anchorWidth : -popUpRect.width - anchorWidth;
 
         var leftPopUpRect:Rectangle = popUpRect.clone();
         var rightPopUpRect:Rectangle = popUpRect.clone();
         var bottomPopUpRect:Rectangle = popUpRect.clone();
         var topPopUpRect:Rectangle = popUpRect.clone();
 
-        leftPopUpRect.x = buttonRect.x + leftOffset;
-        rightPopUpRect.x = buttonRect.x + rightOffset;
-        bottomPopUpRect.y = buttonRect.y + buttonRect.height;
-        topPopUpRect.y = buttonRect.y - popUpRect.height;
+        leftPopUpRect.x += leftOffset;
+        rightPopUpRect.x += rightOffset;
+        bottomPopUpRect.y += buttonRect.height;
+        topPopUpRect.y += -popUpRect.height;
 
         var leftIntersectionRect:Rectangle = appBounds.intersection(leftPopUpRect);
         var rightIntersectionRect:Rectangle = appBounds.intersection(rightPopUpRect);
@@ -92,27 +91,43 @@ public class HelpButton extends ButtonBase
 
         var horizontalPosition:String;
 
-        if (leftIntersectionRect.width > rightIntersectionRect.width)
+        if (isLTR)
         {
-            popUp.x = buttonRect.x + leftOffset;
-            horizontalPosition = "LEFT";
+            if (leftIntersectionRect.width > rightIntersectionRect.width)
+            {
+                popUp.x = leftPopUpRect.x;
+                horizontalPosition = "LEFT";
+            }
+            else
+            {
+                popUp.x = rightPopUpRect.x;
+                horizontalPosition = "RIGHT";
+            }
         }
         else
         {
-            popUp.x = buttonRect.x + rightOffset;
-            horizontalPosition = "RIGHT";
+            if (leftIntersectionRect.width < rightIntersectionRect.width)
+            {
+                popUp.x = app.width - rightPopUpRect.x - rightPopUpRect.width;
+                horizontalPosition = "LEFT";
+            }
+            else
+            {
+                popUp.x = app.width - leftPopUpRect.x - leftPopUpRect.width;
+                horizontalPosition = "RIGHT";
+            }
         }
 
         var verticalPosition:String;
 
         if (Math.round(topIntersectionRect.height) > Math.round(bottomIntersectionRect.height))
         {
-            popUp.y = buttonRect.y - popUpRect.height;
+            popUp.y = topPopUpRect.y;
             verticalPosition = "TOP";
         }
         else if (Math.round(topIntersectionRect.height) < Math.round(bottomIntersectionRect.height))
         {
-            popUp.y = buttonRect.y + buttonRect.height;
+            popUp.y = bottomPopUpRect.y;
             verticalPosition = "BOTTOM";
         }
         else
@@ -125,58 +140,54 @@ public class HelpButton extends ButtonBase
         positionHelpPopUpAnchor(popUpPosition);
     }
 
-    public function get anchorHalfWidth():Number
-    {
-        return helpPopUp.anchor.width * 0.5;
-    }
-
     private function positionHelpPopUpAnchor(popUpPosition:String):void
     {
+        var anchorWidth:Number = helpPopUp.anchor.width;
         //we assume help pop-up anchor points to the right: <
         switch (popUpPosition)
         {
             case "MIDDLE_RIGHT":
             {
-                helpPopUp.anchor.left = -anchorHalfWidth;
+                helpPopUp.anchor.left = -anchorWidth;
                 helpPopUp.anchor.verticalCenter = 0;
                 break;
             }
             case "MIDDLE_LEFT":
             {
-                helpPopUp.anchor.right = -anchorHalfWidth;
+                helpPopUp.anchor.right = -anchorWidth;
                 helpPopUp.anchor.rotation = 180;
                 helpPopUp.anchor.verticalCenter = 0;
                 break;
             }
             case "TOP_RIGHT":
             {
-                helpPopUp.anchor.left = -anchorHalfWidth;
-                helpPopUp.anchor.bottom = -anchorHalfWidth;
-                helpPopUp.anchor.scaleX = 2;
+                helpPopUp.anchor.left = -anchorWidth;
+                helpPopUp.anchor.bottom = -anchorWidth;
+                helpPopUp.anchor.scaleX = 2.5;
                 helpPopUp.anchor.rotation = -45;
                 break;
             }
             case "TOP_LEFT":
             {
-                helpPopUp.anchor.right = -anchorHalfWidth;
-                helpPopUp.anchor.bottom = -anchorHalfWidth;
-                helpPopUp.anchor.scaleX = 2;
+                helpPopUp.anchor.right = -anchorWidth;
+                helpPopUp.anchor.bottom = -anchorWidth;
+                helpPopUp.anchor.scaleX = 2.5;
                 helpPopUp.anchor.rotation = -135;
                 break;
             }
             case "BOTTOM_RIGHT":
             {
-                helpPopUp.anchor.top = -anchorHalfWidth;
-                helpPopUp.anchor.left = -anchorHalfWidth;
-                helpPopUp.anchor.scaleX = 2;
+                helpPopUp.anchor.top = -anchorWidth;
+                helpPopUp.anchor.left = -anchorWidth;
+                helpPopUp.anchor.scaleX = 2.5;
                 helpPopUp.anchor.rotation = 45;
                 break;
             }
             case "BOTTOM_LEFT":
             {
-                helpPopUp.anchor.top = -anchorHalfWidth;
-                helpPopUp.anchor.right = -anchorHalfWidth;
-                helpPopUp.anchor.scaleX = 2;
+                helpPopUp.anchor.top = -anchorWidth;
+                helpPopUp.anchor.right = -anchorWidth;
+                helpPopUp.anchor.scaleX = 2.5;
                 helpPopUp.anchor.rotation = 135;
                 break;
             }

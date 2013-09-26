@@ -26,8 +26,6 @@ public class LayerSettings
     private var showObjectId:XML;
     private var showGlobalId:XML;
     private var exportLocation:XML;
-    private var showAttachments:XML;
-    private var showRelatedRecords:XML;
     private var columnsOrder:XML;
     private var sublayer:XML;
 
@@ -49,8 +47,6 @@ public class LayerSettings
         showObjectId = layerSettingsXML.showobjectid[0];
         showGlobalId = layerSettingsXML.showglobalid[0];
         exportLocation = layerSettingsXML.exportlocation[0];
-        showAttachments = layerSettingsXML.showattachments[0];
-        showRelatedRecords = layerSettingsXML.showrelatedrecords[0];
         columnsOrder = layerSettingsXML.columnsorder[0];
         sublayer = layerSettingsXML.sublayer[0];
     }
@@ -84,14 +80,6 @@ public class LayerSettings
         if (exportLocation)
         {
             configXML.appendChild(exportLocation);
-        }
-        if (showAttachments)
-        {
-            configXML.appendChild(showAttachments);
-        }
-        if (showRelatedRecords)
-        {
-            configXML.appendChild(showRelatedRecords);
         }
         if (columnsOrder)
         {

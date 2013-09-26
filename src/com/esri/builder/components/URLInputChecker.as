@@ -16,6 +16,8 @@
 package com.esri.builder.components
 {
 
+import com.esri.builder.supportClasses.URLUtil;
+
 import flash.net.URLRequestMethod;
 
 import mx.rpc.events.FaultEvent;
@@ -118,7 +120,7 @@ public class URLInputChecker extends URLInputCheckerBase
 
     override protected function prepareURLChecker(url:String):void
     {
-        urlRequest.url = url;
+        urlRequest.url = URLUtil.ensureValidKeyValuePairs(URLUtil.removeToken(url));
     }
 
     override protected function addURLCheckerListeners():void

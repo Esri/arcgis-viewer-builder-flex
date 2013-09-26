@@ -28,8 +28,10 @@
             import com.esri.ags.tasks.supportClasses.PrintServiceInfo;
             import com.esri.builder.components.serviceBrowser.nodes.GPTaskNode;
             import com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent;
+            import com.esri.builder.model.Model;
             import com.esri.builder.model.RecentlyUsedURLsModel;
             import com.esri.builder.supportClasses.LabelUtil;
+            import com.esri.builder.supportClasses.URLUtil;
             import com.esri.builder.views.BuilderAlert;
 
             import modules.IWidgetModel;
@@ -65,6 +67,7 @@
 
             private function requestServiceInfo():void
             {
+                printTask.url = URLUtil.ensureValidKeyValuePairs(URLUtil.removeToken(printTaskURL));
                 printTask.getServiceInfo(new AsyncResponder(printTask_getServiceInfoCompleteHandler,
                                                             printTask_getServiceInfoFaultHandler));
             }
@@ -188,7 +191,7 @@
             private function hasGPTaskEndPoint():Boolean
             {
                 const endsWithGPServerAndTaskName:RegExp = / \/ GPServer \/ .+ $ /ix;
-                return endsWithGPServerAndTaskName.test(printTaskURL);
+                return endsWithGPServerAndTaskName.test(URLUtil.removeQueryString(printTaskURL));
             }
 
             private function serviceBrowser_selectionChangeHandler(event:ServiceBrowserEvent):void
@@ -213,11 +216,22 @@
             {
                 printModel.defaultFormat = defaultFormatSelection.selectedItem;
             }
+
+            private function updateDPI():void
+            {
+                printModel.dpi = dpiSelection.selectedItem;
+            }
+
+            private function userInputToDPI(input:String):Object
+            {
+                var parsedDPI:Number = parseFloat(input);
+                return isNaN(parsedDPI) ? PrintModel.DEFAULT_DPI : parsedDPI;
+            }
         ]]>
     </fx:Script>
 
     <fx:Declarations>
-        <esri:PrintTask id="printTask" url="{printModel.taskURL}"/>
+        <esri:PrintTask id="printTask"/>
     </fx:Declarations>
 
     <s:states>
@@ -262,11 +276,21 @@
         <graphics:green_check width="20" height="20"
                               layoutDirection="ltr"
                               visible="{hasValidPrintTask}"/>
+
+        <s:CheckBox includeInLayout="{printModel.willUseExportWebMap}"
+                    label="{resourceManager.getString('BuilderStrings', 'configLayerView.useProxy')}"
+                    selected="@{printModel.useProxy}"
+                    visible="{printModel.willUseExportWebMap}"/>
+
+        <s:Group toolTip="{resourceManager.getString('BuilderStrings', 'httpProxyMissing')}" visible="{printModel.useProxy
+                                        &amp;&amp; !Model.instance.proxyURL}">
+            <graphics:warning width="20" height="20"/>
+        </s:Group>
     </s:FormItem>
 
     <s:FormItem excludeFrom="browsingTasks"
                 label="{resourceManager.getString('BuilderStrings', 'print.title')}"
-                toolTip="{resourceManager.getString('BuilderStrings', 'print.titleToolTip')}">
+                toolTip="{resourceManager.getString('BuilderStrings', 'print.titleTooltip')}">
         <s:layout>
             <s:HorizontalLayout/>
         </s:layout>
@@ -281,7 +305,7 @@
 
     <s:FormItem excludeFrom="webPrint,browsingTasks"
                 label="{resourceManager.getString('BuilderStrings', 'print.subtitle')}"
-                toolTip="{resourceManager.getString('BuilderStrings', 'print.subtitleToolTip')}">
+                toolTip="{resourceManager.getString('BuilderStrings', 'print.subtitleTooltip')}">
         <s:TextInput width="400" text="@{printModel.subtitle}"/>
     </s:FormItem>
 
@@ -299,7 +323,7 @@
 
     <s:FormItem excludeFrom="browsingTasks"
                 label="{resourceManager.getString('BuilderStrings', 'print.copyright')}"
-                toolTip="{resourceManager.getString('BuilderStrings', 'print.copyrightToolTip')}">
+                toolTip="{resourceManager.getString('BuilderStrings', 'print.copyrightTooltip')}">
         <s:layout>
             <s:HorizontalLayout/>
         </s:layout>
@@ -350,5 +374,24 @@
                  text="{resourceManager.getString('BuilderStrings', 'print.noLayoutTemplatesAvailable')}"
                  verticalCenter="0"
                  visible="{!hasLayoutTemplateOptions}"/>
+    </s:FormItem>
+
+    <s:FormItem id="dpiInput"
+                excludeFrom="basicPrint,browsingTasks"
+                label="{resourceManager.getString('BuilderStrings', 'print.dpi')}">
+        <s:ComboBox id="dpiSelection"
+                    change="updateDPI()"
+                    labelToItemFunction="userInputToDPI"
+                    openOnInput="false"
+                    requireSelection="true"
+                    restrict="0123456789"
+                    selectedItem="{printModel.dpi}"
+                    verticalCenter="0">
+            <s:ArrayList>
+                <fx:Number>96</fx:Number>
+                <fx:Number>300</fx:Number>
+                <fx:Number>600</fx:Number>
+            </s:ArrayList>
+        </s:ComboBox>
     </s:FormItem>
 </s:Form>

@@ -33,6 +33,7 @@ import mx.rpc.events.FaultEvent;
 import mx.rpc.events.ResultEvent;
 import mx.rpc.http.HTTPService;
 import mx.utils.StringUtil;
+import mx.utils.URLUtil;
 
 public final class SettingsValidator extends EventDispatcher
 {
@@ -55,6 +56,17 @@ public final class SettingsValidator extends EventDispatcher
             }
 
             dispatchValidationFailure(getLocalizedMessage('settings.baseURLRequired'));
+            return;
+        }
+        if (!URLUtil.isHttpURL(settings.webServerURL)
+            && !URLUtil.isHttpsURL(settings.webServerURL))
+        {
+            if (Log.isDebug())
+            {
+                LOG.debug('Invalid URL');
+            }
+
+            dispatchValidationFailure(getLocalizedMessage('settings.invalidURL'));
             return;
         }
         if (!settings.webServerFolder || emptyRE.test(settings.webServerFolder))
@@ -94,7 +106,9 @@ public final class SettingsValidator extends EventDispatcher
 
         if (settings.geometryServiceURL)
         {
-            if (!/^https?:\/\/.+\/GeometryServer$/.test(settings.geometryServiceURL))
+            if (!/^https?:\/\/.+\/GeometryServer$/.test(
+                com.esri.builder.supportClasses.URLUtil.removeQueryString(
+                settings.geometryServiceURL)))
             {
                 if (Log.isDebug())
                 {

@@ -29,11 +29,13 @@
             import com.esri.builder.model.ViewerApp;
 
             import mx.core.FlexGlobals;
-            import mx.managers.PopUpManager;
+            import mx.core.LayoutDirection;
 
-            import spark.events.GridCaretEvent;
+            import spark.components.supportClasses.DropDownController;
+            import spark.events.DropDownEvent;
 
             private var viewerApp:ViewerApp;
+            private var dropDownController:DropDownController;
 
             override public function prepare(hasBeenRecycled:Boolean):void
             {
@@ -69,69 +71,32 @@
 
             private function init():void
             {
-                owner.addEventListener(AppEvent.APP_MENU_OPENED, openedMenuHandler, false, 0, true)
-                owner.addEventListener(GridCaretEvent.CARET_CHANGE, caretChangeHandler, false, 0, true)
+                dropDownController = new DropDownController();
+                dropDownController.openButton = menuButton;
+                dropDownController.dropDown = appItemMenu;
+                dropDownController.addEventListener(DropDownEvent.CLOSE, dropDownChangeHandler, false, 0, true);
+                dropDownController.addEventListener(DropDownEvent.OPEN, dropDownChangeHandler, false, 0, true);
             }
 
-            private function openMenu():void
+            private function dropDownChangeHandler(event:DropDownEvent):void
             {
-                if (appItemMenu.isPopUp)
+                dispatchEvent(new Event("isOpenChanged"));
+                if (event.type == DropDownEvent.OPEN)
                 {
-                    hideMenu();
-                }
-                else
-                {
-                    showMenu();
-                    owner.dispatchEvent(new AppEvent(AppEvent.APP_MENU_OPENED, rowIndex));
-                }
-            }
-
-            private function toggleMenu():void
-            {
-                if (appItemMenu.isPopUp)
-                {
-                    appItemMenu.visible = false;
-                    PopUpManager.removePopUp(appItemMenu);
-                }
-                else
-                {
-                    appItemMenu.visible = true;
-                    PopUpManager.addPopUp(appItemMenu, parent);
+                    updateMenuPosition();
                 }
             }
 
-            protected function openedMenuHandler(event:AppEvent):void
+            private function updateMenuPosition():void
             {
-                var menuOpenerIndex:int = event.data as int;
-                if (menuOpenerIndex != rowIndex)
-                {
-                    hideMenu();
-                }
-            }
-
-            private function hideMenu():void
-            {
-                appItemMenu.visible = false;
-                PopUpManager.removePopUp(appItemMenu);
-            }
-
-            private function showMenu():void
-            {
-                var appDisplay:DisplayObject = (FlexGlobals.topLevelApplication as DisplayObject);
-                PopUpManager.addPopUp(appItemMenu, appDisplay);
-                appItemMenu.visible = true;
-
-                var menuButtonCenterX:Number = menuButton.x + (menuButton.width >> 1);
+                var xOffset:Number = (layoutDirection == LayoutDirection.LTR) ? -appItemMenu.width : 0;
+                var menuButtonCenterX:Number = menuButton.x + (menuButton.width >> 1) + xOffset;
                 var menuButtonCenterY:Number = menuButton.y + (menuButton.height >> 1) + 3;
-                //TODO: better way of handling positioning based on locale
-                if (layoutDirection == 'ltr')
-                {
-                    menuButtonCenterX -= appItemMenu.width;
-                }
                 var menuGlobalButtonCenter:Point = localToGlobal(new Point(menuButtonCenterX, menuButtonCenterY));
                 appItemMenu.x = menuGlobalButtonCenter.x;
                 appItemMenu.y = menuGlobalButtonCenter.y;
 
+                var appDisplay:DisplayObject = FlexGlobals.topLevelApplication as DisplayObject;
                 var menuBottomY:Number = appItemMenu.y + appItemMenu.height;
                 if (menuBottomY > appDisplay.height)
                 {
@@ -139,17 +104,15 @@
                 }
             }
 
-            protected function caretChangeHandler(event:GridCaretEvent):void
-            {
-                if (event.newRowIndex != this.rowIndex)
-                {
-                    hideMenu();
-                }
-            }
-
             private function dispatchApplicationSelected():void
             {
                 AppEvent.dispatch(AppEvent.APP_SELECTED);
+            }
+
+            [Bindable(event="isOpenChanged")]
+            private function get isOpen():Boolean
+            {
+                return dropDownController.isOpen;
             }
         ]]>
     </fx:Script>
@@ -161,10 +124,6 @@
     </s:states>
 
     <fx:Declarations>
-        <views:AppItemMenu id="appItemMenu"
-                           includeInLayout="false"
-                           visible="false"/>
-
         <s:GlowFilter id="glowFilter"
                       blurX="5"
                       blurY="5"
@@ -204,7 +163,10 @@
                           verticalCenter="0"/>
     </s:Group>
 
-    <s:Button id="menuButton"
-              click="openMenu()"
-              skinClass="com.esri.builder.skins.SmallDropDownButtonSkin"/>
+    <s:Button id="menuButton" skinClass="com.esri.builder.skins.SmallDropDownButtonSkin"/>
+
+    <s:PopUpAnchor x="{menuButton.x}" y="{menuButton.y}"
+                   displayPopUp="{isOpen}">
+        <views:AppItemMenu id="appItemMenu"/>
+    </s:PopUpAnchor>
 </s:GridItemRenderer>

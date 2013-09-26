@@ -31,6 +31,7 @@
             import com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent;
             import com.esri.builder.model.Model;
             import com.esri.builder.model.RecentlyUsedURLsModel;
+            import com.esri.builder.supportClasses.URLUtil;
             import com.esri.builder.views.BuilderAlert;
 
             import modules.IWidgetModel;
@@ -136,7 +137,7 @@
             private function hasGPTaskEndPoint():Boolean
             {
                 const endsWithGPServerAndTaskName:RegExp = / \/ GPServer \/ .+ $ /ix;
-                return endsWithGPServerAndTaskName.test(dataExtractModel.dataExtractionService);
+                return endsWithGPServerAndTaskName.test(URLUtil.removeQueryString(dataExtractModel.dataExtractionService));
             }
 
             protected function dataExtractionServiceURLInput_enterHandler(event:SearchInputEvent):void

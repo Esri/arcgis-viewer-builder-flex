@@ -23,9 +23,9 @@ public class GeocodeServerNode extends ServerNode
         super(parent, name, type);
     }
 
-    override public function get displayLabel():String
+    override public function get shorthandType():String
     {
-        return super.displayLabel + " (GS)";
+        return "GS";
     }
 
     override public function get hasChildren():Boolean

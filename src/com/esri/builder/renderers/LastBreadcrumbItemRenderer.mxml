@@ -29,7 +29,7 @@
     </s:layout>
     <s:Label color="0x367DD5"
              maxDisplayedLines="1"
-             maxWidth="400"
+             maxWidth="370"
              showTruncationTip="true"
              styleName="boldText"
              text="{data.label}"/>

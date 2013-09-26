@@ -57,13 +57,13 @@
             public var supportsRelatedRecords:Boolean;
 
             [Bindable]
-            private var showRelatedRecords:Boolean;
+            private var showRelatedRecords:Boolean = true;
             [Bindable]
-            private var showAttachments:Boolean;
+            private var showAttachments:Boolean = true;
 
             private var availableFields:Array;
 
-            public var originalLayerSettings:LayerSettings;
+            public var originalLayerSettings:AttributeTableLayerSettings;
 
             private var _layerDetails:LayerDetails;
 
@@ -134,7 +134,7 @@
                 return false;
             }
 
-            public function overrideLayerSettings(layerSettings:LayerSettings):void
+            public function overrideLayerSettings(layerSettings:AttributeTableLayerSettings):void
             {
                 if (layerSettings)
                 {
@@ -155,6 +155,13 @@
 
                 availableFields = FieldUtil.getValidFields(layerDetails.fields);
                 var originalFieldSettings:Array = originalLayerSettings ? originalLayerSettings.fields : [];
+
+                if (originalLayerSettings)
+                {
+                    showAttachments = originalLayerSettings.showAttachments;
+                    showRelatedRecords = originalLayerSettings.showRelatedRecords;
+                }
+
                 availableFieldSettingsOptions.source =
                     createFieldSettings(availableFields, originalFieldSettings,
                                         layerDetails.version, getEditorTrackingFieldNames(layerDetails));
@@ -253,9 +260,11 @@
 
             private function commitAndClose():void
             {
-                var layerSettings:LayerSettings = new LayerSettings();
+                var layerSettings:AttributeTableLayerSettings = new AttributeTableLayerSettings();
                 layerSettings.name = layerName;
                 layerSettings.fields = getIncludedFieldSettings();
+                layerSettings.showAttachments = supportsAttachments && showAttachments;
+                layerSettings.showRelatedRecords = supportsRelatedRecords && showRelatedRecords;
 
                 close(true, { originalLayerSettings: originalLayerSettings, layerSettings: layerSettings });
             }

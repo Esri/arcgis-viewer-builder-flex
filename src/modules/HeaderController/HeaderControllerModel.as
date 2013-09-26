@@ -51,6 +51,8 @@ public class HeaderControllerModel implements IWidgetModel
     [Bindable]
     public var searchResultTitle:String;
     [Bindable]
+    public var searchResultDescription:String;
+    [Bindable]
     public var locatorURL:String = Model.instance.geocodeURL || DEFAULT_LOCATOR_URL;
     [Bindable]
     public var useProxy:Boolean = false;
@@ -128,10 +130,16 @@ public class HeaderControllerModel implements IWidgetModel
                     prompt = parsedPrompt;
                 }
 
-                const parsedSearchResultTitle:String = geocoderXML.labels.searchresulttitle[0];
+                const parsedSearchResultTitle:String = geocoderXML.result.title[0] || geocoderXML.labels.searchresulttitle[0];
                 if (parsedSearchResultTitle)
                 {
                     searchResultTitle = parsedSearchResultTitle;
+                }
+
+                const parsedSearchResultDescription:String = geocoderXML.result.description[0];
+                if (parsedSearchResultDescription)
+                {
+                    searchResultDescription = parsedSearchResultDescription;
                 }
             }
 
@@ -333,6 +341,21 @@ public class HeaderControllerModel implements IWidgetModel
         {
             geocoderXML.appendChild(<usemapservicesonly>true</usemapservicesonly>);
         }
+        if (searchResultTitle || searchResultDescription)
+        {
+            var resultXML:XML = <result/>;
+
+            if (searchResultTitle)
+            {
+                resultXML.appendChild(<title>{searchResultTitle}</title>);
+            }
+            if (searchResultDescription)
+            {
+                resultXML.appendChild(<description>{searchResultDescription}</description>);
+            }
+
+            geocoderXML.appendChild(resultXML);
+        }
 
         var labelsXML:XML = getLabelsXML();
         if (labelsXML)
@@ -359,10 +382,6 @@ public class HeaderControllerModel implements IWidgetModel
             if (prompt)
             {
                 labelsXML.appendChild(<searchprompt>{prompt}</searchprompt>);
-            }
-            if (searchResultTitle)
-            {
-                labelsXML.appendChild(<searchresulttitle>{searchResultTitle}</searchresulttitle>);
             }
         }
 

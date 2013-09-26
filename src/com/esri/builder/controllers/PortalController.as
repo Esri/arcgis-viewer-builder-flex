@@ -18,12 +18,14 @@ package com.esri.builder.controllers
 
 import com.esri.ags.components.IdentityManager;
 import com.esri.ags.components.supportClasses.Credential;
+import com.esri.ags.events.IdentityManagerEvent;
 import com.esri.ags.events.PortalEvent;
 import com.esri.ags.portal.Portal;
 import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.model.Model;
 import com.esri.builder.model.PortalModel;
 import com.esri.builder.supportClasses.LogUtil;
+import com.esri.builder.supportClasses.URLUtil;
 
 import mx.logging.ILogger;
 import mx.logging.Log;
@@ -42,48 +44,20 @@ public class PortalController
     public function PortalController()
     {
         AppEvent.addListener(AppEvent.SETTINGS_SAVED, settingsChangeHandler);
-        AppEvent.addListener(AppEvent.PORTAL_SIGN_IN, portalSignInHandler);
-        AppEvent.addListener(AppEvent.PORTAL_SIGN_OUT, portalSignOutHandler);
-        AppEvent.addListener(AppEvent.IDENTITY_MANAGER_SIGN_IN_SUCCESS, identityManager_signInSuccessHandler);
-    }
-
-    private function identityManager_signInSuccessHandler(event:AppEvent):void
-    {
-        var credential:Credential = event.data as Credential;
-        if (PortalModel.getInstance().hasSameOrigin(credential.server)
-            && !PortalModel.getInstance().portal.signedIn)
-        {
-            AppEvent.dispatch(AppEvent.PORTAL_SIGN_IN);
-        }
-    }
-
-    private function portalSignOutHandler(event:AppEvent):void
-    {
-        if (Log.isInfo())
-        {
-            LOG.info("Portal sign out requested");
-        }
-
-        portal.addEventListener(PortalEvent.LOAD, portal_loadHandler);
-        portal.addEventListener(FaultEvent.FAULT, portal_faultHandler);
-        portal.signOut();
-    }
-
-    private function portalSignInHandler(event:AppEvent):void
-    {
-        if (Log.isInfo())
-        {
-            LOG.info("Portal sign in requested");
-        }
-
-        portal.addEventListener(PortalEvent.LOAD, portal_loadHandler);
-        portal.addEventListener(FaultEvent.FAULT, portal_faultHandler);
-        portal.signIn();
     }
 
     private function settingsChangeHandler(event:AppEvent):void
     {
-        loadPortal(PortalModel.getInstance().portalURL, Model.instance.cultureCode);
+        //optimization: AGO uses OAuth, so we register the OAuth info upfront
+        var portalModel:PortalModel = PortalModel.getInstance();
+        var portalURL:String = portalModel.portalURL;
+        var cultureCode:String = Model.instance.cultureCode;
+        if (portalModel.isAGO(portalURL))
+        {
+            portalModel.registerOAuthPortal(portalURL, cultureCode);
+        }
+
+        loadPortal(portalURL, cultureCode);
     }
 
     private function loadPortal(url:String, cultureCode:String):void
@@ -111,8 +85,9 @@ public class PortalController
 
                 lastUsedCultureCode = cultureCode;
                 portal.culture = cultureCode;
-                portal.url = url;
+                portal.url = URLUtil.removeToken(url);
 
+                IdentityManager.instance.removeEventListener(IdentityManagerEvent.SIGN_IN, identityManager_signInHandler);
                 portal.addEventListener(PortalEvent.LOAD, portal_loadHandler);
                 portal.addEventListener(FaultEvent.FAULT, portal_faultHandler);
                 portal.load();
@@ -121,19 +96,26 @@ public class PortalController
         else
         {
             unloadPortal();
-            AppEvent.dispatch(AppEvent.PORTAL_STATUS_UPDATED);
+            dispatchPortalStatusUpdate();
         }
     }
 
-    private function unloadPortal():void
+    private function identityManager_signInHandler(event:IdentityManagerEvent):void
     {
-        if (Log.isDebug())
+        if (PortalModel.getInstance().hasSameOrigin(event.credential.server)
+            && !PortalModel.getInstance().portal.signedIn)
         {
-            LOG.debug("Unloading Portal");
+            signIntoPortalInternally();
         }
+    }
 
-        portal.url = null;
-        portal.unload();
+    private function signIntoPortalInternally():void
+    {
+        AppEvent.removeListener(AppEvent.PORTAL_SIGN_IN, portalSignInHandler);
+        IdentityManager.instance.removeEventListener(IdentityManagerEvent.SIGN_IN, identityManager_signInHandler);
+        portal.addEventListener(PortalEvent.LOAD, portal_loadHandler);
+        portal.addEventListener(FaultEvent.FAULT, portal_faultHandler);
+        portal.signIn();
     }
 
     private function portal_loadHandler(event:PortalEvent):void
@@ -147,7 +129,7 @@ public class PortalController
         portal.removeEventListener(PortalEvent.LOAD, portal_loadHandler);
         portal.removeEventListener(FaultEvent.FAULT, portal_faultHandler);
 
-        AppEvent.dispatch(AppEvent.PORTAL_STATUS_UPDATED);
+        dispatchPortalStatusUpdate();
     }
 
     private function portal_faultHandler(event:FaultEvent):void
@@ -175,8 +157,65 @@ public class PortalController
         }
         else
         {
-            AppEvent.dispatch(AppEvent.PORTAL_STATUS_UPDATED);
+            dispatchPortalStatusUpdate();
         }
+    }
+
+    private function unloadPortal():void
+    {
+        if (Log.isDebug())
+        {
+            LOG.debug("Unloading Portal");
+        }
+
+        portal.url = null;
+        portal.unload();
+    }
+
+    private function dispatchPortalStatusUpdate():void
+    {
+        updatePortalHandlersBasedOnStatus();
+        AppEvent.dispatch(AppEvent.PORTAL_STATUS_UPDATED);
+    }
+
+    private function updatePortalHandlersBasedOnStatus():void
+    {
+        if (portal.signedIn)
+        {
+            AppEvent.addListener(AppEvent.PORTAL_SIGN_OUT, portalSignOutHandler);
+            AppEvent.removeListener(AppEvent.PORTAL_SIGN_IN, portalSignInHandler);
+            IdentityManager.instance.removeEventListener(IdentityManagerEvent.SIGN_IN, identityManager_signInHandler);
+        }
+        else
+        {
+            AppEvent.addListener(AppEvent.PORTAL_SIGN_IN, portalSignInHandler);
+            IdentityManager.instance.addEventListener(IdentityManagerEvent.SIGN_IN, identityManager_signInHandler);
+            AppEvent.removeListener(AppEvent.PORTAL_SIGN_OUT, portalSignOutHandler);
+        }
+    }
+
+    private function portalSignOutHandler(event:AppEvent):void
+    {
+        if (Log.isInfo())
+        {
+            LOG.info("Portal sign out requested");
+        }
+
+        AppEvent.removeListener(AppEvent.PORTAL_SIGN_OUT, portalSignOutHandler);
+        IdentityManager.instance.removeEventListener(IdentityManagerEvent.SIGN_IN, identityManager_signInHandler);
+        portal.addEventListener(PortalEvent.LOAD, portal_loadHandler);
+        portal.addEventListener(FaultEvent.FAULT, portal_faultHandler);
+        portal.signOut();
+    }
+
+    private function portalSignInHandler(event:AppEvent):void
+    {
+        if (Log.isInfo())
+        {
+            LOG.info("Portal sign in requested");
+        }
+
+        signIntoPortalInternally();
     }
 }
 }

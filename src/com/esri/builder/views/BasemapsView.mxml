@@ -35,18 +35,18 @@
             import com.esri.builder.model.ConfigLayerStore;
             import com.esri.builder.model.Model;
             import com.esri.builder.model.PortalLayer;
-            import com.esri.builder.model.PortalModel;
             import com.esri.builder.supportClasses.ConfigLayerIconHandler;
             import com.esri.builder.supportClasses.ErrorMessageUtil;
             import com.esri.builder.supportClasses.LogUtil;
+            import com.esri.builder.supportClasses.URLUtil;
             import com.esri.builder.views.supportClasses.LayerSelectionEvent;
 
             import mx.collections.ArrayList;
             import mx.events.FlexEvent;
             import mx.logging.ILogger;
             import mx.logging.Log;
-            import mx.rpc.AsyncResponder;
             import mx.rpc.Fault;
+            import mx.rpc.Responder;
 
             import spark.components.List;
 
@@ -239,8 +239,8 @@
                         jsonTask.url = basemap.serviceURL;
                         jsonTask.requestTimeout = Model.REQUEST_TIMEOUT;
                         jsonTask.showBusyCursor = true;
-                        jsonTask.execute(param, new AsyncResponder(jsonTask_resultHandler, jsonTask_faultHandler, configLayer1));
-                        function jsonTask_resultHandler(resultObject:Object, token:Object = null):void
+                        jsonTask.execute(param, new mx.rpc.Responder(jsonTask_resultHandler, jsonTask_faultHandler));
+                        function jsonTask_resultHandler(resultObject:Object):void
                         {
                             if (Log.isDebug())
                             {
@@ -249,21 +249,21 @@
 
                             if (resultObject.bandCount)
                             {
-                                ConfigLayer(token).type = ConfigLayer.IMAGE;
+                                configLayer1.type = ConfigLayer.IMAGE;
                             }
                             else if (resultObject.singleFusedMapCache)
                             {
-                                ConfigLayer(token).type = ConfigLayer.TILED;
+                                configLayer1.type = ConfigLayer.TILED;
                             }
                             else
                             {
                                 if (pointsToLayer(basemap.serviceURL))
                                 {
-                                    ConfigLayer(token).type = ConfigLayer.FEATURE;
+                                    configLayer1.type = ConfigLayer.FEATURE;
                                 }
                                 else
                                 {
-                                    ConfigLayer(token).type = ConfigLayer.DYNAMIC;
+                                    configLayer1.type = ConfigLayer.DYNAMIC;
                                 }
                             }
 
@@ -276,7 +276,7 @@
                             updateConfigLayerList();
                         }
 
-                        function jsonTask_faultHandler(fault:Fault, token:Object = null):void
+                        function jsonTask_faultHandler(fault:Fault):void
                         {
                             if (fault.faultString != "Sign in aborted")
                             {
@@ -310,6 +310,17 @@
                                 {
                                     if (Log.isDebug())
                                     {
+                                        LOG.debug("Add portal config layer - type: {0}, url: {1}", configLayer1.type, basemap.serviceURL);
+                                    }
+
+                                    configLayer1.url = basemap.serviceURL;
+                                    Model.instance.configBasemapsList.addLayer(configLayer1);
+                                    updateConfigLayerList();
+                                }
+                                else
+                                {
+                                    if (Log.isDebug())
+                                    {
                                         LOG.debug("Fetching feature service item");
                                     }
 
@@ -319,8 +330,8 @@
                                     jsonTask1.url = basemap.serviceURL;
                                     jsonTask1.requestTimeout = Model.REQUEST_TIMEOUT;
                                     jsonTask1.showBusyCursor = true;
-                                    jsonTask1.execute(param1, new AsyncResponder(jsonTask1_resultHandler, jsonTask1_faultHandler));
-                                    function jsonTask1_resultHandler(resultObject:Object, token:Object = null):void
+                                    jsonTask1.execute(param1, new mx.rpc.Responder(jsonTask1_resultHandler, jsonTask1_faultHandler));
+                                    function jsonTask1_resultHandler(resultObject:Object):void
                                     {
                                         if (Log.isDebug())
                                         {
@@ -345,7 +356,7 @@
                                         }
                                     }
 
-                                    function jsonTask1_faultHandler(fault:Fault, token:Object = null):void
+                                    function jsonTask1_faultHandler(fault:Fault):void
                                     {
                                         if (fault.faultString != "Sign in aborted")
                                         {
@@ -367,17 +378,6 @@
                                             }
                                         }
                                     }
-                                }
-                                else
-                                {
-                                    if (Log.isDebug())
-                                    {
-                                        LOG.debug("Add portal config layer - type: {0}, url: {1}", configLayer1.type, basemap.serviceURL);
-                                    }
-
-                                    configLayer1.url = basemap.serviceURL;
-                                    Model.instance.configBasemapsList.addLayer(configLayer1);
-                                    updateConfigLayerList();
                                 }
                             }
                             else
@@ -451,7 +451,7 @@
             private function pointsToLayer(url:String):Boolean
             {
                 var endsWithLayerId:RegExp = /\/[0-9]+$/;
-                return endsWithLayerId.test(url);
+                return endsWithLayerId.test(URLUtil.removeQueryString(url));
             }
 
             private function configureNonEsriBasemap(configLayer:ConfigLayer, basemapType:String):void
@@ -608,15 +608,11 @@
                                    listTitle="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsView.listTitle')}"
                                    noLayerText="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsView.noBasemapSelected')}"/>
 
-        <s:Group toolTip="{PortalModel.getInstance().portal.loaded ?
-                 '' : resourceManager.getString('BuilderStrings', 'agsPortal.requiresPortal')}">
-            <s:CheckBox id="addArcGISBasemapsCheckBox"
-                        change="updateAddArcGISBasemaps()"
-                        enabled="{PortalModel.getInstance().portal.loaded}"
-                        fontSize="14"
-                        label="{resourceManager.getString('BuilderStrings', 'mapsView.addArcGISBasemaps')}"
-                        selected="{Model.instance.config.configMap.addArcGISBasemaps}"
-                        styleName="boldText"/>
-        </s:Group>
+        <s:CheckBox id="addArcGISBasemapsCheckBox"
+                    change="updateAddArcGISBasemaps()"
+                    fontSize="14"
+                    label="{resourceManager.getString('BuilderStrings', 'mapsView.addArcGISBasemaps')}"
+                    selected="{Model.instance.config.configMap.addArcGISBasemaps}"
+                    styleName="boldText"/>
     </s:VGroup>
 </s:Group>

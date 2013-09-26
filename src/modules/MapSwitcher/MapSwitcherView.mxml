@@ -70,9 +70,24 @@
                      text="@{mapSwitcherModel.basemapsLabel}"/>
     </s:FormItem>
 
+    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'mapSwitcher.visibleLayerList')}">
+        <components:SliderToggleButton height="100%"
+                                       deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                       selected="@{mapSwitcherModel.layerListVisible}"
+                                       selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
+    </s:FormItem>
+
+    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'mapSwitcher.layerListLabel')}">
+        <s:TextInput width="100%"
+                     enabled="{mapSwitcherModel.layerListVisible}"
+                     maxChars="30"
+                     text="@{mapSwitcherModel.layerListLabel}"/>
+    </s:FormItem>
+
     <s:FormItem label="{resourceManager.getString('BuilderStrings', 'mapSwitcher.expandLayerItems')}">
         <components:SliderToggleButton height="100%"
                                        deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                       enabled="{mapSwitcherModel.layerListVisible}"
                                        selected="@{mapSwitcherModel.expandLayerItems}"
                                        selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
     </s:FormItem>
@@ -80,6 +95,7 @@
     <s:FormItem label="{resourceManager.getString('BuilderStrings', 'includeLegendItems')}">
         <components:SliderToggleButton height="100%"
                                        deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                       enabled="{mapSwitcherModel.layerListVisible}"
                                        selected="@{mapSwitcherModel.includeLegendItems}"
                                        selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
     </s:FormItem>

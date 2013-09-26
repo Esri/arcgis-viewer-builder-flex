@@ -1,3 +1,6 @@
+Esri welcomes contributions from anyone and everyone. Please see our
+[guidelines for contributing](https://github.com/esri/contributing).
+
 # Contributing to ArcGIS Viewer for Flex Application Builder
 
 There are many ways you can contribute to the [ArcGIS Viewer for Flex Application Builder](http://links.esri.com/flexviewer).
@@ -17,7 +20,7 @@ The [ArcGIS Viewer for Flex Application Builder](http://links.esri.com/flexviewe
 4. Checkout the [develop branch](https://github.com/Esri/arcgis-viewer-builder-flex/tree/develop).
 5. Create a new feature branch on your local machine.
     * The name of the branch doesn't matter, but as a best practice use a descriptive name like "remove-duplicate-time-module-date-formats".
-6. Write code to add an enhancement or fix the problem.  
+6. Write code to add an enhancement or fix the problem.
     * Follow the [coding conventions][1] already used in the Flex Viewer Application Builder source code (spaces instead of tabs, proper indentation, use [Flex Formatter](http://sourceforge.net/projects/flexformatter/files/) along with our [Flex Formatter settings](https://github.com/Esri/arcgis-viewer-flex/blob/develop/FlexFormatter.properties)).
     * Document your code.
     * Make commits of logical units.
@@ -25,9 +28,8 @@ The [ArcGIS Viewer for Flex Application Builder](http://links.esri.com/flexviewe
 7. Test your code.
 
 ### Submitting changes
-1. Read the License section below.
-2. Push the changes in your feature branch to your repo.
-3. Submit a [pull request](https://help.github.com/articles/using-pull-requests) against the "develop" branch.  Submitting a pull request will open a GitHub issue.
+1. Push the changes in your feature branch to your repo.
+2. Submit a [pull request](https://help.github.com/articles/using-pull-requests) against the "develop" branch.  Submitting a pull request will open a GitHub issue.
     * Clearly describe the issue including steps to reproduce; or if an enhancement, indicate the functionality you built.
 
 ## License

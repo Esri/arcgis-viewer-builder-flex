@@ -25,9 +25,9 @@ import com.esri.builder.components.serviceBrowser.nodes.ImageServerNode;
 import com.esri.builder.components.serviceBrowser.nodes.LayerNode;
 import com.esri.builder.components.serviceBrowser.nodes.MapServerNode;
 import com.esri.builder.components.serviceBrowser.nodes.NAServerNode;
+import com.esri.builder.components.serviceBrowser.nodes.RouteLayerNode;
 import com.esri.builder.components.serviceBrowser.nodes.ServerNode;
 import com.esri.builder.components.serviceBrowser.nodes.ServiceDirectoryNode;
-import com.esri.builder.components.serviceBrowser.nodes.RouteLayerNode;
 
 public class ServiceDirectoryNodeCreator
 {

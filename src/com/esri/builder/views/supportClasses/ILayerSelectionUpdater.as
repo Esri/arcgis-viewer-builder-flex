@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2008-2016 Esri. All Rights Reserved.
+// Copyright (c) 2008-2013 Esri. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,19 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////
-package com.esri.builder.components
+package com.esri.builder.views.supportClasses
 {
 
-import com.esri.ags.components.supportClasses.Credential;
-import com.esri.ags.skins.supportClasses.SignInWindow;
-import com.esri.builder.eventbus.AppEvent;
-
-public class SignInWindow extends com.esri.ags.skins.supportClasses.SignInWindow
+public interface ILayerSelectionUpdater
 {
-    override protected function generateCredentialResult(credential:Credential):void
-    {
-        super.generateCredentialResult(credential);
-        AppEvent.dispatch(AppEvent.IDENTITY_MANAGER_SIGN_IN_SUCCESS, credential);
-    }
+    function updateLayerSelection():void;
 }
 }

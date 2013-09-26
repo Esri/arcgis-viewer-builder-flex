@@ -34,6 +34,7 @@
             import com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent;
             import com.esri.builder.model.Model;
             import com.esri.builder.model.RecentlyUsedURLsModel;
+            import com.esri.builder.supportClasses.URLUtil;
             import com.esri.builder.views.BuilderAlert;
 
             import modules.IWidgetModel;
@@ -150,7 +151,8 @@
 
             private function validateLocator():void
             {
-                var locatorMetadataRequest:JSONTask = new JSONTask(locatorURL);
+                var url:String = URLUtil.ensureValidKeyValuePairs(URLUtil.removeToken(locatorURL));
+                var locatorMetadataRequest:JSONTask = new JSONTask(url);
                 var urlVars:URLVariables = new URLVariables();
                 urlVars.f = 'json';
                 locatorMetadataRequest.execute(urlVars, new AsyncResponder(locatorMetadataRequest_resultHandler, locatorMetadataRequest_faultHandler));
@@ -199,7 +201,7 @@
             private function hasGeocodeServerEndPoint():Boolean
             {
                 const endsWithGeocodeServer:RegExp = / \/ GeocodeServer \/? $ /ix;
-                return endsWithGeocodeServer.test(locatorURL);
+                return endsWithGeocodeServer.test(URLUtil.removeQueryString(locatorURL));
             }
 
             protected function linkDataGrid_moveItemDownHandler(event:ModifyItemEvent):void

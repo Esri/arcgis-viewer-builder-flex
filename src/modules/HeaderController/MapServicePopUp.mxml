@@ -35,6 +35,7 @@
             import com.esri.builder.eventbus.AppEvent;
             import com.esri.builder.model.RecentlyUsedURLsModel;
             import com.esri.builder.supportClasses.FieldUtil;
+            import com.esri.builder.supportClasses.URLUtil;
 
             import mx.collections.ArrayList;
             import mx.events.CollectionEvent;
@@ -113,12 +114,12 @@
             private function hasMapServerEndPoint():Boolean
             {
                 const endsWithMapServer:RegExp = / \/ MapServer \/? $ /ix;
-                return endsWithMapServer.test(mapServiceURL);
+                return endsWithMapServer.test(URLUtil.removeQueryString(mapServiceURL));
             }
 
             private function getAllDetails():void
             {
-                var detailsTask:DetailsTask = new DetailsTask(mapServiceURL);
+                var detailsTask:DetailsTask = new DetailsTask(URLUtil.removeToken(mapServiceURL));
                 detailsTask.getAllDetails(
                     new AsyncResponder(detailsTask_getAllDetailsResultHandler,
                                        detailsTask_getAllDetailsFaultHandler));

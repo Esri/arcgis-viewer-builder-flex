@@ -25,6 +25,7 @@
             import com.esri.builder.components.ServiceBrowser;
             import com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent;
             import com.esri.builder.views.supportClasses.IIncludeLayerDispatcher;
+            import com.esri.builder.views.supportClasses.ILayerSelectionUpdater;
 
             import mx.collections.ArrayList;
 
@@ -62,7 +63,7 @@
             {
                 if (owner)
                 {
-                    (owner as IIncludeLayerDispatcher).updateLayerSelection();
+                    (owner as ILayerSelectionUpdater).updateLayerSelection();
                 }
             }
 

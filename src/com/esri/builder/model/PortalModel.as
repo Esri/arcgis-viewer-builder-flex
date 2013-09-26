@@ -18,6 +18,7 @@ package com.esri.builder.model
 
 import com.esri.ags.components.IdentityManager;
 import com.esri.ags.components.supportClasses.Credential;
+import com.esri.ags.components.supportClasses.OAuthInfo;
 import com.esri.ags.portal.Portal;
 import com.esri.builder.supportClasses.PortalUtil;
 import com.esri.builder.supportClasses.URLUtil;
@@ -36,6 +37,8 @@ public class PortalModel extends EventDispatcher
     //--------------------------------------------------------------------------
 
     public static const DEFAULT_PORTAL_URL:String = "https://www.arcgis.com/";
+
+    private static const BUILDER_APP_ID:String = "flexappbuilder";
 
     private static var instance:PortalModel;
 
@@ -59,17 +62,16 @@ public class PortalModel extends EventDispatcher
     {
         var cleanURL:String = url;
         cleanURL = StringUtil.trim(cleanURL);
-        cleanURL = replacePreviousDefaultPortalURL(cleanURL);
+        cleanURL = ensureHTTPSOnArcGISDomains(cleanURL);
         cleanURL = cleanURL.replace(/\/sharing\/content\/items\/?$/i, '');
         cleanURL = URLUtil.ensureTrailingForwardSlash(cleanURL);
         cleanURL = URLUtil.encode(cleanURL);
         return cleanURL;
     }
 
-    private function replacePreviousDefaultPortalURL(url:String):String
+    private function ensureHTTPSOnArcGISDomains(url:String):String
     {
-        const previousDefaultPortalURL:String = "http://www.arcgis.com/";
-        return url.replace(previousDefaultPortalURL, DEFAULT_PORTAL_URL);
+        return isAGO(url) ? mx.utils.URLUtil.replaceProtocol(url, "https") : url;
     }
 
     public function canSignOut():Boolean
@@ -89,6 +91,27 @@ public class PortalModel extends EventDispatcher
         var portalServerNameWithPort:String = mx.utils.URLUtil.getServerNameWithPort(portalURL);
 
         return (serverURLServerNameWithPort == portalServerNameWithPort);
+    }
+
+    public function registerOAuthPortal(url:String, cultureCode:String):void
+    {
+        var oAuthInfo:OAuthInfo = IdentityManager.instance.findOAuthInfo(url);
+        if (oAuthInfo)
+        {
+            oAuthInfo.locale = cultureCode;
+        }
+        else
+        {
+            oAuthInfo = new OAuthInfo(BUILDER_APP_ID);
+            oAuthInfo.portalURL = url;
+            IdentityManager.instance.registerOAuthInfos([ oAuthInfo ]);
+        }
+    }
+
+    public function isAGO(url:String):Boolean
+    {
+        const isAGO:RegExp = /^https?:\/\/.*arcgis\.com/gi;
+        return isAGO.test(url);
     }
 
     //--------------------------------------------------------------------------

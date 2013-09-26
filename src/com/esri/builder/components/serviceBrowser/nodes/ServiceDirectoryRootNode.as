@@ -27,10 +27,16 @@ public class ServiceDirectoryRootNode extends FolderNode
     {
         this.nodeFilter = nodeFilter;
 
+        var queryDelimiterIndex:int = servicesDirectoryRootURL.indexOf("?");
+        if (queryDelimiterIndex > -1)
+        {
+            queryString = servicesDirectoryRootURL.substr(queryDelimiterIndex);
+            servicesDirectoryRootURL = servicesDirectoryRootURL.substr(0, queryDelimiterIndex);
+        }
+
         const endsWithRestServices:RegExp = /(.+\/rest\/services)\/?(.*)/;
         const servicesRootAndTrailingPaths:Array = endsWithRestServices.exec(servicesDirectoryRootURL);
 
-        var servicesDirectoryRootURL:String;
         if (servicesRootAndTrailingPaths)
         {
             //ignore index 0 as it contains full url
@@ -50,7 +56,7 @@ public class ServiceDirectoryRootNode extends FolderNode
             .split("?");
     }
 
-    override public function get url():String
+    override public function get baseURL():String
     {
         return name;
     }

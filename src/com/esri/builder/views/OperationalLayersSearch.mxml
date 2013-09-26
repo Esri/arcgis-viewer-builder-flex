@@ -20,7 +20,8 @@
          xmlns:s="library://ns.adobe.com/flex/spark"
          xmlns:views="com.esri.builder.views.*"
          creationComplete="init()"
-         implements="com.esri.builder.views.supportClasses.IIncludeLayerDispatcher">
+         implements="com.esri.builder.views.supportClasses.IIncludeLayerDispatcher,
+                     com.esri.builder.views.supportClasses.ILayerSelectionUpdater">
     <fx:Script>
         <![CDATA[
             import com.esri.ags.portal.Portal;

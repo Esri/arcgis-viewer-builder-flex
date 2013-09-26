@@ -29,6 +29,7 @@
             import com.esri.builder.components.serviceBrowser.supportClasses.ServiceBrowserEvent;
             import com.esri.builder.model.Model;
             import com.esri.builder.model.RecentlyUsedURLsModel;
+            import com.esri.builder.supportClasses.URLUtil;
 
             import modules.IWidgetModel;
 
@@ -100,7 +101,7 @@
             private function hasGeocodeServerEndPoint():Boolean
             {
                 const endsWithGeocodeServer:RegExp = / \/ GeocodeServer \/? $ /ix;
-                return endsWithGeocodeServer.test(locateModel.locator);
+                return endsWithGeocodeServer.test(URLUtil.removeQueryString(locateModel.locator));
             }
         ]]>
     </fx:Script>

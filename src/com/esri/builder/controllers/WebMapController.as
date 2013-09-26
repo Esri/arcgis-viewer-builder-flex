@@ -290,6 +290,10 @@ public final class WebMapController
             queryParams.ofType(PortalItem.TYPE_WEB_MAP).withSortField("name").withLimit(ITEMS_QUERY_LIMIT);
             responder.token = portalGroup.queryItems(queryParams, new AsyncResponder(groupItems_resultHandler, portal_faultHandler, responder));
         }
+        else
+        {
+            Model.instance.webmapState = 'nomatch';
+        }
     }
 
     private function groupItems_resultHandler(queryResult:PortalQueryResult, responder:CallResponder):void

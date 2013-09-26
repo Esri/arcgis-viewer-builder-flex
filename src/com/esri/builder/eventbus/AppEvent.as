@@ -92,7 +92,6 @@ public class AppEvent extends Event
     public static const UPGRADE_APP:String = "UPGRADE_APP";
     public static const UPGRADE_APP_COMPLETE:String = "UPGRADE_APP_COMPLETE";
     public static const UPGRADE_APP_FAILED:String = "UPGRADE_APP_FAILED";
-    public static const APP_MENU_OPENED:String = "APP_MENU_OPENED";
     public static const APP_STATE_CHANGED:String = "APP_STATE_CHANGED";
     public static const BREADCRUMB_SELECTED:String = "BREADCRUMB_SELECTED";
     public static const PREVIEW_APP_IN_BROWSER_SELECTED:String = "PREVIEW_APP_IN_BROWSER_SELECTED";
@@ -122,7 +121,6 @@ public class AppEvent extends Event
     public static const REMOVE_CUSTOM_WIDGET:String = "REMOVE_CUSTOM_WIDGET";
     public static const REMOVE_CUSTOM_WIDGET_SUCCESS:String = "REMOVE_CUSTOM_WIDGET_SUCCESS";
     public static const REMOVE_CUSTOM_WIDGET_FAILURE:String = "REMOVE_CUSTOM_WIDGET_FAILURE";
-    public static const IDENTITY_MANAGER_SIGN_IN_SUCCESS:String = "IDENTITY_MANAGER_SIGN_IN_SUCCESS";
 
     //--------------------------------------------------------------------------
     //

@@ -13,11 +13,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////
-package com.esri.builder.views.supportClasses
+package com.esri.builder.model
 {
 
-public interface IIncludeLayerDispatcher
+[Bindable]
+public class Locale
 {
-    function dispatchIncludeLayer():void;
+    private var _id:String;
+
+    public function get id():String
+    {
+        return _id;
+    }
+
+    private var _label:String;
+
+    public function get label():String
+    {
+        return _label;
+    }
+
+    public function Locale(id:String, label:String)
+    {
+        _id = id;
+        _label = label;
+    }
 }
 }

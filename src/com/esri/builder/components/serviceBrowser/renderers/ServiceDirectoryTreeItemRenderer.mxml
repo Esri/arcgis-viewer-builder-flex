@@ -16,9 +16,7 @@
   // limitations under the License.
   ////////////////////////////////////////////////////////////////
 -->
-<s:MXTreeItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
-                      xmlns:s="library://ns.adobe.com/flex/spark"
-                      xmlns:mx="library://ns.adobe.com/flex/mx">
+<s:MXTreeItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark">
     <fx:Script>
         <![CDATA[
             import com.esri.builder.components.serviceBrowser.nodes.EmptyNode;

@@ -18,9 +18,8 @@
 -->
 <s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
           xmlns:s="library://ns.adobe.com/flex/spark"
-          xmlns:mx="library://ns.adobe.com/flex/mx"
           add="this_addHandler(event)"
-          currentState="normal">
+          currentState="canSignIn">
     <fx:Script>
         <![CDATA[
             import com.esri.ags.portal.Portal;
@@ -54,21 +53,14 @@
 
             private function changeStateBasedOnPortal():void
             {
-                if (portal.loaded)
+                if (portal.user)
                 {
-                    if (portal.user)
-                    {
-                        currentState = PortalModel.getInstance().canSignOut() ?
-                            "signedIntoPortal" : "signedIntoPortalFixed";
-                    }
-                    else
-                    {
-                        currentState = "normal";
-                    }
+                    currentState = PortalModel.getInstance().canSignOut() ?
+                        "signedIntoPortal" : "signedIntoPortalFixed";
                 }
                 else
                 {
-                    currentState = "portalNotLoaded";
+                    currentState = portal.url ? "canSignIn" : "canNotSignIn";
                 }
             }
 
@@ -133,8 +125,8 @@
     </fx:Script>
 
     <s:states>
-        <s:State name="normal"/>
-        <s:State name="portalNotLoaded"/>
+        <s:State name="canSignIn"/>
+        <s:State name="canNotSignIn"/>
         <s:State name="signedIntoPortal"/>
         <s:State name="signedIntoPortalFixed"/>
     </s:states>
@@ -159,17 +151,17 @@
                                                      [ portal.info.portalName ])}"/>
     </s:HGroup>
 
-    <s:Group excludeFrom="signedIntoPortal, signedIntoPortalFixed" toolTip.portalNotLoaded="{resourceManager.getString('BuilderStrings',
+    <s:Group excludeFrom="signedIntoPortal, signedIntoPortalFixed" toolTip.canNotSignIn="{resourceManager.getString('BuilderStrings',
              'agsPortal.requiresPortal')}">
-        <s:Label alpha.portalNotLoaded="0.5"
+        <s:Label alpha.canNotSignIn="0.5"
                  buttonMode="true"
-                 buttonMode.portalNotLoaded="false"
-                 click.normal="signIn_clickHandler(event)"
+                 buttonMode.canNotSignIn="false"
+                 click.canSignIn="signIn_clickHandler(event)"
                  color="0x367AD5"
-                 color.portalNotLoaded="0x666666"
+                 color.canNotSignIn="0x666666"
                  text="{resourceManager.getString('BuilderStrings', 'homeView.portalSignIn')}"
                  textDecoration="underline"
-                 textDecoration.portalNotLoaded="none"
+                 textDecoration.canNotSignIn="none"
                  toolTip="{resourceManager.getString('BuilderStrings',
                                                  'homeView.portalSignInTooltip', 
                                                  [ portal.info.portalName ])}"/>

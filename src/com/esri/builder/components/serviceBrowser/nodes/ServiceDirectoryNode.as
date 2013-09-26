@@ -16,11 +16,11 @@
 package com.esri.builder.components.serviceBrowser.nodes
 {
 
-import com.esri.builder.supportClasses.URLUtil;
 import com.esri.builder.components.serviceBrowser.filters.INodeFilter;
 import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryNodeFetchEvent;
 import com.esri.builder.components.serviceBrowser.supportClasses.ServiceDirectoryNodeFetcher;
 import com.esri.builder.components.serviceBrowser.supportClasses.URLNodeTraversalEvent;
+import com.esri.builder.supportClasses.URLUtil;
 
 import flash.events.Event;
 import flash.events.EventDispatcher;
@@ -88,7 +88,18 @@ public class ServiceDirectoryNode extends EventDispatcher implements ILazyLoadNo
 
     public function get url():String
     {
-        return parent.url + '/' + name;
+        return baseURL + getTopMostParent().queryString;
+    }
+
+    //TODO: improve internal/public field access
+    public function get internalURL():String
+    {
+        return baseURL + getTopMostParent().safeQueryString;
+    }
+
+    public function get baseURL():String
+    {
+        return parent.baseURL + '/' + name;
     }
 
     public function get isBranch():Boolean
@@ -125,6 +136,25 @@ public class ServiceDirectoryNode extends EventDispatcher implements ILazyLoadNo
         _token = value;
     }
 
+    private var _queryString:String;
+    private var _safeQueryString:String;
+
+    public function get safeQueryString():String
+    {
+        return _safeQueryString ||= "";
+    }
+
+    public function get queryString():String
+    {
+        return _queryString ||= "";
+    }
+
+    public function set queryString(value:String):void
+    {
+        _queryString = value;
+        _safeQueryString = URLUtil.removeToken(value);
+    }
+
     public function ServiceDirectoryNode(parent:ServiceDirectoryNode, name:String)
     {
         _name = URLUtil.encode(name);
@@ -157,7 +187,7 @@ public class ServiceDirectoryNode extends EventDispatcher implements ILazyLoadNo
         nodeFetcher.addEventListener(ServiceDirectoryNodeFetchEvent.NODE_FETCH_COMPLETE, nodeFetcher_nodeFetchCompleteHandler);
         nodeFetcher.addEventListener(FaultEvent.FAULT, nodeFetcher_faultHandler);
         nodeFetcher.token = token;
-        nodeFetcher.fetch(url, nodeFilter, this);
+        nodeFetcher.fetch(internalURL, nodeFilter, this);
     }
 
     protected function nodeFetcher_nodeFetchCompleteHandler(event:ServiceDirectoryNodeFetchEvent):void
@@ -256,6 +286,20 @@ public class ServiceDirectoryNode extends EventDispatcher implements ILazyLoadNo
     protected function processNodeFetchFault(fault:Fault):void
     {
         //hook
+    }
+
+    public function getTopMostParent():ServiceDirectoryNode
+    {
+        var currentParent:ServiceDirectoryNode = this;
+        var topMostParent:ServiceDirectoryNode;
+
+        while (currentParent)
+        {
+            topMostParent = currentParent;
+            currentParent = currentParent.parent;
+        }
+
+        return topMostParent;
     }
 }
 }

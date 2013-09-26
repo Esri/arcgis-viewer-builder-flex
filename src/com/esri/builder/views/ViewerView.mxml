@@ -27,11 +27,11 @@
     <fx:Script>
         <![CDATA[
             import com.esri.ags.portal.Portal;
-            import com.esri.builder.supportClasses.URLUtil;
             import com.esri.builder.eventbus.AppEvent;
             import com.esri.builder.model.Model;
             import com.esri.builder.model.PortalModel;
             import com.esri.builder.supportClasses.LogUtil;
+            import com.esri.builder.supportClasses.URLUtil;
             import com.esri.builder.views.supportClasses.TutorialPopUpHandler;
 
             import mx.events.FlexEvent;
@@ -40,8 +40,6 @@
             import mx.utils.StringUtil;
 
             import spark.events.IndexChangeEvent;
-
-            private const OPAQUE_WMODE:String = "wmode=opaque";
 
             private const LOG:ILogger = LogUtil.createLogger(ViewerView);
 
@@ -165,24 +163,21 @@
 
                 const designTabSelected:Boolean = (currentSelectedTabIndex == 3);
                 const previewTabSelected:Boolean = (currentSelectedTabIndex == 4);
-                const wasViewerLoadedWithOpaqueWMode:Boolean = (html.location && html.location.indexOf(OPAQUE_WMODE) > -1);
                 //prevent loading Viewer only if using private web map
                 const isDesignReloadApplicable:Boolean = !Model.instance.webmap
                     || (Model.instance.webmap && Model.instance.webmap.access == "public");
 
-                if (designTabSelected
-                    && isDesignReloadApplicable
-                    && (hasToReloadViewerDueToConfigChange || !wasViewerLoadedWithOpaqueWMode))
+                if (designTabSelected && isDesignReloadApplicable
+                    && hasToReloadViewerDueToConfigChange)
                 {
                     if (Log.isDebug())
                     {
                         LOG.debug("Reload Design Viewer");
                     }
                     hasToReloadViewerDueToConfigChange = false;
-                    loadViewer(OPAQUE_WMODE);
+                    loadViewer();
                 }
-                else if (previewTabSelected
-                    && (hasToReloadViewerDueToConfigChange || wasViewerLoadedWithOpaqueWMode))
+                else if (previewTabSelected && hasToReloadViewerDueToConfigChange)
                 {
                     if (Log.isDebug())
                     {
@@ -304,6 +299,7 @@
             {
                 html.cancelLoad();
 
+                additionalURLParams.push("wmode=opaque");
                 additionalURLParams.push('builder=true');
 
                 const viewerIndexLocation:String =

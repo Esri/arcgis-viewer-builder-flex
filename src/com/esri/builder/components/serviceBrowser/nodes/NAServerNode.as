@@ -23,9 +23,9 @@ public class NAServerNode extends ServerNode
         super(parent, name, type);
     }
 
-    override public function get displayLabel():String
+    override public function get shorthandType():String
     {
-        return super.displayLabel + " (NA)";
+        return "NA";
     }
 }
 }

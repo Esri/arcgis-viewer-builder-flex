@@ -34,6 +34,7 @@
             import com.esri.builder.model.Model;
             import com.esri.builder.supportClasses.URLUtil;
             import com.esri.builder.views.supportClasses.IIncludeLayerDispatcher;
+            import com.esri.builder.views.supportClasses.ILayerSelectionUpdater;
 
             import mx.events.FlexEvent;
             import mx.managers.CursorManager;
@@ -169,14 +170,26 @@
 
             private function assimilateWMSLayer(wmsLayer:WMSLayer, configLayer:ConfigLayer):void
             {
-                var visibleLayerNames:Array = [];
-                for each (var info:WMSLayerInfo in wmsLayer.layerInfos)
-                {
-                    visibleLayerNames.push(info.name);
-                }
-
                 configLayer.label = wmsLayer.title ? wmsLayer.title : findAppropriateLabel(wmsLayer.url);
-                configLayer.visibleLayers = visibleLayerNames.join();
+                configLayer.visibleLayers = extractVisibleLayerNames(wmsLayer.layerInfos).join();
+            }
+
+            private function extractVisibleLayerNames(layerInfos:Array):Array
+            {
+                var visibleLayerNames:Array = [];
+                for each (var info:WMSLayerInfo in layerInfos)
+                {
+                    if (info.name)
+                    {
+                        visibleLayerNames.push(info.name);
+                    }
+
+                    if (info.subLayers)
+                    {
+                        visibleLayerNames = visibleLayerNames.concat(extractVisibleLayerNames(info.subLayers));
+                    }
+                }
+                return visibleLayerNames;
             }
 
             private function assimilateWMTSLayer(wmtsLayer:WMTSLayer, configLayer:ConfigLayer):void
@@ -196,7 +209,7 @@
             private function findAppropriateLabel(url:String):String
             {
                 const labelToken:RegExp = /( [^\/.]+ ) (?: \.[a-zA-Z0-9]+ )? $/x;
-                const labelMatches:Array = labelToken.exec(url);
+                const labelMatches:Array = labelToken.exec(URLUtil.removeQueryString(url));
                 return (labelMatches && labelMatches.length > 0) ? labelMatches[1] : url;
             }
 
@@ -288,7 +301,7 @@
 
             private function dispatchUpdateLayerSelection():void
             {
-                (owner as IIncludeLayerDispatcher).updateLayerSelection();
+                (owner as ILayerSelectionUpdater).updateLayerSelection();
             }
 
             protected function this_creationCompleteHandler(event:FlexEvent):void
