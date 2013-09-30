@@ -16,6 +16,8 @@
 package com.esri.builder.supportClasses
 {
 
+import com.esri.builder.logging.SimpleLogDecorator;
+
 import flash.utils.getQualifiedClassName;
 
 import mx.logging.ILogger;
@@ -31,7 +33,7 @@ public class LogUtil
         }
 
         var qualifiedClassName:String = getQualifiedClassName(classToLog);
-        return Log.getLogger(qualifiedClassName.replace('::', '.'));
+        return new SimpleLogDecorator(Log.getLogger(qualifiedClassName.replace('::', '.')));
     }
 }
 }

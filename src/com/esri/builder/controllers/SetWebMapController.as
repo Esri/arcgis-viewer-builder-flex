@@ -34,7 +34,6 @@ import com.esri.builder.supportClasses.LogUtil;
 
 import mx.controls.Alert;
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.managers.CursorManager;
 import mx.resources.IResourceManager;
 import mx.resources.ResourceManager;
@@ -69,10 +68,7 @@ public final class SetWebMapController
     {
         var webmap:PortalItem = event.data as PortalItem;
 
-        if (Log.isInfo())
-        {
-            LOG.info('Setting web map to id {0}', webmap.id);
-        }
+        LOG.info('Setting web map to id {0}', webmap.id);
 
         // Check if the basemap has a bing key before selecting it as the selected webmap.
         webMapUtil.createMapById(webmap.id, new AsyncResponder(bingKeyCheck_resultHandler,
@@ -136,10 +132,7 @@ public final class SetWebMapController
 
     private function setWebMap(webmap:PortalItem, map:Map):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info('Setting web map to id {0}', webmap.id);
-        }
+        LOG.info('Setting web map to id {0}', webmap.id);
 
         Model.instance.config.isDirty = true;
         Model.instance.webmap = webmap;
@@ -164,10 +157,7 @@ public final class SetWebMapController
 
     private function setWebMapConfigLayers(id:String):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug('Creating config layers for web map: {0}', id);
-        }
+        LOG.debug('Creating config layers for web map: {0}', id);
 
         Model.instance.webMapConfigBasemapList.removeAllLayers();
         Model.instance.webMapConfigOpLayerList.removeAllLayers();
@@ -179,10 +169,7 @@ public final class SetWebMapController
 
     private function webMapUtil_createMapByIDHandler(event:WebMapEvent):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug('Create map by ID success');
-        }
+        LOG.debug('Create map by ID success');
 
         webMapUtil.removeEventListener(WebMapEvent.CREATE_MAP_BY_ID_COMPLETE, webMapUtil_createMapByIDHandler);
         webMapUtil.removeEventListener(FaultEvent.FAULT, webMapUtil_faultHandler);
@@ -198,20 +185,14 @@ public final class SetWebMapController
             isOpLayer = layer.id.indexOf("base") != 0;
             if (isOpLayer)
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug('Storing basemap config layer');
-                }
+                LOG.debug('Storing basemap config layer');
 
                 Model.instance.webMapConfigOpLayerList.addLayer(
                     ConfigLayer.operationalConfigLayerFromLayer(layer, layer.name));
             }
             else
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug('Storing operational config layer');
-                }
+                LOG.debug('Storing operational config layer');
 
                 Model.instance.webMapConfigBasemapList.addLayer(
                     ConfigLayer.basemapConfigLayerFromLayer(layer, layer.name));
@@ -221,10 +202,7 @@ public final class SetWebMapController
 
     private function webMapUtil_faultHandler(event:FaultEvent):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug('Create map by ID fault');
-        }
+        LOG.debug('Create map by ID fault');
 
         webMapUtil.removeEventListener(WebMapEvent.CREATE_MAP_BY_ID_COMPLETE, webMapUtil_createMapByIDHandler);
         webMapUtil.removeEventListener(FaultEvent.FAULT, webMapUtil_faultHandler);
@@ -235,10 +213,7 @@ public final class SetWebMapController
         const itemId:String = Model.instance.config.configMap.itemId;
         if (itemId)
         {
-            if (Log.isInfo())
-            {
-                LOG.info('Loading web map: {0}', itemId);
-            }
+            LOG.info('Loading web map: {0}', itemId);
 
             var portal:Portal = PortalModel.getInstance().portal;
 
@@ -255,10 +230,7 @@ public final class SetWebMapController
 
             function resultHandler(portalItem:PortalItem, token:Object = null):void
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug("Web map item fetch success");
-                }
+                LOG.debug("Web map item fetch success");
 
                 if (portal.user) // always show my content first when logged in
                 {
@@ -272,20 +244,14 @@ public final class SetWebMapController
 
             function faultHandler(fault:Fault, token:Object = null):void
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug("Web map item fetch fault");
-                }
+                LOG.debug("Web map item fetch fault");
 
                 Model.instance.webmap = null;
                 Model.instance.webMapConfigBasemapList.removeAllLayers();
                 Model.instance.webMapConfigOpLayerList.removeAllLayers();
 
-                if (Log.isError())
-                {
-                    LOG.error(ResourceManager.getInstance().getString('BuilderStrings', 'setWebMap.couldNotLoadWebMap',
-                                                                      [ fault.toString()]));
-                }
+                LOG.error(ResourceManager.getInstance().getString('BuilderStrings', 'setWebMap.couldNotLoadWebMap',
+                                                                  [ fault.toString()]));
 
                 AppEvent.dispatch(AppEvent.SHOW_ERROR,
                                   ResourceManager.getInstance().getString('BuilderStrings',

@@ -33,7 +33,6 @@ import modules.supportClasses.CustomXMLModule;
 import mx.core.FlexGlobals;
 import mx.events.ModuleEvent;
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.modules.IModuleInfo;
 import mx.modules.ModuleManager;
 
@@ -90,19 +89,13 @@ public class WidgetTypeLoader extends EventDispatcher
 
     private function loadModule():void
     {
-        if (Log.isInfo())
-        {
-            LOG.info('Loading SWF module: {0}', swf.url);
-        }
+        LOG.info('Loading SWF module: {0}', swf.url);
 
         moduleInfo = ModuleManager.getModule(swf.url);
 
         if (moduleInfo.ready)
         {
-            if (Log.isInfo())
-            {
-                LOG.info('Unloading module: {0}', swf.url);
-            }
+            LOG.info('Unloading module: {0}', swf.url);
 
             moduleInfo.addEventListener(ModuleEvent.UNLOAD, moduleInfo_unloadHandler);
             moduleInfo.release();
@@ -110,10 +103,7 @@ public class WidgetTypeLoader extends EventDispatcher
         }
         else
         {
-            if (Log.isInfo())
-            {
-                LOG.info('Loading module: {0}', swf.url);
-            }
+            LOG.info('Loading module: {0}', swf.url);
 
             var fileBytes:ByteArray = new ByteArray();
             var fileStream:FileStream = new FileStream();
@@ -130,10 +120,7 @@ public class WidgetTypeLoader extends EventDispatcher
 
     private function moduleInfo_unloadHandler(event:ModuleEvent):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info('Module unloaded: {0}', swf.url);
-        }
+        LOG.info('Module unloaded: {0}', swf.url);
 
         var moduleInfo:IModuleInfo = event.module;
         moduleInfo.removeEventListener(ModuleEvent.UNLOAD, moduleInfo_unloadHandler);
@@ -159,27 +146,18 @@ public class WidgetTypeLoader extends EventDispatcher
 
     private function processModuleInfo(moduleInfo:IModuleInfo):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info('Module loaded: {0}', swf.url);
-        }
+        LOG.info('Module loaded: {0}', swf.url);
 
         if (config && config.exists)
         {
-            if (Log.isInfo())
-            {
-                LOG.info('Reading module config: {0}', config.url);
-            }
+            LOG.info('Reading module config: {0}', config.url);
             var moduleConfig:XML = readModuleConfig(config);
         }
 
         const builderModule:IBuilderModule = moduleInfo.factory.create() as IBuilderModule;
         if (builderModule)
         {
-            if (Log.isInfo())
-            {
-                LOG.info('Widget type created for module: {0}', swf.url);
-            }
+            LOG.info('Widget type created for module: {0}', swf.url);
             var widgetType:WidgetType = getWidgetType(moduleInfo, builderModule, moduleConfig);
         }
 
@@ -205,10 +183,7 @@ public class WidgetTypeLoader extends EventDispatcher
 
     private function dispatchComplete(widgetType:WidgetType):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info('Module load complete: {0}', name);
-        }
+        LOG.info('Module load complete: {0}', name);
 
         dispatchEvent(new WidgetTypeLoaderEvent(WidgetTypeLoaderEvent.LOAD_COMPLETE, widgetType));
     }
@@ -224,20 +199,14 @@ public class WidgetTypeLoader extends EventDispatcher
 
     private function dispatchError():void
     {
-        if (Log.isInfo())
-        {
-            LOG.info('Module load failed: {0}', name);
-        }
+        LOG.info('Module load failed: {0}', name);
 
         dispatchEvent(new WidgetTypeLoaderEvent(WidgetTypeLoaderEvent.LOAD_ERROR));
     }
 
     private function loadConfigModule():void
     {
-        if (Log.isInfo())
-        {
-            LOG.info('Loading XML module: {0}', config.url);
-        }
+        LOG.info('Loading XML module: {0}', config.url);
 
         var moduleConfig:XML = readModuleConfig(config);
         if (moduleConfig)
@@ -266,10 +235,7 @@ public class WidgetTypeLoader extends EventDispatcher
         catch (e:Error)
         {
             //ignore
-            if (Log.isInfo())
-            {
-                LOG.info('Could not read module config: {0}', e.toString());
-            }
+            LOG.info('Could not read module config: {0}', e.toString());
         }
         finally
         {
@@ -281,10 +247,7 @@ public class WidgetTypeLoader extends EventDispatcher
 
     private function parseCustomWidgetType(configXML:XML):CustomWidgetType
     {
-        if (Log.isInfo())
-        {
-            LOG.info('Creating widget type from XML: {0}', configXML);
-        }
+        LOG.info('Creating widget type from XML: {0}', configXML);
 
         var customModule:CustomXMLModule = new CustomXMLModule();
         customModule.widgetName = configXML.name;

@@ -19,15 +19,15 @@ package com.esri.builder.controllers
 import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.model.Model;
 import com.esri.builder.model.ViewerApp;
+import com.esri.builder.supportClasses.LogUtil;
 import com.esri.builder.views.BuilderAlert;
 
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.resources.ResourceManager;
 
 public class EditAppController
 {
-    private const LOG:ILogger = Log.getLogger('com.esri.builder.controllers.EditAppController');
+    private const LOG:ILogger = LogUtil.createLogger(EditAppController);
 
     public var loadWidgetConfigurations:LoadWidgetConfigurations;
 
@@ -43,10 +43,7 @@ public class EditAppController
 
     private function editApp(viewerApp:ViewerApp):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info('loading viewer application from {0}', viewerApp.directory.nativePath);
-        }
+        LOG.info('loading viewer application from {0}', viewerApp.directory.nativePath);
 
         Model.instance.appDir = viewerApp.directory;
         Model.instance.appName = viewerApp.directory.name;

@@ -27,7 +27,6 @@ import com.esri.builder.views.BuilderAlert;
 import flash.net.SharedObject;
 
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.resources.ResourceManager;
 
 public final class SaveSettingsController
@@ -77,10 +76,7 @@ public final class SaveSettingsController
 
     private function saveUserPref(settings:Settings):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Saving settings");
-        }
+        LOG.info("Saving settings");
 
         const so:SharedObject = SharedObject.getLocal(Model.USER_PREF);
         so.data.baseURL = settings.webServerURL;

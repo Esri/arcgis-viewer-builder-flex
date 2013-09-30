@@ -30,6 +30,7 @@
             import com.esri.ags.tasks.JSONTask;
             import com.esri.builder.model.ConfigLayer;
             import com.esri.builder.model.Model;
+            import com.esri.builder.supportClasses.LogUtil;
             import com.esri.builder.views.BuilderAlert;
 
             import modules.IWidgetModel;
@@ -37,11 +38,10 @@
             import mx.collections.ArrayList;
             import mx.controls.Alert;
             import mx.logging.ILogger;
-            import mx.logging.Log;
             import mx.rpc.AsyncResponder;
             import mx.rpc.Fault;
 
-            public const LOG:ILogger = Log.getLogger('modules.Time.TimeView');
+            public const LOG:ILogger = LogUtil.createLogger(TimeView);
 
             [Bindable]
             private var timeAwareLayersList:ArrayList = new ArrayList();
@@ -226,10 +226,7 @@
 
                 function serviceInspector_faultHandler(event:Fault, configLayer:ConfigLayer):void
                 {
-                    if (Log.isWarn())
-                    {
-                        LOG.warn('Could not get details for {0} layer', configLayer.label);
-                    }
+                    LOG.warn('Could not get details for {0} layer', configLayer.label);
 
                     updateProcessedTimeAwareConfigLayers(timeAwareLayers);
                 }

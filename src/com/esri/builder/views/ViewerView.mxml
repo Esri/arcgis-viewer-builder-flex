@@ -36,7 +36,6 @@
 
             import mx.events.FlexEvent;
             import mx.logging.ILogger;
-            import mx.logging.Log;
             import mx.utils.StringUtil;
 
             import spark.events.IndexChangeEvent;
@@ -67,10 +66,7 @@
                 var appState:String = event.data as String;
                 if (appState == 'viewer')
                 {
-                    if (Log.isInfo())
-                    {
-                        LOG.info("Reset main view");
-                    }
+                    LOG.info("Reset main view");
                     resetView();
                 }
             }
@@ -90,10 +86,7 @@
             {
                 if (Model.instance.config.isDirty)
                 {
-                    if (Log.isDebug())
-                    {
-                        LOG.debug("Prevent tab change: config has been modified");
-                    }
+                    LOG.debug("Prevent tab change: config has been modified");
 
                     AppEvent.dispatch(AppEvent.SAVE_CHANGES, "viewerview");
                     nextTabIndex = event.newIndex;
@@ -107,10 +100,7 @@
             {
                 currentSelectedTabIndex = event.currentTarget.selectedIndex;
 
-                if (Log.isInfo())
-                {
-                    LOG.info("Change Viewer tab");
-                }
+                LOG.info("Change Viewer tab");
 
                 if (currentSelectedTabIndex == 0)
                 {
@@ -142,10 +132,7 @@
 
                 if (currentSelectedTabIndex == 0 || currentSelectedTabIndex == 1 || currentSelectedTabIndex == 2 || currentSelectedTabIndex == 3)
                 {
-                    if (Log.isInfo())
-                    {
-                        LOG.info("Show tutorial pop-up");
-                    }
+                    LOG.info("Show tutorial pop-up");
                     tutorialModePopUpHandler.showTutorialPopUp(mapTabIndexToTutorialName());
                 }
             }
@@ -154,10 +141,7 @@
             {
                 if (!html)
                 {
-                    if (Log.isDebug())
-                    {
-                        LOG.debug("Cannot load viewer: HTML component not initialized");
-                    }
+                    LOG.debug("Cannot load viewer: HTML component not initialized");
                     return;
                 }
 
@@ -170,19 +154,13 @@
                 if (designTabSelected && isDesignReloadApplicable
                     && hasToReloadViewerDueToConfigChange)
                 {
-                    if (Log.isDebug())
-                    {
-                        LOG.debug("Reload Design Viewer");
-                    }
+                    LOG.debug("Reload Design Viewer");
                     hasToReloadViewerDueToConfigChange = false;
                     loadViewer();
                 }
                 else if (previewTabSelected && hasToReloadViewerDueToConfigChange)
                 {
-                    if (Log.isDebug())
-                    {
-                        LOG.debug("Reload Preview Viewer");
-                    }
+                    LOG.debug("Reload Preview Viewer");
                     hasToReloadViewerDueToConfigChange = false;
                     loadViewer();
                 }
@@ -221,10 +199,7 @@
 
             private function mapsSwitchedHandler(event:AppEvent):void
             {
-                if (Log.isInfo())
-                {
-                    LOG.info("ViewerView maps switched");
-                }
+                LOG.info("ViewerView maps switched");
 
                 currentState = String(event.data);
             }
@@ -235,10 +210,7 @@
                 configSavedBox.visible = false;
                 hasToReloadViewerDueToConfigChange = true;
 
-                if (Log.isDebug())
-                {
-                    LOG.debug("ViewerView process config file saved");
-                }
+                LOG.debug("ViewerView process config file saved");
             }
 
             private function changesSavedHandler(event:AppEvent):void
@@ -248,10 +220,7 @@
                     hasToReloadViewerDueToConfigChange = true;
                     topMenuBar.selectedIndex = nextTabIndex;
 
-                    if (Log.isDebug())
-                    {
-                        LOG.debug("ViewerView process changes saved");
-                    }
+                    LOG.debug("ViewerView process changes saved");
                 }
             }
 
@@ -289,10 +258,7 @@
                     AppEvent.dispatch(AppEvent.WEB_MAP_SELECTED);
                 }
 
-                if (Log.isInfo())
-                {
-                    LOG.info("ViewerView state change: {0}", value);
-                }
+                LOG.info("ViewerView state change: {0}", value);
             }
 
             private function loadViewer(... additionalURLParams):void
@@ -312,18 +278,12 @@
                 Model.instance.htmlLocation = viewerIndexLocation;
                 html.location = Model.instance.htmlLocation;
 
-                if (Log.isDebug())
-                {
-                    LOG.debug("Load Viewer: {0}", viewerIndexLocation);
-                }
+                LOG.debug("Load Viewer: {0}", viewerIndexLocation);
             }
 
             protected function html_initializeHandler(event:FlexEvent):void
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug("HTML component initialized");
-                }
+                LOG.debug("HTML component initialized");
                 html.htmlLoader.navigateInSystemBrowser = true;
             }
 

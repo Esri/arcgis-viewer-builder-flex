@@ -19,6 +19,7 @@ package com.esri.builder.controllers
 import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.model.Model;
 import com.esri.builder.model.ViewerApp;
+import com.esri.builder.supportClasses.LogUtil;
 import com.esri.builder.views.BuilderAlert;
 import com.esri.builder.views.popups.RenameApplicationPopUp;
 
@@ -30,13 +31,12 @@ import mx.controls.Alert;
 import mx.core.FlexGlobals;
 import mx.events.CloseEvent;
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.managers.PopUpManager;
 import mx.resources.ResourceManager;
 
 public final class RenameAppController
 {
-    private const LOG:ILogger = Log.getLogger('com.esri.builder.controllers.RenameAppController');
+    private const LOG:ILogger = LogUtil.createLogger(RenameAppController);
     private const RENAME_APP_ERROR_MESSAGE:String = 'Problem renaming directory: {0}';
 
     private var renameAppPopUp:RenameApplicationPopUp;
@@ -81,10 +81,7 @@ public final class RenameAppController
 
     private function renameApp(viewerApp:ViewerApp, newName:String):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info('Renaming application {0} to {1}', viewerApp.label, newName);
-        }
+        LOG.info('Renaming application {0} to {1}', viewerApp.label, newName);
         const newFile:File = Model.instance.baseDir.resolvePath(newName);
         if (newFile.isDirectory)
         {
@@ -146,10 +143,7 @@ public final class RenameAppController
 
         function logError(errorMessage:String, error:IOError):void
         {
-            if (Log.isError())
-            {
-                LOG.error(errorMessage, error.toString());
-            }
+            LOG.error(errorMessage, error.toString());
         }
     }
 }

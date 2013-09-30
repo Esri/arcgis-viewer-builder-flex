@@ -19,6 +19,7 @@ package com.esri.builder.controllers
 import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.model.Model;
 import com.esri.builder.model.ViewerApp;
+import com.esri.builder.supportClasses.LogUtil;
 import com.esri.builder.views.BuilderAlert;
 import com.esri.builder.views.popups.DeleteApplicationPopUp;
 
@@ -27,14 +28,12 @@ import flash.display.DisplayObject;
 import mx.core.FlexGlobals;
 import mx.events.CloseEvent;
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.managers.PopUpManager;
 import mx.resources.ResourceManager;
-import mx.utils.StringUtil;
 
 public final class DeleteAppController
 {
-    private const LOG:ILogger = Log.getLogger('com.esri.builder.controllers.DeleteAppController');
+    private const LOG:ILogger = LogUtil.createLogger(DeleteAppController);
 
     private var deleteAppPopUp:DeleteApplicationPopUp;
     private var appToDelete:ViewerApp;
@@ -65,10 +64,7 @@ public final class DeleteAppController
         }
         catch (e:Error)
         {
-            if (Log.isError())
-            {
-                LOG.error('Could not delete directory: {0}', e.message);
-            }
+            LOG.error('Could not delete directory: {0}', e.message);
 
             Model.instance.status = e.message.toString();
             BuilderAlert.show(ResourceManager.getInstance().getString('BuilderStrings', 'deleteApplicationPopUp.couldNotDelete', [ e.message.toString()]),
@@ -84,10 +80,7 @@ public final class DeleteAppController
 
     private function deleteApp(viewerApp:ViewerApp):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Deleting application {0}", viewerApp.label);
-        }
+        LOG.info("Deleting application {0}", viewerApp.label);
         viewerApp.directory.deleteDirectory(true);
         Model.instance.status = ResourceManager.getInstance().getString('BuilderStrings',
                                                                         'deleteAppController.deleted',

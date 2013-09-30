@@ -26,7 +26,6 @@ import com.esri.builder.supportClasses.LogUtil;
 import flash.events.EventDispatcher;
 
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.rpc.AsyncResponder;
 import mx.rpc.Fault;
 import mx.rpc.events.FaultEvent;
@@ -44,10 +43,7 @@ public class PortalSearch extends EventDispatcher
 
     public function execute(queryParams:PortalQueryParameters):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Querying Portal: {0}", queryParams.toString());
-        }
+        LOG.info("Querying Portal: {0}", queryParams.toString());
 
         portal.queryItems(queryParams,
                           new AsyncResponder(portal_searchResultHandler,
@@ -56,10 +52,7 @@ public class PortalSearch extends EventDispatcher
 
     private function portal_searchResultHandler(queryResult:PortalQueryResult, token:Object = null):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Processing Portal search results");
-        }
+        LOG.debug("Processing Portal search results");
 
         const portalItems:Array = queryResult.results;
         const results:Array = [];
@@ -78,10 +71,7 @@ public class PortalSearch extends EventDispatcher
 
     protected function dispatchCompleteEvent(results:Array):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Portal search complete");
-        }
+        LOG.debug("Portal search complete");
 
         dispatchEvent(new PortalSearchEvent(PortalSearchEvent.COMPLETE, results));
     }
@@ -93,10 +83,7 @@ public class PortalSearch extends EventDispatcher
 
     protected function dispatchFaultEvent(fault:Fault):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Portal search fault: {0}", fault.toString());
-        }
+        LOG.debug("Portal search fault: {0}", fault.toString());
 
         dispatchEvent(new FaultEvent(FaultEvent.FAULT, false, false, fault));
     }

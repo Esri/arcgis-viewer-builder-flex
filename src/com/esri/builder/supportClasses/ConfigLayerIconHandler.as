@@ -16,12 +16,9 @@
 package com.esri.builder.supportClasses
 {
 
-import com.esri.builder.components.*;
-
 import com.esri.builder.model.ConfigLayer;
 import com.esri.builder.model.Model;
 import com.esri.builder.model.PortalLayer;
-import com.esri.builder.supportClasses.LogUtil;
 
 import flash.display.LoaderInfo;
 import flash.events.Event;
@@ -37,7 +34,6 @@ import flash.net.URLRequest;
 import flash.utils.ByteArray;
 
 import mx.logging.ILogger;
-import mx.logging.Log;
 
 public class ConfigLayerIconHandler extends EventDispatcher
 {
@@ -48,17 +44,11 @@ public class ConfigLayerIconHandler extends EventDispatcher
 
     public function assignIconURL(basemap:PortalLayer, configLayer:ConfigLayer):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Assigning config layer icon");
-        }
+        LOG.info("Assigning config layer icon");
 
         if (!basemap.thumbnailURL)
         {
-            if (Log.isWarn())
-            {
-                LOG.warn("No thumbnail URL available");
-            }
+            LOG.warn("No thumbnail URL available");
 
             dispatchEvent(new Event(Event.COMPLETE));
             return;
@@ -70,19 +60,13 @@ public class ConfigLayerIconHandler extends EventDispatcher
             var hasToken:Boolean = (tokenIndex > -1);
             configLayer.icon = hasToken ? basemap.thumbnailURL.substr(0, tokenIndex) : basemap.thumbnailURL;
 
-            if (Log.isDebug())
-            {
-                LOG.debug("Public basemap icon: {0}", configLayer.icon);
-            }
+            LOG.debug("Public basemap icon: {0}", configLayer.icon);
 
             dispatchEvent(new Event(Event.COMPLETE));
         }
         else
         {
-            if (Log.isDebug())
-            {
-                LOG.debug("Private basemap icon. Need to save locally.");
-            }
+            LOG.debug("Private basemap icon. Need to save locally.");
 
             this.configLayer = configLayer;
             this.thumbnailURL = basemap.thumbnailURL;
@@ -92,10 +76,7 @@ public class ConfigLayerIconHandler extends EventDispatcher
 
     private function saveThumbnailImage():void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Fetching icon");
-        }
+        LOG.debug("Fetching icon");
 
         var loader:URLLoader = new URLLoader();
         loader.dataFormat = URLLoaderDataFormat.BINARY;
@@ -107,10 +88,7 @@ public class ConfigLayerIconHandler extends EventDispatcher
 
     protected function loader_completeHandler(event:Event):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Icon fetch complete");
-        }
+        LOG.debug("Icon fetch complete");
 
         var urlLoader:URLLoader = event.currentTarget as URLLoader;
         urlLoader.removeEventListener(Event.COMPLETE, loader_completeHandler);
@@ -120,10 +98,7 @@ public class ConfigLayerIconHandler extends EventDispatcher
         var iconFilename:String = extractImageFilenameFromThumbnailURL();
         saveIconFileToAppAssets(urlLoader.data, iconFilename);
 
-        if (Log.isDebug())
-        {
-            LOG.debug("Icon filename: {0}", iconFilename);
-        }
+        LOG.debug("Icon filename: {0}", iconFilename);
 
         dispatchEvent(new Event(Event.COMPLETE));
     }
@@ -144,10 +119,7 @@ public class ConfigLayerIconHandler extends EventDispatcher
 
     private function saveIconFileToAppAssets(iconBytes:ByteArray, iconFilename:String):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Saving icon locally.");
-        }
+        LOG.debug("Saving icon locally.");
 
         var iconFilePath:String = FileUtil.generateUniqueRelativePath(Model.instance.appDir,
                                                                       "assets/images/" + iconFilename);
@@ -160,27 +132,18 @@ public class ConfigLayerIconHandler extends EventDispatcher
             fileWriter.close();
             configLayer.icon = iconFilePath;
 
-            if (Log.isDebug())
-            {
-                LOG.debug("Saved icon at: {0}", iconFilePath);
-            }
+            LOG.debug("Saved icon at: {0}", iconFilePath);
         }
         catch (error:Error)
         {
-            if (Log.isWarn())
-            {
-                LOG.warn("Could not save icon at: {0}, details: {1}", iconFilePath, error.toString());
-            }
+            LOG.warn("Could not save icon at: {0}, details: {1}", iconFilePath, error.toString());
                 //Fail silently
         }
     }
 
     protected function loader_ioErrorHandler(event:Event):void
     {
-        if (Log.isWarn())
-        {
-            LOG.warn("Could not load icon data - IO error");
-        }
+        LOG.warn("Could not load icon data - IO error");
 
         var loaderInfo:LoaderInfo = event.currentTarget as LoaderInfo;
         loaderInfo.removeEventListener(Event.COMPLETE, loader_completeHandler);
@@ -193,10 +156,7 @@ public class ConfigLayerIconHandler extends EventDispatcher
 
     protected function loader_securityErrorHandler(event:Event):void
     {
-        if (Log.isWarn())
-        {
-            LOG.warn("Could not load icon data - security error");
-        }
+        LOG.warn("Could not load icon data - security error");
 
         var loaderInfo:LoaderInfo = event.currentTarget as LoaderInfo;
         loaderInfo.removeEventListener(Event.COMPLETE, loader_completeHandler);

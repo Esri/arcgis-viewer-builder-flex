@@ -28,7 +28,6 @@ import flash.filesystem.File;
 import flash.utils.Dictionary;
 
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.resources.ResourceManager;
 
 public class StartupWidgetTypeLoader extends EventDispatcher
@@ -40,10 +39,7 @@ public class StartupWidgetTypeLoader extends EventDispatcher
 
     public function loadWidgetTypes():void
     {
-        if (Log.isInfo())
-        {
-            LOG.info('Loading modules...');
-        }
+        LOG.info('Loading modules...');
 
         var moduleFiles:Array = getModuleFiles(WellKnownDirectories.getInstance().bundledModules)
             .concat(getModuleFiles(WellKnownDirectories.getInstance().customModules));
@@ -57,10 +53,7 @@ public class StartupWidgetTypeLoader extends EventDispatcher
         {
             var fileName:String = FileUtil.getFileName(moduleFile);
 
-            if (Log.isDebug())
-            {
-                LOG.debug('loading module {0}', fileName);
-            }
+            LOG.debug('loading module {0}', fileName);
 
             if (processedFileNames.indexOf(fileName) == -1)
             {
@@ -126,10 +119,7 @@ public class StartupWidgetTypeLoader extends EventDispatcher
 
     private function sortAndAssignWidgetTypes():void
     {
-        if (Log.isInfo())
-        {
-            LOG.info('All modules resolved');
-        }
+        LOG.info('All modules resolved');
 
         for each (var widgetType:WidgetType in widgetTypeArr)
         {
@@ -157,10 +147,7 @@ public class StartupWidgetTypeLoader extends EventDispatcher
 
         var widgetType:WidgetType = event.widgetType;
 
-        if (Log.isDebug())
-        {
-            LOG.debug('Module {0} is resolved', widgetType.name);
-        }
+        LOG.debug('Module {0} is resolved', widgetType.name);
 
         widgetTypeArr.push(widgetType);
         markModuleAsLoaded(loader);
@@ -176,10 +163,7 @@ public class StartupWidgetTypeLoader extends EventDispatcher
         var errorMessage:String = ResourceManager.getInstance().getString('BuilderStrings',
                                                                           'importWidgetProcess.couldNotLoadCustomWidgets',
                                                                           [ loader.name ]);
-        if (Log.isDebug())
-        {
-            LOG.debug(errorMessage);
-        }
+        LOG.debug(errorMessage);
 
         BuilderAlert.show(errorMessage,
                           ResourceManager.getInstance().getString('BuilderStrings', 'error'));

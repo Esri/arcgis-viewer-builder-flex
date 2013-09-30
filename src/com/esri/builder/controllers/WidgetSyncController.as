@@ -26,7 +26,6 @@ import com.esri.builder.supportClasses.LogUtil;
 import flash.filesystem.File;
 
 import mx.logging.ILogger;
-import mx.logging.Log;
 
 public class WidgetSyncController
 {
@@ -59,10 +58,7 @@ public class WidgetSyncController
             return;
         }
 
-        if (Log.isInfo())
-        {
-            LOG.info("Copying missing widget files.");
-        }
+        LOG.info("Copying missing widget files.");
 
         var directoryContents:Array = widgetDirectory.getDirectoryListing();
         for each (var fileOrFolder:File in directoryContents)
@@ -85,10 +81,7 @@ public class WidgetSyncController
         //only copying missing files
         if (!fileDestination.exists)
         {
-            if (Log.isDebug())
-            {
-                LOG.debug("Copying {0} to {1}", fileOrFolder.nativePath, fileDestination.nativePath);
-            }
+            LOG.debug("Copying {0} to {1}", fileOrFolder.nativePath, fileDestination.nativePath);
 
             try
             {
@@ -96,10 +89,7 @@ public class WidgetSyncController
             }
             catch (error:Error)
             {
-                if (Log.isWarn())
-                {
-                    LOG.warn("Could not copy {0} to {1}: {2}", fileOrFolder.nativePath, fileDestination.nativePath, error.toString());
-                }
+                LOG.warn("Could not copy {0} to {1}: {2}", fileOrFolder.nativePath, fileDestination.nativePath, error.toString());
                     //fail silently
             }
         }
