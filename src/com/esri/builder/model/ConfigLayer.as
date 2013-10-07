@@ -277,10 +277,9 @@ public final class ConfigLayer
         configLayer.autoRefresh = layerXML.@autorefresh || 0;
         var displayLevels:XMLList = layerXML.@displaylevels;
         // TODO - configLayer.displayLevels = displayLevels;
-        if (configLayer.type == DYNAMIC)
-        {
-            configLayer.imageFormat = parseImageFormat(layerXML.@imageformat[0]);
-        }
+        var imageFormat:String = layerXML.@imageformat[0];
+        var isDynamic:Boolean = (configLayer.type == DYNAMIC);
+        configLayer.imageFormat = isDynamic ? parseImageFormat(imageFormat) : imageFormat;
         configLayer.token = layerXML.@token;
         configLayer.url = layerXML.@url;
         const useproxy:String = layerXML.@useproxy;
