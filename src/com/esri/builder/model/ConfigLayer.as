@@ -356,6 +356,7 @@ public final class ConfigLayer
             case "gif":
             {
                 parsedImageFormat = imageFormat;
+                break;
             }
             default:
             {
