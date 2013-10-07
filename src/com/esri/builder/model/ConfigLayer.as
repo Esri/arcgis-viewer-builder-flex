@@ -277,10 +277,9 @@ public final class ConfigLayer
         configLayer.autoRefresh = layerXML.@autorefresh || 0;
         var displayLevels:XMLList = layerXML.@displaylevels;
         // TODO - configLayer.displayLevels = displayLevels;
-        if (configLayer.type == DYNAMIC)
-        {
-            configLayer.imageFormat = parseImageFormat(layerXML.@imageformat[0]);
-        }
+        var imageFormat:String = layerXML.@imageformat[0];
+        var isDynamic:Boolean = (configLayer.type == DYNAMIC);
+        configLayer.imageFormat = isDynamic ? toKnownImageFormat(imageFormat) : imageFormat;
         configLayer.token = layerXML.@token;
         configLayer.url = layerXML.@url;
         const useproxy:String = layerXML.@useproxy;
@@ -344,9 +343,9 @@ public final class ConfigLayer
         return configLayer;
     }
 
-    private static function parseImageFormat(imageFormat:String):String
+    private static function toKnownImageFormat(imageFormat:String):String
     {
-        var parsedImageFormat:String;
+        var knownFormat:String;
 
         switch (imageFormat)
         {
@@ -355,15 +354,16 @@ public final class ConfigLayer
             case "jpg":
             case "gif":
             {
-                parsedImageFormat = imageFormat;
+                knownFormat = imageFormat;
+                break;
             }
             default:
             {
-                parsedImageFormat = "png8";
+                knownFormat = "png8";
             }
         }
 
-        return parsedImageFormat;
+        return knownFormat;
     }
 
     public function encodeXML():XML
