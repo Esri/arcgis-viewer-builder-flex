@@ -71,7 +71,7 @@ public class PortalURLInputChecker extends URLInputCheckerBase
     override protected function prepareURLChecker(url:String):void
     {
         portal.url = com.esri.builder.supportClasses.URLUtil.ensureValidKeyValuePairs(
-                com.esri.builder.supportClasses.URLUtil.removeToken(url));
+            com.esri.builder.supportClasses.URLUtil.removeToken(url));
     }
 
     override protected function addURLCheckerListeners():void
@@ -207,4 +207,5 @@ public class PortalURLInputChecker extends URLInputCheckerBase
         super.text = value;
     }
 }
+
 }

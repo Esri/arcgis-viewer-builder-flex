@@ -450,8 +450,7 @@
                                               layoutDirection="ltr"
                                               visible="{hasSupportedSingleLineLocator}"/>
 
-                        <s:Group toolTip="{resourceManager.getString('BuilderStrings', 'headerController.needSingleLineFieldLocator')}"
-                                 visible="{!hasSupportedSingleLineLocator}">
+                        <s:Group toolTip="{resourceManager.getString('BuilderStrings', 'headerController.needSingleLineFieldLocator')}" visible="{!hasSupportedSingleLineLocator}">
                             <graphics:warning width="20" height="20"/>
                         </s:Group>
                     </s:Group>
