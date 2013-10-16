@@ -160,7 +160,7 @@ public final class SwitchingMapsController
         XML.ignoreWhitespace = false;
         XML.prettyIndent = 4;
 
-        mapConfigXML = <map initialextent={initialextent} top="40" wraparound180="true"/>
+        mapConfigXML = <map initialextent={initialextent} top="40" wraparound180="true" addarcgisbasemaps={Model.instance.config.configMap.addArcGISBasemaps}/>
         if (!extent)
         {
             delete mapConfigXML.map.@initialextent;
