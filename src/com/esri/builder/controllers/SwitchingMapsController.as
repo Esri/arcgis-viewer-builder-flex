@@ -25,12 +25,16 @@ import com.esri.ags.layers.Layer;
 import com.esri.ags.layers.WebTiledLayer;
 import com.esri.ags.layers.supportClasses.TileInfo;
 import com.esri.ags.portal.WebMapUtil;
+import com.esri.ags.portal.supportClasses.PortalItem;
 import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.model.ConfigLayer;
 import com.esri.builder.model.ConfigMap;
 import com.esri.builder.model.Model;
+import com.esri.builder.model.PortalLayer;
 import com.esri.builder.model.PortalModel;
+import com.esri.builder.supportClasses.IconFetchEvent;
 import com.esri.builder.supportClasses.LogUtil;
+import com.esri.builder.supportClasses.PortalLayerIconFetcher;
 import com.esri.builder.views.popups.NoticePopUp;
 
 import flash.display.DisplayObject;
@@ -42,6 +46,8 @@ import mx.events.CloseEvent;
 import mx.logging.ILogger;
 import mx.managers.PopUpManager;
 import mx.resources.ResourceManager;
+import mx.rpc.Fault;
+import mx.rpc.Responder;
 import mx.utils.ObjectUtil;
 
 public final class SwitchingMapsController
@@ -251,20 +257,75 @@ public final class SwitchingMapsController
             }
         }
 
-        mapConfigXML.appendChild(baseLayers);
+        var basemapLayerItemId:String;
 
-        if (opLayers.hasComplexContent())
+        if (event.itemData.baseMap)
         {
-            mapConfigXML.appendChild(opLayers);
+            var basemapLayersObjects:Array = event.itemData.baseMap.baseMapLayers;
+            for each (var basemapLayerObject:Object in basemapLayersObjects)
+            {
+                if (basemapLayerObject.itemId && !basemapLayerObject.isReference)
+                {
+                    basemapLayerItemId = basemapLayerObject.itemId;
+                    break;
+                }
+            }
         }
-        if (unsupportedLayers.length)
+
+        if (basemapLayerItemId)
         {
-            noticePopUp.isWaiting = false;
-            showLayerNotAddedPopUp(unsupportedLayers);
+            PortalModel.getInstance().portal.getItem(basemapLayerItemId, new Responder(getItem_resultHandler, getItem_faultHandler));
+
+            function getItem_resultHandler(item:PortalItem):void
+            {
+                LOG.debug("fetched basemap item: {0}", basemapLayerItemId);
+                var iconFetcher:PortalLayerIconFetcher = new PortalLayerIconFetcher();
+                iconFetcher.addEventListener(IconFetchEvent.FETCH_COMPLETE, iconFetcher_fetchCompleteHandler);
+                iconFetcher.fetchIconURL(new PortalLayer(item));
+
+                function iconFetcher_fetchCompleteHandler(e:IconFetchEvent):void
+                {
+                    iconFetcher.removeEventListener(IconFetchEvent.FETCH_COMPLETE, iconFetcher_fetchCompleteHandler);
+
+                    if (baseLayers.children().length() > 0 && e.iconPath)
+                    {
+                        //set the icon on the 1st basemap
+                        baseLayers.child(0).@icon = e.iconPath;
+                    }
+
+                    carryOn();
+                }
+            }
+
+            function getItem_faultHandler(fault:Fault):void
+            {
+                LOG.debug("could not fetch basemap item: {0}", fault.toString());
+                carryOn();
+            }
         }
         else
         {
-            saveNewMapConfig();
+            carryOn();
+        }
+
+        function carryOn():void
+        {
+            mapConfigXML.appendChild(baseLayers);
+
+            if (opLayers.hasComplexContent())
+            {
+                mapConfigXML.appendChild(opLayers);
+            }
+
+            if (unsupportedLayers.length)
+            {
+                noticePopUp.isWaiting = false;
+                showLayerNotAddedPopUp(unsupportedLayers);
+            }
+            else
+            {
+                saveNewMapConfig();
+            }
         }
     }
 
