@@ -210,13 +210,13 @@
                         {
                             LOG.debug("Map service fetch success");
 
-                            if (resultObject.bandCount)
-                            {
-                                configLayer1.type = ConfigLayer.IMAGE;
-                            }
-                            else if (resultObject.singleFusedMapCache)
+                            if (resultObject.singleFusedMapCache)
                             {
                                 configLayer1.type = ConfigLayer.TILED;
+                            }
+                            else if (resultObject.bandCount)
+                            {
+                                configLayer1.type = ConfigLayer.IMAGE;
                             }
                             else
                             {

@@ -154,13 +154,13 @@ public class PortalBasemapGallerySearch extends PortalSearch
     {
         var layerType:String;
 
-        if (serviceMetadata.bandCount)
-        {
-            layerType = ConfigLayer.IMAGE;
-        }
-        else if (serviceMetadata.singleFusedMapCache)
+        if (serviceMetadata.singleFusedMapCache)
         {
             layerType = ConfigLayer.TILED;
+        }
+        else if (serviceMetadata.bandCount)
+        {
+            layerType = ConfigLayer.IMAGE;
         }
         else if (isNaN(Number(item.url.charAt(item.url.length - 1))))
         {
