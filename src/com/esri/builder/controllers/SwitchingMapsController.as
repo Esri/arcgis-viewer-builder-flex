@@ -54,7 +54,6 @@ public final class SwitchingMapsController
 {
     private static const LOG:ILogger = LogUtil.createLogger(SwitchingMapsController);
 
-    private var doNotShowLayerNotAddedPopUp:Boolean;
     private var isCreatingLayersFromWebMap:Boolean;
     private var webMapUtil:WebMapUtil;
     private var mapConfigXML:XML;
@@ -150,23 +149,21 @@ public final class SwitchingMapsController
 
         var map:Map = event.map;
 
-        var unsupportedLayers:Array = []
+        var unsupportedLayers:Array = [];
 
-        var title:String = event.item.title;
-
-        var initialextent:String;
+        var initialExtent:String;
         var extent:Extent = map.extent;
         if (extent)
         {
             var extentArr:Array = [ extent.xmin, extent.ymin, extent.xmax, extent.ymax ];
-            initialextent = extentArr.join(" ");
+            initialExtent = extentArr.join(" ");
         }
 
         XML.ignoreComments = false;
         XML.ignoreWhitespace = false;
         XML.prettyIndent = 4;
 
-        mapConfigXML = <map initialextent={initialextent} top="40" wraparound180="true" addarcgisbasemaps={Model.instance.config.configMap.addArcGISBasemaps}/>
+        mapConfigXML = <map initialextent={initialExtent} top="40" wraparound180="true" addarcgisbasemaps={Model.instance.config.configMap.addArcGISBasemaps}/>;
         if (!extent)
         {
             delete mapConfigXML.map.@initialextent;
