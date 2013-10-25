@@ -20,7 +20,7 @@ import flash.events.Event;
 
 public class IconFetchEvent extends Event
 {
-    public static const FETCH_COMPLETE:String = "FETCH_COMPLETE";
+    public static const FETCH_COMPLETE:String = "fetchComplete";
 
     private var _iconPath:String;
 
