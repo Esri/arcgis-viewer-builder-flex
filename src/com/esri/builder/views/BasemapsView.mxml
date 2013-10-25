@@ -35,9 +35,10 @@
             import com.esri.builder.model.ConfigLayerStore;
             import com.esri.builder.model.Model;
             import com.esri.builder.model.PortalLayer;
-            import com.esri.builder.supportClasses.ConfigLayerIconHandler;
             import com.esri.builder.supportClasses.ErrorMessageUtil;
+            import com.esri.builder.supportClasses.IconFetchEvent;
             import com.esri.builder.supportClasses.LogUtil;
+            import com.esri.builder.supportClasses.PortalLayerIconFetcher;
             import com.esri.builder.supportClasses.URLUtil;
             import com.esri.builder.views.supportClasses.LayerSelectionEvent;
 
@@ -335,17 +336,17 @@
             private function assignIconURL(basemap:PortalLayer, configLayer:ConfigLayer):void
             {
                 LOG.debug("Assigning ConfigLayer icon");
-                var configLayerIconHandler:ConfigLayerIconHandler = new ConfigLayerIconHandler();
-                configLayerIconHandler.addEventListener(Event.COMPLETE, configLayerIconHandler_completeHandler);
-                configLayerIconHandler.assignIconURL(basemap, configLayer);
-            }
 
-            protected function configLayerIconHandler_completeHandler(event:Event):void
-            {
-                LOG.debug("ConfigLayer icon complete");
+                var iconFetcher:PortalLayerIconFetcher = new PortalLayerIconFetcher();
+                iconFetcher.addEventListener(IconFetchEvent.FETCH_COMPLETE, iconFetcher_fetchCompleteHandler);
+                iconFetcher.fetchIconURL(basemap);
 
-                var configLayerIconHandler:ConfigLayerIconHandler = event.currentTarget as ConfigLayerIconHandler;
-                configLayerIconHandler.removeEventListener(Event.COMPLETE, configLayerIconHandler_completeHandler);
+                function iconFetcher_fetchCompleteHandler(event:IconFetchEvent):void
+                {
+                    iconFetcher.removeEventListener(IconFetchEvent.FETCH_COMPLETE, iconFetcher_fetchCompleteHandler);
+                    configLayer.icon = event.iconPath;
+                    dispatchEvent(new Event(Event.COMPLETE));
+                }
             }
 
             private function getConfigLayerType(itemType:String, url:String = null):String
