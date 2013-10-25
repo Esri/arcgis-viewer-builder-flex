@@ -43,6 +43,7 @@
             import mx.events.FlexEvent;
             import mx.rpc.AsyncResponder;
             import mx.rpc.AsyncToken;
+            import mx.rpc.Fault;
             import mx.utils.StringUtil;
 
             private var portal:Portal = PortalModel.getInstance().portal;
@@ -81,7 +82,7 @@
                 }
             }
 
-            private function items_faultHandler(queryResult:PortalQueryResult, asyncToken:AsyncToken):void
+            private function items_faultHandler(fault:Fault, asyncToken:AsyncToken):void
             {
                 responder.lastResult = null;
                 currentState = "nomaps";
