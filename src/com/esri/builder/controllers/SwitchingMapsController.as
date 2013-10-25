@@ -257,66 +257,17 @@ public final class SwitchingMapsController
             }
         }
 
-        var basemapLayerItemId:String;
+        mapConfigXML.appendChild(baseLayers);
 
-        if (event.itemData.baseMap)
+        if (opLayers.hasComplexContent())
         {
-            var basemapLayersObjects:Array = event.itemData.baseMap.baseMapLayers;
-            for each (var basemapLayerObject:Object in basemapLayersObjects)
-            {
-                if (basemapLayerObject.itemId && !basemapLayerObject.isReference)
-                {
-                    basemapLayerItemId = basemapLayerObject.itemId;
-                    break;
-                }
-            }
+            mapConfigXML.appendChild(opLayers);
         }
 
-        if (basemapLayerItemId)
+        assignBasemapIcon(event.itemData, mapConfigXML, proceedToSaveConfig);
+
+        function proceedToSaveConfig():void
         {
-            PortalModel.getInstance().portal.getItem(basemapLayerItemId, new Responder(getItem_resultHandler, getItem_faultHandler));
-
-            function getItem_resultHandler(item:PortalItem):void
-            {
-                LOG.debug("fetched basemap item: {0}", basemapLayerItemId);
-                var iconFetcher:PortalLayerIconFetcher = new PortalLayerIconFetcher();
-                iconFetcher.addEventListener(IconFetchEvent.FETCH_COMPLETE, iconFetcher_fetchCompleteHandler);
-                iconFetcher.fetchIconURL(new PortalLayer(item));
-
-                function iconFetcher_fetchCompleteHandler(e:IconFetchEvent):void
-                {
-                    iconFetcher.removeEventListener(IconFetchEvent.FETCH_COMPLETE, iconFetcher_fetchCompleteHandler);
-
-                    if (baseLayers.children().length() > 0 && e.iconPath)
-                    {
-                        //set the icon on the 1st basemap
-                        baseLayers.child(0).@icon = e.iconPath;
-                    }
-
-                    carryOn();
-                }
-            }
-
-            function getItem_faultHandler(fault:Fault):void
-            {
-                LOG.debug("could not fetch basemap item: {0}", fault.toString());
-                carryOn();
-            }
-        }
-        else
-        {
-            carryOn();
-        }
-
-        function carryOn():void
-        {
-            mapConfigXML.appendChild(baseLayers);
-
-            if (opLayers.hasComplexContent())
-            {
-                mapConfigXML.appendChild(opLayers);
-            }
-
             if (unsupportedLayers.length)
             {
                 noticePopUp.isWaiting = false;
@@ -327,6 +278,67 @@ public final class SwitchingMapsController
                 saveNewMapConfig();
             }
         }
+    }
+
+    private function assignBasemapIcon(itemData:Object, mapConfigXML:XML, afterFunction:Function):void
+    {
+        var basemapItemId:String = findBasemapLayerItemId(itemData);
+        if (basemapItemId)
+        {
+            PortalModel.getInstance()
+                .portal.getItem(basemapItemId, new Responder(getItem_resultHandler,
+                                                             getItem_faultHandler));
+
+            function getItem_resultHandler(item:PortalItem):void
+            {
+                LOG.debug("fetched basemap item: {0}", basemapItemId);
+                var iconFetcher:PortalLayerIconFetcher = new PortalLayerIconFetcher();
+                iconFetcher.addEventListener(IconFetchEvent.FETCH_COMPLETE, iconFetcher_fetchCompleteHandler);
+                iconFetcher.fetchIconURL(new PortalLayer(item));
+
+                function iconFetcher_fetchCompleteHandler(event:IconFetchEvent):void
+                {
+                    iconFetcher.removeEventListener(IconFetchEvent.FETCH_COMPLETE, iconFetcher_fetchCompleteHandler);
+
+                    if (mapConfigXML.basemaps.children().length() > 0 && event.iconPath)
+                    {
+                        mapConfigXML.basemaps.child(0).@icon = event.iconPath;
+                    }
+
+                    afterFunction();
+                }
+            }
+
+            function getItem_faultHandler(fault:Fault):void
+            {
+                LOG.debug("could not fetch basemap item: {0}", fault.toString());
+                afterFunction();
+            }
+        }
+        else
+        {
+            afterFunction();
+        }
+    }
+
+    private function findBasemapLayerItemId(itemData:Object):String
+    {
+        var basemapLayerItemId:String;
+
+        if (itemData.baseMap)
+        {
+            var layersObjects:Array = itemData.baseMap.baseMapLayers;
+            for each (var layerObject:Object in layersObjects)
+            {
+                if (layerObject.itemId && !layerObject.isReference)
+                {
+                    basemapLayerItemId = layerObject.itemId;
+                    break;
+                }
+            }
+        }
+
+        return basemapLayerItemId;
     }
 
     private function showLayerNotAddedPopUp(layerNames:Array):void
