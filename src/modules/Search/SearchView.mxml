@@ -49,9 +49,15 @@
             import spark.events.GridEvent;
 
             private const SEARCH_EXPRESSION_SAMPLE:String =
-                "PARCELID like \'[value]\'\n" +
-                "upper(STATE) LIKE upper(\'[value]\')\n" +
-                "upper(NAME) LIKE upper(\'%[value]%\')";
+                "\n" +
+                "PARCELID like \'[value]\'" +
+                "\n" +
+                "\n" +
+                "upper(STATE) LIKE upper(\'[value]\')" +
+                "\n" +
+                "\n" +
+                "upper(NAME) LIKE upper(\'%[value]%\')" +
+                "\n";
 
             private var lastLoadedURL:String;
 
@@ -491,6 +497,7 @@
 
             <views:HelpButton left="editSearchColumn3:24"
                               baseline="editSearchRow3:0"
+                              contentWidth="230"
                               helpText="{resourceManager.getString('BuilderStrings', 'search.expressionHelpContent', [ SEARCH_EXPRESSION_SAMPLE ])}"
                               title="{resourceManager.getString('BuilderStrings', 'search.expression')}"/>
 
