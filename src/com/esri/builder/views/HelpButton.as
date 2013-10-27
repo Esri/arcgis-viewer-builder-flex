@@ -35,6 +35,8 @@ public class HelpButton extends ButtonBase
     public var title:String;
     [Bindable]
     public var helpText:String;
+    [Bindable]
+    public var contentWidth:Number = 220;
 
     private var helpPopUp:HelpPopUp;
 
@@ -57,6 +59,7 @@ public class HelpButton extends ButtonBase
     private function createHelpPopUp():HelpPopUp
     {
         helpPopUp = new HelpPopUp();
+        helpPopUp.width = contentWidth;
         helpPopUp.title = title;
         helpPopUp.content = helpText;
         return helpPopUp;
