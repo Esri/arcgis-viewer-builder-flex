@@ -140,7 +140,7 @@ public class URLInputChecker extends URLInputCheckerBase
         }
         else
         {
-            displayInvalidURL();
+            displayInvalidURL(fallbackErrorMessage);
         }
     }
 
@@ -153,7 +153,7 @@ public class URLInputChecker extends URLInputCheckerBase
     protected function urlRequest_faultHandler(event:FaultEvent):void
     {
         removeURLCheckerListeners();
-        displayInvalidURL();
+        displayInvalidURL(getInvalidMessage(event.fault));
     }
 
     override protected function requestURLValidation():void

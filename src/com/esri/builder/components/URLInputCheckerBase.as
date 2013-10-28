@@ -16,11 +16,14 @@
 package com.esri.builder.components
 {
 
+import com.esri.builder.supportClasses.ErrorMessageUtil;
 import com.esri.builder.supportClasses.URLUtil;
 
 import flash.events.Event;
 import flash.events.TimerEvent;
 import flash.utils.Timer;
+
+import mx.rpc.Fault;
 
 import spark.components.TextInput;
 import spark.events.TextOperationEvent;
@@ -59,6 +62,20 @@ public class URLInputCheckerBase extends TextInput
     public function get isURLValid():Boolean
     {
         return _isURLValid;
+    }
+
+    private var _invalidMessage:String;
+
+    [Bindable(event="invalidMessageChanged")]
+    public function get invalidMessage():String
+    {
+        return _invalidMessage;
+    }
+
+    protected function setInvalidMessageInternally(message:String = ""):void
+    {
+        _invalidMessage = message ? message : "";
+        dispatchEvent(new Event("invalidMessageChanged"));
     }
 
     [Bindable("change")]
@@ -178,6 +195,7 @@ public class URLInputCheckerBase extends TextInput
     {
         if (enabled)
         {
+            setInvalidMessageInternally();
             isURLValidationPending = true;
             validationTimer.reset();
             validationTimer.start();
@@ -221,7 +239,7 @@ public class URLInputCheckerBase extends TextInput
         if (!URLUtil.isValidURL(url))
         {
             isURLValidationPending = false;
-            displayInvalidURL();
+            displayInvalidURL(invalidURLErrorMessage);
             return;
         }
 
@@ -238,12 +256,13 @@ public class URLInputCheckerBase extends TextInput
         catch (error:Error)
         {
             removeURLCheckerListeners()
-            displayInvalidURL();
+            displayInvalidURL(error.toString());
         }
     }
 
-    protected function displayInvalidURL():void
+    protected function displayInvalidURL(message:String = ""):void
     {
+        setInvalidMessageInternally(message);
         isURLValidationPending = false;
         setValidURLInternal(false);
         dispatchEvent(new Event("invalidURL"));
@@ -314,6 +333,21 @@ public class URLInputCheckerBase extends TextInput
         {
             return prompt ? "normalWithPrompt" : "normal";
         }
+    }
+
+    protected function getInvalidMessage(fault:Fault):String
+    {
+        return ErrorMessageUtil.getKnownErrorCauseMessage(fault, fallbackErrorMessage);
+    }
+
+    protected function get fallbackErrorMessage():String
+    {
+        return resourceManager.getString("BuilderStrings", "couldNotValidateURL");
+    }
+
+    protected function get invalidURLErrorMessage():String
+    {
+        return resourceManager.getString("BuilderStrings", "invalidURL");
     }
 }
 }

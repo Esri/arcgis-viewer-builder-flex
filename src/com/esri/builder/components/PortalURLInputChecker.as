@@ -97,7 +97,7 @@ public class PortalURLInputChecker extends URLInputCheckerBase
         }
         else
         {
-            displayInvalidURL();
+            displayInvalidURL(fallbackErrorMessage);
         }
     }
 
@@ -126,7 +126,7 @@ public class PortalURLInputChecker extends URLInputCheckerBase
             && hasTriedDefaultInstanceEndPoint && hasTriedPortalEndPoint)
         {
             resetURLAdjusting();
-            displayInvalidURL();
+            displayInvalidURL(getInvalidMessage(event.fault));
             return;
         }
         else
@@ -178,7 +178,7 @@ public class PortalURLInputChecker extends URLInputCheckerBase
             }
 
             resetURLAdjusting();
-            displayInvalidURL();
+            displayInvalidURL(getInvalidMessage(event.fault));
         }
     }
 
