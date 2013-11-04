@@ -56,242 +56,280 @@ public class LayerToXMLUtil
 
     private static function layerToXML(layer:Layer, label:String):XML
     {
-        var lyrXML:XML;
+        var layerXML:XML;
 
         if (layer is ArcGISDynamicMapServiceLayer)
         {
-            var dynLyr:ArcGISDynamicMapServiceLayer = layer as ArcGISDynamicMapServiceLayer;
-            lyrXML = <layer label={label}
+            var dynLayer:ArcGISDynamicMapServiceLayer = layer as ArcGISDynamicMapServiceLayer;
+
+            layerXML = <layer label={label}
                     type="dynamic"
-                    visible={dynLyr.visible}
-                    alpha={dynLyr.alpha}
-                    url={dynLyr.url}
-                    useproxy={dynLyr.proxyURL != null}/>;
-            if (dynLyr.refreshInterval > 0)
+                    visible={dynLayer.visible}
+                    alpha={dynLayer.alpha}
+                    url={dynLayer.url}
+                    useproxy={dynLayer.proxyURL != null}/>;
+
+            if (dynLayer.refreshInterval > 0)
             {
-                lyrXML.@autorefresh = minutesToSeconds(dynLyr.refreshInterval);
+                layerXML.@autorefresh = minutesToSeconds(dynLayer.refreshInterval);
             }
-            if (dynLyr.showInLegend)
+
+            if (dynLayer.showInLegend)
             {
-                if (dynLyr.showInLegendHiddenLayers)
+                if (dynLayer.showInLegendHiddenLayers)
                 {
-                    lyrXML.@showinlegendhiddenlayers = dynLyr.showInLegendHiddenLayers.join();
+                    layerXML.@showinlegendhiddenlayers = dynLayer.showInLegendHiddenLayers.join();
                 }
             }
             else
             {
-                lyrXML.@showinlegend = false;
+                layerXML.@showinlegend = false;
             }
-            if (dynLyr.visibleLayers)
+
+            if (dynLayer.visibleLayers)
             {
-                lyrXML.@visiblelayers = dynLyr.visibleLayers.toArray().join();
+                layerXML.@visiblelayers = dynLayer.visibleLayers.toArray().join();
             }
-            if (dynLyr.layerDefinitions && dynLyr.layerDefinitions.length > 0)
+
+            if (dynLayer.layerDefinitions && dynLayer.layerDefinitions.length > 0)
             {
                 // <sublayer id="2" definitionexpression="AGBUR = 'BIA'"/>
-                for each (var layerDefinition:LayerDefinition in dynLyr.layerDefinitions)
+                for each (var layerDefinition:LayerDefinition in dynLayer.layerDefinitions)
                 {
-                    lyrXML.appendChild(<sublayer id={layerDefinition.layerId} definitionexpression={layerDefinition.definition}/>);
+                    layerXML.appendChild(<sublayer id={layerDefinition.layerId} definitionexpression={layerDefinition.definition}/>);
                 }
             }
         }
         else if (layer is ArcGISImageServiceLayer)
         {
-            var imgLyr:ArcGISImageServiceLayer = layer as ArcGISImageServiceLayer;
-            lyrXML = <layer label={label}
+            var imgLayer:ArcGISImageServiceLayer = layer as ArcGISImageServiceLayer;
+
+            layerXML = <layer label={label}
                     type="image"
-                    visible={imgLyr.visible}
-                    alpha={imgLyr.alpha}
-                    url={imgLyr.url}
-                    useproxy={imgLyr.proxyURL != null}/>;
-            if (imgLyr.refreshInterval > 0)
+                    visible={imgLayer.visible}
+                    alpha={imgLayer.alpha}
+                    url={imgLayer.url}
+                    useproxy={imgLayer.proxyURL != null}/>;
+
+            if (imgLayer.refreshInterval > 0)
             {
-                lyrXML.@autorefresh = minutesToSeconds(imgLyr.refreshInterval);
+                layerXML.@autorefresh = minutesToSeconds(imgLayer.refreshInterval);
             }
-            if (!imgLyr.showInLegend)
+
+            if (!imgLayer.showInLegend)
             {
-                lyrXML.@showinlegend = false;
+                layerXML.@showinlegend = false;
             }
-            if (imgLyr.bandIds)
+
+            if (imgLayer.bandIds)
             {
-                lyrXML.@bandids = imgLyr.bandIds.join();
+                layerXML.@bandids = imgLayer.bandIds.join();
             }
         }
         else if (layer is ArcGISTiledMapServiceLayer)
         {
-            var tiledLyr:ArcGISTiledMapServiceLayer = layer as ArcGISTiledMapServiceLayer;
-            lyrXML = <layer label={label}
+            var tiledLayer:ArcGISTiledMapServiceLayer = layer as ArcGISTiledMapServiceLayer;
+            layerXML = <layer label={label}
                     type="tiled"
-                    visible={tiledLyr.visible}
-                    alpha={tiledLyr.alpha}
-                    url={tiledLyr.url}
-                    useproxy={tiledLyr.proxyURL != null}/>;
-            if (tiledLyr.refreshInterval > 0)
+                    visible={tiledLayer.visible}
+                    alpha={tiledLayer.alpha}
+                    url={tiledLayer.url}
+                    useproxy={tiledLayer.proxyURL != null}/>;
+
+            if (tiledLayer.refreshInterval > 0)
             {
-                lyrXML.@autorefresh = minutesToSeconds(tiledLyr.refreshInterval);
+                layerXML.@autorefresh = minutesToSeconds(tiledLayer.refreshInterval);
             }
-            if (tiledLyr.showInLegend)
+
+            if (tiledLayer.showInLegend)
             {
-                if (tiledLyr.showInLegendHiddenLayers)
+                if (tiledLayer.showInLegendHiddenLayers)
                 {
-                    lyrXML.@showinlegendhiddenlayers = tiledLyr.showInLegendHiddenLayers.join();
+                    layerXML.@showinlegendhiddenlayers = tiledLayer.showInLegendHiddenLayers.join();
                 }
             }
             else
             {
-                lyrXML.@showinlegend = false;
+                layerXML.@showinlegend = false;
             }
-            if (tiledLyr.displayLevels)
+
+            if (tiledLayer.displayLevels)
             {
-                lyrXML.@displaylevels = tiledLyr.displayLevels.join();
+                layerXML.@displaylevels = tiledLayer.displayLevels.join();
             }
         }
         else if (layer is CSVLayer)
         {
-            var csvLyr:CSVLayer = layer as CSVLayer;
-            lyrXML = <layer label={label}
+            var csvLayer:CSVLayer = layer as CSVLayer;
+
+            layerXML = <layer label={label}
                     type="csv"
-                    visible={csvLyr.visible}
-                    alpha={csvLyr.alpha}
-                    url={csvLyr.url}
-                    longitudefieldname={csvLyr.longitudeFieldName}
-                    latitudefieldname={csvLyr.latitudeFieldName}/>;
-            if (csvLyr.refreshInterval > 0)
+                    visible={csvLayer.visible}
+                    alpha={csvLayer.alpha}
+                    url={csvLayer.url}
+                    longitudefieldname={csvLayer.longitudeFieldName}
+                    latitudefieldname={csvLayer.latitudeFieldName}/>;
+
+            if (csvLayer.refreshInterval > 0)
             {
-                lyrXML.@autorefresh = minutesToSeconds(csvLyr.refreshInterval);
+                layerXML.@autorefresh = minutesToSeconds(csvLayer.refreshInterval);
             }
-            if (!csvLyr.showInLegend)
+
+            if (!csvLayer.showInLegend)
             {
-                lyrXML.@showinlegend = false;
+                layerXML.@showinlegend = false;
             }
-            if (csvLyr.columnDelimiter != ",")
+
+            if (csvLayer.columnDelimiter != ",")
             {
-                lyrXML.@columndelimiter = csvLyr.columnDelimiter;
+                layerXML.@columndelimiter = csvLayer.columnDelimiter;
             }
-            if (csvLyr.sourceFields)
+
+            if (csvLayer.sourceFields)
             {
                 var fields:Array = [];
-                for each (var field:Field in csvLyr.sourceFields)
+                for each (var field:Field in csvLayer.sourceFields)
                 {
                     fields.push(field.name + "|" + field.alias + "|" + field.type);
                 }
-                lyrXML.@sourcefields = fields.join();
+                layerXML.@sourcefields = fields.join();
             }
         }
         else if (layer is FeatureLayer && !(layer is CSVLayer))
         {
-            var feaLyr:FeatureLayer = layer as FeatureLayer;
-            if (!feaLyr.featureCollection)
+            var feaLayer:FeatureLayer = layer as FeatureLayer;
+
+            if (!feaLayer.featureCollection)
             {
-                lyrXML = <layer label={label}
+                layerXML = <layer label={label}
                         type="feature"
-                        visible={feaLyr.visible}
-                        alpha={feaLyr.alpha}
-                        mode={feaLyr.mode}
-                        url={feaLyr.url}
-                        iseditable={feaLyr.isEditable}
-                        useproxy={feaLyr.proxyURL != null}/>;
-                if (feaLyr.refreshInterval > 0)
+                        visible={feaLayer.visible}
+                        alpha={feaLayer.alpha}
+                        mode={feaLayer.mode}
+                        url={feaLayer.url}
+                        iseditable={feaLayer.isEditable}
+                        useproxy={feaLayer.proxyURL != null}/>;
+
+                if (feaLayer.refreshInterval > 0)
                 {
-                    lyrXML.@autorefresh = minutesToSeconds(feaLyr.refreshInterval);
+                    layerXML.@autorefresh = minutesToSeconds(feaLayer.refreshInterval);
                 }
-                if (!feaLyr.showInLegend)
+
+                if (!feaLayer.showInLegend)
                 {
-                    lyrXML.@showinlegend = false;
+                    layerXML.@showinlegend = false;
                 }
             }
         }
         else if (layer is GeoRSSLayer)
         {
             var geoRSSLayer:GeoRSSLayer = layer as GeoRSSLayer;
-            lyrXML = <layer label={label}
+
+            layerXML = <layer label={label}
                     type="georss"
                     visible={geoRSSLayer.visible}
                     alpha={geoRSSLayer.alpha}
                     url={geoRSSLayer.url}/>;
+
             if (geoRSSLayer.refreshInterval > 0)
             {
-                lyrXML.@autorefresh = minutesToSeconds(geoRSSLayer.refreshInterval);
+                layerXML.@autorefresh = minutesToSeconds(geoRSSLayer.refreshInterval);
             }
+
             if (!geoRSSLayer.showInLegend)
             {
-                lyrXML.@showinlegend = false;
+                layerXML.@showinlegend = false;
             }
+
             if (geoRSSLayer.serviceURL)
             {
-                lyrXML.@serviceurl = geoRSSLayer.serviceURL;
+                layerXML.@serviceurl = geoRSSLayer.serviceURL;
             }
+
             if (geoRSSLayer.pointSymbol)
             {
-                lyrXML.appendChild(getPointSymbolXML(geoRSSLayer.pointSymbol));
+                layerXML.appendChild(getPointSymbolXML(geoRSSLayer.pointSymbol));
             }
+
             if (geoRSSLayer.polylineSymbol)
             {
-                lyrXML.appendChild(getLineSymbolXML(geoRSSLayer.polylineSymbol));
+                layerXML.appendChild(getLineSymbolXML(geoRSSLayer.polylineSymbol));
             }
+
             if (geoRSSLayer.polygonSymbol)
             {
-                lyrXML.appendChild(getPolygonSymbolXML(geoRSSLayer.polygonSymbol));
+                layerXML.appendChild(getPolygonSymbolXML(geoRSSLayer.polygonSymbol));
             }
         }
         else if (layer is KMLLayer)
         {
-            var kmlLyr:KMLLayer = layer as KMLLayer;
-            lyrXML = <layer label={label}
+            var kmlLayer:KMLLayer = layer as KMLLayer;
+
+            layerXML = <layer label={label}
                     type="kml"
-                    visible={kmlLyr.visible}
-                    alpha={kmlLyr.alpha}
-                    url={kmlLyr.url}/>;
-            if (kmlLyr.refreshInterval > 0)
+                    visible={kmlLayer.visible}
+                    alpha={kmlLayer.alpha}
+                    url={kmlLayer.url}/>;
+
+            if (kmlLayer.refreshInterval > 0)
             {
-                lyrXML.@autorefresh = minutesToSeconds(kmlLyr.refreshInterval);
+                layerXML.@autorefresh = minutesToSeconds(kmlLayer.refreshInterval);
             }
-            if (!kmlLyr.showInLegend)
+
+            if (!kmlLayer.showInLegend)
             {
-                lyrXML.@showinlegend = false;
+                layerXML.@showinlegend = false;
             }
         }
         else if (layer is OpenStreetMapLayer)
         {
-            var osmLyr:OpenStreetMapLayer = layer as OpenStreetMapLayer;
-            lyrXML = <layer label={label}
+            var osmLayer:OpenStreetMapLayer = layer as OpenStreetMapLayer;
+
+            layerXML = <layer label={label}
                     type="osm"
-                    visible={osmLyr.visible}
-                    alpha={osmLyr.alpha}/>;
-            if (osmLyr.refreshInterval > 0)
+                    visible={osmLayer.visible}
+                    alpha={osmLayer.alpha}/>;
+
+            if (osmLayer.refreshInterval > 0)
             {
-                lyrXML.@autorefresh = minutesToSeconds(osmLyr.refreshInterval);
+                layerXML.@autorefresh = minutesToSeconds(osmLayer.refreshInterval);
             }
-            if (!osmLyr.showInLegend)
+
+            if (!osmLayer.showInLegend)
             {
-                lyrXML.@showinlegend = false;
+                layerXML.@showinlegend = false;
             }
         }
         else if (layer is VETiledLayer)
         {
-            var veLyr:VETiledLayer = layer as VETiledLayer;
-            lyrXML = <layer label={label}
+            var veLayer:VETiledLayer = layer as VETiledLayer;
+
+            layerXML = <layer label={label}
                     type="bing"
-                    visible={veLyr.visible}
-                    alpha={veLyr.alpha}
-                    style={veLyr.mapStyle}/>;
-            if (veLyr.refreshInterval > 0)
+                    visible={veLayer.visible}
+                    alpha={veLayer.alpha}
+                    style={veLayer.mapStyle}/>;
+
+            if (veLayer.refreshInterval > 0)
             {
-                lyrXML.@autorefresh = minutesToSeconds(veLyr.refreshInterval);
+                layerXML.@autorefresh = minutesToSeconds(veLayer.refreshInterval);
             }
-            if (!veLyr.showInLegend)
+
+            if (!veLayer.showInLegend)
             {
-                lyrXML.@showinlegend = false;
+                layerXML.@showinlegend = false;
             }
-            if (veLyr.displayLevels)
+
+            if (veLayer.displayLevels)
             {
-                lyrXML.@displaylevels = veLyr.displayLevels.join();
+                layerXML.@displaylevels = veLayer.displayLevels.join();
             }
         }
         else if (layer is WMSLayer)
         {
             var wmsLayer:WMSLayer = layer as WMSLayer;
-            lyrXML = <layer label={label}
+
+            layerXML = <layer label={label}
                     type="wms"
                     visible={wmsLayer.visible}
                     alpha={wmsLayer.alpha}
@@ -299,39 +337,47 @@ public class LayerToXMLUtil
                     skipgetcapabilities={wmsLayer.skipGetCapabilities}
                     imageformat={wmsLayer.imageFormat}
                     url={wmsLayer.url}/>;
+
             if (wmsLayer.refreshInterval > 0)
             {
-                lyrXML.@autorefresh = minutesToSeconds(wmsLayer.refreshInterval);
+                layerXML.@autorefresh = minutesToSeconds(wmsLayer.refreshInterval);
             }
+
             if (!wmsLayer.showInLegend)
             {
-                lyrXML.@showinlegend = false;
+                layerXML.@showinlegend = false;
             }
+
             if (wmsLayer.copyright)
             {
-                lyrXML.@copyright = wmsLayer.copyright;
+                layerXML.@copyright = wmsLayer.copyright;
             }
+
             if (wmsLayer.spatialReference)
             {
-                lyrXML.@wkid = wmsLayer.spatialReference.wkid;
+                layerXML.@wkid = wmsLayer.spatialReference.wkid;
             }
+
             if (wmsLayer.maxImageHeight > 0)
             {
-                lyrXML.@maximageheight = wmsLayer.maxImageHeight;
+                layerXML.@maximageheight = wmsLayer.maxImageHeight;
             }
+
             if (wmsLayer.maxImageWidth > 0)
             {
-                lyrXML.@maximagewidth = wmsLayer.maxImageWidth;
+                layerXML.@maximagewidth = wmsLayer.maxImageWidth;
             }
+
             if (wmsLayer.visibleLayers)
             {
-                lyrXML.@visiblelayers = wmsLayer.visibleLayers.toArray().join();
+                layerXML.@visiblelayers = wmsLayer.visibleLayers.toArray().join();
             }
         }
         else if (layer is WMTSLayer)
         {
             var wmtsLayer:WMTSLayer = layer as WMTSLayer;
-            lyrXML = <layer label={label}
+
+            layerXML = <layer label={label}
                     type="wmts"
                     visible={wmtsLayer.visible}
                     alpha={wmtsLayer.alpha}
@@ -339,25 +385,30 @@ public class LayerToXMLUtil
                     imageformat={wmtsLayer.imageFormat}
                     url={wmtsLayer.url}
                     useproxy={wmtsLayer.proxyURL != null}/>;
+
             if (wmtsLayer.refreshInterval > 0)
             {
-                lyrXML.@autorefresh = minutesToSeconds(wmtsLayer.refreshInterval);
+                layerXML.@autorefresh = minutesToSeconds(wmtsLayer.refreshInterval);
             }
+
             if (!wmtsLayer.showInLegend)
             {
-                lyrXML.@showinlegend = false;
+                layerXML.@showinlegend = false;
             }
+
             if (wmtsLayer.layerId)
             {
-                lyrXML.@layerid = wmtsLayer.layerId;
+                layerXML.@layerid = wmtsLayer.layerId;
             }
+
             if (wmtsLayer.serviceMode)
             {
-                lyrXML.@mode = wmtsLayer.serviceMode;
+                layerXML.@mode = wmtsLayer.serviceMode;
             }
+
             if (wmtsLayer.style)
             {
-                lyrXML.@style = wmtsLayer.style;
+                layerXML.@style = wmtsLayer.style;
             }
         }
         else if (layer is WebTiledLayer)
@@ -369,35 +420,40 @@ public class LayerToXMLUtil
             var hasSupportedTileInfo:Boolean = ObjectUtil.compare(defaultTileInfo, webTiledLayer.tileInfo) == 0;
             if (hasSupportedTileInfo)
             {
-                lyrXML = <layer label={label}
+                layerXML = <layer label={label}
                         type="webtiled"
                         visible={webTiledLayer.visible}
                         alpha={webTiledLayer.alpha}
                         url={webTiledLayer.urlTemplate}/>;
+
                 if (webTiledLayer.refreshInterval > 0)
                 {
-                    lyrXML.@autorefresh = minutesToSeconds(webTiledLayer.refreshInterval);
+                    layerXML.@autorefresh = minutesToSeconds(webTiledLayer.refreshInterval);
                 }
+
                 if (!webTiledLayer.showInLegend)
                 {
-                    lyrXML.@showinlegend = false;
+                    layerXML.@showinlegend = false;
                 }
+
                 if (webTiledLayer.copyright)
                 {
-                    lyrXML.@copyright = webTiledLayer.copyright;
+                    layerXML.@copyright = webTiledLayer.copyright;
                 }
+
                 if (webTiledLayer.displayLevels)
                 {
-                    lyrXML.@displaylevels = webTiledLayer.displayLevels.join();
+                    layerXML.@displaylevels = webTiledLayer.displayLevels.join();
                 }
+
                 if (webTiledLayer.subDomains)
                 {
-                    lyrXML.@subdomains = webTiledLayer.subDomains.join();
+                    layerXML.@subdomains = webTiledLayer.subDomains.join();
                 }
             }
         }
 
-        return lyrXML;
+        return layerXML;
     }
 
     private static function minutesToSeconds(minutes:Number):Number
