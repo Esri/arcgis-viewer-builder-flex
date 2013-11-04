@@ -713,6 +713,10 @@ public final class ConfigLayer
                     alpha={dynLyr.alpha}
                     url={dynLyr.url}
                     useproxy={dynLyr.proxyURL != null}/>;
+            if (dynLyr.refreshInterval > 0)
+            {
+                lyrXML.@autorefresh = minutesToSeconds(dynLyr.refreshInterval);
+            }
             if (dynLyr.showInLegend)
             {
                 if (dynLyr.showInLegendHiddenLayers)
@@ -746,6 +750,10 @@ public final class ConfigLayer
                     alpha={imgLyr.alpha}
                     url={imgLyr.url}
                     useproxy={imgLyr.proxyURL != null}/>;
+            if (imgLyr.refreshInterval > 0)
+            {
+                lyrXML.@autorefresh = minutesToSeconds(imgLyr.refreshInterval);
+            }
             if (!imgLyr.showInLegend)
             {
                 lyrXML.@showinlegend = false;
@@ -764,6 +772,10 @@ public final class ConfigLayer
                     alpha={tiledLyr.alpha}
                     url={tiledLyr.url}
                     useproxy={tiledLyr.proxyURL != null}/>;
+            if (tiledLyr.refreshInterval > 0)
+            {
+                lyrXML.@autorefresh = minutesToSeconds(tiledLyr.refreshInterval);
+            }
             if (tiledLyr.showInLegend)
             {
                 if (tiledLyr.showInLegendHiddenLayers)
@@ -790,6 +802,10 @@ public final class ConfigLayer
                     url={csvLyr.url}
                     longitudefieldname={csvLyr.longitudeFieldName}
                     latitudefieldname={csvLyr.latitudeFieldName}/>;
+            if (csvLyr.refreshInterval > 0)
+            {
+                lyrXML.@autorefresh = minutesToSeconds(csvLyr.refreshInterval);
+            }
             if (!csvLyr.showInLegend)
             {
                 lyrXML.@showinlegend = false;
@@ -821,6 +837,10 @@ public final class ConfigLayer
                         url={feaLyr.url}
                         iseditable={feaLyr.isEditable}
                         useproxy={feaLyr.proxyURL != null}/>;
+                if (feaLyr.refreshInterval > 0)
+                {
+                    lyrXML.@autorefresh = minutesToSeconds(feaLyr.refreshInterval);
+                }
                 if (!feaLyr.showInLegend)
                 {
                     lyrXML.@showinlegend = false;
@@ -835,6 +855,10 @@ public final class ConfigLayer
                     visible={geoRSSLayer.visible}
                     alpha={geoRSSLayer.alpha}
                     url={geoRSSLayer.url}/>;
+            if (geoRSSLayer.refreshInterval > 0)
+            {
+                lyrXML.@autorefresh = minutesToSeconds(geoRSSLayer.refreshInterval);
+            }
             if (!geoRSSLayer.showInLegend)
             {
                 lyrXML.@showinlegend = false;
@@ -864,6 +888,10 @@ public final class ConfigLayer
                     visible={kmlLyr.visible}
                     alpha={kmlLyr.alpha}
                     url={kmlLyr.url}/>;
+            if (kmlLyr.refreshInterval > 0)
+            {
+                lyrXML.@autorefresh = minutesToSeconds(kmlLyr.refreshInterval);
+            }
             if (!kmlLyr.showInLegend)
             {
                 lyrXML.@showinlegend = false;
@@ -876,6 +904,10 @@ public final class ConfigLayer
                     type="osm"
                     visible={osmLyr.visible}
                     alpha={osmLyr.alpha}/>;
+            if (osmLyr.refreshInterval > 0)
+            {
+                lyrXML.@autorefresh = minutesToSeconds(osmLyr.refreshInterval);
+            }
             if (!osmLyr.showInLegend)
             {
                 lyrXML.@showinlegend = false;
@@ -889,6 +921,10 @@ public final class ConfigLayer
                     visible={veLyr.visible}
                     alpha={veLyr.alpha}
                     style={veLyr.mapStyle}/>;
+            if (veLyr.refreshInterval > 0)
+            {
+                lyrXML.@autorefresh = minutesToSeconds(veLyr.refreshInterval);
+            }
             if (!veLyr.showInLegend)
             {
                 lyrXML.@showinlegend = false;
@@ -909,6 +945,10 @@ public final class ConfigLayer
                     skipgetcapabilities={wmsLayer.skipGetCapabilities}
                     imageformat={wmsLayer.imageFormat}
                     url={wmsLayer.url}/>;
+            if (wmsLayer.refreshInterval > 0)
+            {
+                lyrXML.@autorefresh = minutesToSeconds(wmsLayer.refreshInterval);
+            }
             if (!wmsLayer.showInLegend)
             {
                 lyrXML.@showinlegend = false;
@@ -945,6 +985,10 @@ public final class ConfigLayer
                     imageformat={wmtsLayer.imageFormat}
                     url={wmtsLayer.url}
                     useproxy={tiledLyr.proxyURL != null}/>;
+            if (wmtsLayer.refreshInterval > 0)
+            {
+                lyrXML.@autorefresh = minutesToSeconds(wmtsLayer.refreshInterval);
+            }
             if (!wmtsLayer.showInLegend)
             {
                 lyrXML.@showinlegend = false;
@@ -976,6 +1020,10 @@ public final class ConfigLayer
                         visible={webTiledLayer.visible}
                         alpha={webTiledLayer.alpha}
                         url={webTiledLayer.urlTemplate}/>;
+                if (webTiledLayer.refreshInterval > 0)
+                {
+                    lyrXML.@autorefresh = minutesToSeconds(webTiledLayer.refreshInterval);
+                }
                 if (!webTiledLayer.showInLegend)
                 {
                     lyrXML.@showinlegend = false;
@@ -996,6 +1044,12 @@ public final class ConfigLayer
         }
 
         return lyrXML;
+    }
+
+    private static function minutesToSeconds(minutes:Number):Number
+    {
+        const SECONDS_IN_MINUTE:int = 60;
+        return minutes * SECONDS_IN_MINUTE;
     }
 
     private static function getPointSymbolXML(pointSymbol:Symbol):XML
