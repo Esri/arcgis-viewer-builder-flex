@@ -984,7 +984,7 @@ public final class ConfigLayer
                     version={wmtsLayer.version}
                     imageformat={wmtsLayer.imageFormat}
                     url={wmtsLayer.url}
-                    useproxy={tiledLyr.proxyURL != null}/>;
+                    useproxy={wmtsLayer.proxyURL != null}/>;
             if (wmtsLayer.refreshInterval > 0)
             {
                 lyrXML.@autorefresh = minutesToSeconds(wmtsLayer.refreshInterval);
