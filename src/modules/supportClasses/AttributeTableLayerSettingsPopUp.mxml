@@ -526,14 +526,14 @@
                                                 {
                                                     if (data)
                                                     {
-                                                        isEditorTrackingField = data["isEditorTrackingField"];
-                                                        isEditable = data["editable"];
-                                                        isFieldVisible = data["selected"];
-                                                        isRequiredEditable = data["isRequiredEditable"];
+                                                        isEditorTrackingField = data.isEditorTrackingField;
+                                                        isEditable = data.editable;
+                                                        isFieldVisible = data.selected;
+                                                        isRequiredEditable = data.isRequiredEditable;
 
                                                         if (isFieldVisible)
                                                         {
-                                                            checkBox.selected = isRequiredEditable ? data[column.dataField] : true;
+                                                            checkBox.selected = isRequiredEditable ? data.settings.required : true;
                                                         }
                                                         else
                                                         {
@@ -545,7 +545,7 @@
                                                 private function updateDataField():void
                                                 {
                                                     var isSelected:Boolean = checkBox.selected;
-                                                    data[column.dataField] = isSelected;
+                                                    data.settings.required = isSelected;
                                                     grid.dataProvider.itemUpdated(data, column.dataField, !isSelected, isSelected);
                                                 }
                                             ]]>
