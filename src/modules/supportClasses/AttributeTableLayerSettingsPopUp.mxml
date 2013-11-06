@@ -526,10 +526,10 @@
                                                 {
                                                     if (data)
                                                     {
-                                                        isEditorTrackingField = data["isEditorTrackingField"];
-                                                        isEditable = data["editable"];
-                                                        isFieldVisible = data["selected"];
-                                                        isRequiredEditable = data["isRequiredEditable"];
+                                                        isEditorTrackingField = data.isEditorTrackingField;
+                                                        isEditable = data.editable;
+                                                        isFieldVisible = data.selected;
+                                                        isRequiredEditable = data.isRequiredEditable;
 
                                                         if (isFieldVisible)
                                                         {
