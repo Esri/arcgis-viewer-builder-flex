@@ -430,6 +430,7 @@
                                               direction="ltr"
                                               invalidURL="portalURLInput_invalidURLHandler(event)"
                                               processValidPortalFunction="processValidatedPortalFunction"
+                                              requestTimeout="10"
                                               restrict="^ "
                                               text="@{settings.portalURL}"/>
 
