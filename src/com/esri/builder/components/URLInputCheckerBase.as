@@ -49,6 +49,7 @@ public class URLInputCheckerBase extends TextInput
     private var proxyURLChanged:Boolean;
     private var validationDelayChanged:Boolean;
     private var isURLValidationPending:Boolean;
+    private var isURLValidationInProgress:Boolean;
 
     protected var requestTimeoutChanged:Boolean;
     protected var url:String;
@@ -263,6 +264,7 @@ public class URLInputCheckerBase extends TextInput
     protected function displayInvalidURL(message:String = ""):void
     {
         setInvalidMessageInternally(message);
+        isURLValidationInProgress = false;
         isURLValidationPending = false;
         setValidURLInternal(false);
         dispatchEvent(new Event("invalidURL"));
@@ -286,6 +288,7 @@ public class URLInputCheckerBase extends TextInput
 
     protected function triggerURLChecker():void
     {
+        isURLValidationInProgress = true;
         //subclasses must implement
     }
 
@@ -296,6 +299,7 @@ public class URLInputCheckerBase extends TextInput
 
     protected function displayValidURL():void
     {
+        isURLValidationInProgress = false;
         isURLValidationPending = false;
         setValidURLInternal(true);
         dispatchEvent(new Event("validURL"));
@@ -320,9 +324,13 @@ public class URLInputCheckerBase extends TextInput
 
         if (text)
         {
-            if (isURLValidationPending)
+            if (isURLValidationInProgress)
             {
                 return "busy";
+            }
+            else if (isURLValidationPending)
+            {
+                return "normal";
             }
             else
             {

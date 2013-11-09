@@ -115,6 +115,7 @@ public class URLInputChecker extends URLInputCheckerBase
 
     override protected function triggerURLChecker():void
     {
+        super.triggerURLChecker();
         urlRequest.send();
     }
 

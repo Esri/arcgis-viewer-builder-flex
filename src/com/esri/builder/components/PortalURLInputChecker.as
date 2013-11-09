@@ -66,6 +66,7 @@ public class PortalURLInputChecker extends URLInputCheckerBase
 
     override protected function triggerURLChecker():void
     {
+        super.triggerURLChecker();
         portal.load();
     }
 
