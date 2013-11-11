@@ -42,6 +42,7 @@
             import mx.collections.ArrayList;
             import mx.core.FlexGlobals;
             import mx.events.CollectionEvent;
+            import mx.events.CollectionEventKind;
             import mx.events.FlexEvent;
             import mx.rpc.AsyncResponder;
             import mx.rpc.Fault;
@@ -315,7 +316,10 @@
 
             protected function configOperationalLayers_collectionChangeHandler(event:CollectionEvent):void
             {
-                updateLayerListItems();
+                if (event.kind == CollectionEventKind.RESET)
+                {
+                    updateLayerListItems();
+                }
             }
         ]]>
     </fx:Script>
