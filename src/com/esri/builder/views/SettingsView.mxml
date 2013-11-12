@@ -217,6 +217,19 @@
                 settings.printTaskURL = printTaskURL;
                 settings.geocodeURL = geocodeURL;
             }
+
+            private function portalURLInput_invalidURLHandler(event:Event):void
+            {
+                var invalidMessage:String = portalURLInput.invalidMessage;
+                var signInUserError:String = resourceManager.getString("BuilderStrings", "unableToSignInPortalUser");
+                var signUpUserError:String = resourceManager.getString("BuilderStrings", "unableToSignUpPortalUser");
+
+                if (invalidMessage == signInUserError ||
+                    invalidMessage == signUpUserError)
+                {
+                    AppEvent.dispatch(AppEvent.SHOW_ERROR, invalidMessage);
+                }
+            }
         ]]>
     </fx:Script>
 
@@ -415,7 +428,9 @@
             <components:PortalURLInputChecker id="portalURLInput"
                                               width="400"
                                               direction="ltr"
+                                              invalidURL="portalURLInput_invalidURLHandler(event)"
                                               processValidPortalFunction="processValidatedPortalFunction"
+                                              requestTimeout="10"
                                               restrict="^ "
                                               text="@{settings.portalURL}"/>
 

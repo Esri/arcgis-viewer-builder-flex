@@ -115,7 +115,14 @@ public class URLInputChecker extends URLInputCheckerBase
 
     override protected function triggerURLChecker():void
     {
+        super.triggerURLChecker();
         urlRequest.send();
+    }
+
+    override protected function cancelURLValidationInProgress():void
+    {
+        urlRequest.cancel();
+        super.cancelURLValidationInProgress();
     }
 
     override protected function prepareURLChecker(url:String):void
@@ -140,7 +147,7 @@ public class URLInputChecker extends URLInputCheckerBase
         }
         else
         {
-            displayInvalidURL();
+            displayInvalidURL(fallbackErrorMessage);
         }
     }
 
@@ -153,7 +160,7 @@ public class URLInputChecker extends URLInputCheckerBase
     protected function urlRequest_faultHandler(event:FaultEvent):void
     {
         removeURLCheckerListeners();
-        displayInvalidURL();
+        displayInvalidURL(getInvalidMessage(event.fault));
     }
 
     override protected function requestURLValidation():void

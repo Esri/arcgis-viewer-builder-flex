@@ -260,6 +260,28 @@
                         verticalAlign="middle"
                         widthInChars="10"/>
 
+    <s:PopUpAnchor y="{textDisplay.height + 2}" width="{width}" height="{height}"
+                   displayPopUp.invalid="true"
+                   includeInLayout="false"
+                   popUpHeightMatchesAnchorHeight="true"
+                   popUpWidthMatchesAnchorWidth="true">
+        <s:Group left="0" right="0" top="0" bottom="0">
+            <s:Rect left="0" right="0" top="0" bottom="0">
+                <s:fill>
+                    <s:SolidColor color="0xCE474A"/>
+                </s:fill>
+            </s:Rect>
+
+            <s:Label left="5" right="5"
+                     color="0xFFFFFF"
+                     maxDisplayedLines="1"
+                     maxWidth="{textDisplay.width}"
+                     showTruncationTip="true"
+                     text="{hostComponent.invalidMessage}"
+                     verticalCenter="0"/>
+        </s:Group>
+    </s:PopUpAnchor>
+
     <s:Label id="promptDisplay"
              includeIn="normalWithPrompt, disabledWithPrompt"
              includeInLayout="false"
