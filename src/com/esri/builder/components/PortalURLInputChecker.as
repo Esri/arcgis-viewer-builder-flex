@@ -70,6 +70,12 @@ public class PortalURLInputChecker extends URLInputCheckerBase
         portal.load();
     }
 
+    override protected function cancelURLValidationInProgress():void
+    {
+        removeURLCheckerListeners();
+        super.cancelURLValidationInProgress();
+    }
+
     override protected function prepareURLChecker(url:String):void
     {
         portal.url = com.esri.builder.supportClasses.URLUtil.ensureValidKeyValuePairs(

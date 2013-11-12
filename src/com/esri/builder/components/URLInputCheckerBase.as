@@ -92,6 +92,11 @@ public class URLInputCheckerBase extends TextInput
         }
     }
 
+    protected function cancelURLValidationInProgress():void
+    {
+        isURLValidationInProgress = false;
+    }
+
     protected function setTextInternally(value:String):void
     {
         super.text = value;
@@ -196,6 +201,7 @@ public class URLInputCheckerBase extends TextInput
     {
         if (enabled)
         {
+            cancelURLValidationInProgress();
             setInvalidMessageInternally();
             isURLValidationPending = true;
             validationTimer.reset();

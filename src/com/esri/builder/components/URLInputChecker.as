@@ -119,6 +119,12 @@ public class URLInputChecker extends URLInputCheckerBase
         urlRequest.send();
     }
 
+    override protected function cancelURLValidationInProgress():void
+    {
+        urlRequest.cancel();
+        super.cancelURLValidationInProgress();
+    }
+
     override protected function prepareURLChecker(url:String):void
     {
         urlRequest.url = URLUtil.ensureValidKeyValuePairs(URLUtil.removeToken(url));
