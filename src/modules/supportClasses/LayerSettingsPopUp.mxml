@@ -123,7 +123,7 @@
 
             private function hasAtLeastOneSelectedItem(items:Array):Boolean
             {
-                for each (var item:Object in items)
+                for each (var item:FieldSettingsOption in items)
                 {
                     if (item.selected === true)
                     {
@@ -175,6 +175,7 @@
                 var atLeastOneFieldMatched:Boolean;
                 var fieldNameToFieldSettingsOption:Dictionary = new Dictionary();
                 var editableFieldSettings:FieldSettings;
+                var fieldSettingsOption:FieldSettingsOption;
 
                 var field:Field;
                 //init field settings options
@@ -207,14 +208,13 @@
                         editableFieldSettings.required = !isRequiredEditable;
                     }
 
-                    fieldNameToFieldSettingsOption[field.name] =
-                        {
-                            settings: editableFieldSettings,
-                            isRequiredEditable: isRequiredEditable,
-                            isEditorTrackingField: isEditorTrackingField,
-                            selected: true,
-                            editable: field.editable
-                        };
+                    fieldSettingsOption = new FieldSettingsOption(editableFieldSettings);
+                    fieldSettingsOption.isRequiredEditable = isRequiredEditable;
+                    fieldSettingsOption.isEditorTrackingField = isEditorTrackingField;
+                    fieldSettingsOption.selected = true;
+                    fieldSettingsOption.editable = field.editable;
+
+                    fieldNameToFieldSettingsOption[field.name] = fieldSettingsOption;
                 }
 
                 //add user-defined field settings first
@@ -224,7 +224,6 @@
                     fieldSettingsOptions.push(fieldNameToFieldSettingsOption[fieldSettings.name]);
                 }
 
-                var fieldSettingsOption:Object;
                 for each (field in fields)
                 {
                     fieldSettingsOption = fieldNameToFieldSettingsOption[field.name];
@@ -276,7 +275,7 @@
                 var allFieldSettings:Array = [];
 
                 var fieldSettingsOptions:Array = availableFieldSettingsOptions.source;
-                for each (var fieldSettingsOption:Object in fieldSettingsOptions)
+                for each (var fieldSettingsOption:FieldSettingsOption in fieldSettingsOptions)
                 {
                     if (fieldSettingsOption.selected)
                     {
@@ -307,9 +306,9 @@
                 return editorTrackingFieldNames;
             }
 
-            private function actionsItemRenderer(fieldSettingsOption:Object, column:GridColumn):IFactory
+            private function actionsItemRenderer(fieldSettingsOption:FieldSettingsOption, column:GridColumn):IFactory
             {
-                var field:Field = findMatchingField(fieldSettingsOption.settings.name);
+                var field:Field = findMatchingField(fieldSettingsOption.name);
                 var isDateField:Boolean = field && (field.type == Field.TYPE_DATE);
 
                 var itemRendererClass:Class =
@@ -337,8 +336,8 @@
             private function fieldSettingsOptionsDataGrid_editItemHandler(event:ModifyItemEvent):void
             {
                 var fieldFormatPopUp:FieldFormatPopUp = new FieldFormatPopUp();
-                var fieldSettingOption:Object = event.item;
-                var fieldName:String = fieldSettingOption.settings.name;
+                var fieldSettingOption:FieldSettingsOption = event.item as FieldSettingsOption;
+                var fieldName:String = fieldSettingOption.name;
 
                 var fieldSettings:FieldSettings = findMatchingFieldSettings(fieldName);
                 if (fieldSettings)
@@ -361,9 +360,9 @@
             {
                 var settings:FieldSettings;
 
-                for each (var fieldSettingOption:Object in availableFieldSettingsOptions.source)
+                for each (var fieldSettingOption:FieldSettingsOption in availableFieldSettingsOptions.source)
                 {
-                    if (fieldSettingOption.settings.name == fieldName)
+                    if (fieldSettingOption.name == fieldName)
                     {
                         settings = fieldSettingOption.settings;
                         break;
@@ -480,19 +479,19 @@
                                       maxWidth="60"/>
 
                         <s:GridColumn width="100"
-                                      dataField="settings.name"
+                                      dataField="name"
                                       editable="false"
                                       headerText="{resourceManager.getString('BuilderStrings', 'displayFields.name')}"
                                       maxWidth="200"/>
 
                         <s:GridColumn width="100"
-                                      dataField="settings.alias"
+                                      dataField="alias"
                                       editable="true"
                                       headerText="{resourceManager.getString('BuilderStrings', 'displayFields.alias')}"
                                       maxWidth="200"/>
 
                         <s:GridColumn width="100"
-                                      dataField="settings.required"
+                                      dataField="required"
                                       editable="false"
                                       headerText="{resourceManager.getString('BuilderStrings', 'geoprocessing.required')}"
                                       includeIn="showRequired"
@@ -524,7 +523,7 @@
 
                                                         if (isFieldVisible)
                                                         {
-                                                            checkBox.selected = isRequiredEditable ? data.settings.required : true;
+                                                            checkBox.selected = isRequiredEditable ? data.required : true;
                                                         }
                                                         else
                                                         {
@@ -536,7 +535,7 @@
                                                 private function updateDataField():void
                                                 {
                                                     var isSelected:Boolean = checkBox.selected;
-                                                    data.settings.required = isSelected;
+                                                    data.required = isSelected;
                                                     grid.dataProvider.itemUpdated(data, column.dataField, !isSelected, isSelected);
                                                 }
                                             ]]>
