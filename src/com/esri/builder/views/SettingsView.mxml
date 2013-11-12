@@ -428,6 +428,7 @@
             <components:PortalURLInputChecker id="portalURLInput"
                                               width="400"
                                               direction="ltr"
+                                              validationDelay="1.3"
                                               invalidURL="portalURLInput_invalidURLHandler(event)"
                                               processValidPortalFunction="processValidatedPortalFunction"
                                               requestTimeout="10"
