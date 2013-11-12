@@ -345,8 +345,8 @@
             private function fieldSettingsOptionsDataGrid_editItemHandler(event:ModifyItemEvent):void
             {
                 var fieldFormatPopUp:FieldFormatPopUp = new FieldFormatPopUp();
-                var fieldSettingOption:FieldSettingsOption = event.item as FieldSettingsOption;
-                var fieldName:String = fieldSettingOption.name;
+                var fieldSettingsOption:FieldSettingsOption = event.item as FieldSettingsOption;
+                var fieldName:String = fieldSettingsOption.name;
 
                 var fieldSettings:FieldSettings = findMatchingFieldSettings(fieldName);
                 if (fieldSettings)
@@ -369,11 +369,11 @@
             {
                 var settings:FieldSettings;
 
-                for each (var fieldSettingOption:FieldSettingsOption in availableFieldSettingsOptions.source)
+                for each (var fieldSettingsOption:FieldSettingsOption in availableFieldSettingsOptions.source)
                 {
-                    if (fieldSettingOption.name == fieldName)
+                    if (fieldSettingsOption.name == fieldName)
                     {
-                        settings = fieldSettingOption.settings;
+                        settings = fieldSettingsOption.settings;
                         break;
                     }
                 }
