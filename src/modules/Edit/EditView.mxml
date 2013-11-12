@@ -435,7 +435,7 @@
                 <views:HelpButton left="column6:10"
                                   baseline="bottomRow:0"
                                   helpText="{resourceManager.getString('BuilderStrings', 'edit.updateAttributesHelp')}"
-                                  title="{resourceManager.getString('BuilderStrings', 'edit.updateAttributesHelp')}"/>
+                                  title="{resourceManager.getString('BuilderStrings', 'edit.updateAttributes')}"/>
             </components:TitleContainer>
 
             <components:TitleContainer width="100%" height="50%"
