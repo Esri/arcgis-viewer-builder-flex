@@ -73,6 +73,7 @@ public class PortalURLInputChecker extends URLInputCheckerBase
     override protected function cancelURLValidationInProgress():void
     {
         removeURLCheckerListeners();
+        resetURLAdjusting();
         super.cancelURLValidationInProgress();
     }
 
