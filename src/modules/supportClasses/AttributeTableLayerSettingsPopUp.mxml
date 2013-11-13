@@ -220,6 +220,7 @@
                     fieldSettingsOption.isEditorTrackingField = isEditorTrackingField;
                     fieldSettingsOption.selected = true;
                     fieldSettingsOption.editable = field.editable;
+                    fieldSettingsOption.originalAlias = field.alias;
 
                     fieldNameToFieldSettingsOption[field.name] = fieldSettingsOption;
                 }
@@ -497,6 +498,7 @@
                                       dataField="alias"
                                       editable="true"
                                       headerText="{resourceManager.getString('BuilderStrings', 'displayFields.alias')}"
+                                      itemRenderer="com.esri.builder.renderers.FieldSettingsAliasGridItemRenderer"
                                       maxWidth="200"/>
 
                         <s:GridColumn width="100"
@@ -504,62 +506,8 @@
                                       editable="false"
                                       headerText="{resourceManager.getString('BuilderStrings', 'geoprocessing.required')}"
                                       includeIn="showRequired"
-                                      maxWidth="200">
-                            <s:itemRenderer>
-                                <fx:Component>
-                                    <s:GridItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
-                                                        xmlns:s="library://ns.adobe.com/flex/spark"
-                                                        clipAndEnableScrolling="true">
-                                        <fx:Script>
-                                            <![CDATA[
-                                                [Bindable]
-                                                private var isFieldVisible:Boolean;
-                                                [Bindable]
-                                                private var isRequiredEditable:Boolean;
-                                                [Bindable]
-                                                private var isEditable:Boolean;
-                                                [Bindable]
-                                                private var isEditorTrackingField:Boolean;
-
-                                                override public function prepare(hasBeenRecycled:Boolean):void
-                                                {
-                                                    if (data)
-                                                    {
-                                                        isEditorTrackingField = data.isEditorTrackingField;
-                                                        isEditable = data.editable;
-                                                        isFieldVisible = data.selected;
-                                                        isRequiredEditable = data.isRequiredEditable;
-
-                                                        if (isFieldVisible)
-                                                        {
-                                                            checkBox.selected = isRequiredEditable ? data.required : true;
-                                                        }
-                                                        else
-                                                        {
-                                                            checkBox.selected = false;
-                                                        }
-                                                    }
-                                                }
-
-                                                private function updateDataField():void
-                                                {
-                                                    var isSelected:Boolean = checkBox.selected;
-                                                    data.required = isSelected;
-                                                    grid.dataProvider.itemUpdated(data, column.dataField, !isSelected, isSelected);
-                                                }
-                                            ]]>
-                                        </fx:Script>
-
-                                        <s:CheckBox id="checkBox"
-                                                    change="updateDataField()"
-                                                    enabled="{isRequiredEditable &amp;&amp; isFieldVisible}"
-                                                    horizontalCenter="0"
-                                                    verticalCenter="0"
-                                                    visible="{isEditable &amp;&amp; !isEditorTrackingField}"/>
-                                    </s:GridItemRenderer>
-                                </fx:Component>
-                            </s:itemRenderer>
-                        </s:GridColumn>
+                                      itemRenderer="com.esri.builder.renderers.FieldSettingsRequiredGridItemRenderer"
+                                      maxWidth="200"/>
 
                         <s:GridColumn width="100"
                                       editable="false"
