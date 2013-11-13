@@ -220,6 +220,7 @@
                     fieldSettingsOption.isEditorTrackingField = isEditorTrackingField;
                     fieldSettingsOption.selected = true;
                     fieldSettingsOption.editable = field.editable;
+                    fieldSettingsOption.originalAlias = field.alias;
 
                     fieldNameToFieldSettingsOption[field.name] = fieldSettingsOption;
                 }
@@ -497,7 +498,25 @@
                                       dataField="alias"
                                       editable="true"
                                       headerText="{resourceManager.getString('BuilderStrings', 'displayFields.alias')}"
-                                      maxWidth="200"/>
+                                      maxWidth="200">
+                            <s:itemRenderer>
+                                <fx:Component>
+                                    <s:DefaultGridItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark">
+                                        <fx:Script>
+                                            <![CDATA[
+                                                override public function prepare(hasBeenRecycled:Boolean):void
+                                                {
+                                                    var isSelected:Boolean = data && data.selected;
+                                                    label = isSelected ? data.alias : data.originalAlias;
+                                                    alpha = isSelected ? 1 : 0.5;
+                                                    column.editable = isSelected;
+                                                }
+                                            ]]>
+                                        </fx:Script>
+                                    </s:DefaultGridItemRenderer>
+                                </fx:Component>
+                            </s:itemRenderer>
+                        </s:GridColumn>
 
                         <s:GridColumn width="100"
                                       dataField="required"

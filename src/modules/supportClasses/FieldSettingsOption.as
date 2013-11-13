@@ -65,5 +65,6 @@ public class FieldSettingsOption
     public var isEditorTrackingField:Boolean;
     public var selected:Boolean;
     public var editable:Boolean;
+    public var originalAlias:String;
 }
 }
