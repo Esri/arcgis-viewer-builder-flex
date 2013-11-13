@@ -22,6 +22,8 @@ import com.esri.builder.model.Model;
 import com.esri.builder.model.WidgetTypeRegistryModel;
 import com.esri.builder.supportClasses.LogUtil;
 
+import mx.controls.Alert;
+
 import mx.core.FlexGlobals;
 import mx.logging.ILogger;
 import mx.resources.ResourceManager;
@@ -58,6 +60,15 @@ public class LocaleController
         applyLocaleLayoutDirection(selectedLocale);
         setPreferredLocaleFonts(selectedLocale);
         setLocaleSpecificStyles(selectedLocale);
+        updateAlertLabels();
+    }
+
+    private function updateAlertLabels():void
+    {
+        Alert.okLabel = ResourceManager.getInstance().getString("BuilderStrings", "ok");
+        Alert.cancelLabel = ResourceManager.getInstance().getString("BuilderStrings", "cancel");
+        Alert.yesLabel = ResourceManager.getInstance().getString("BuilderStrings", "yes");
+        Alert.noLabel = ResourceManager.getInstance().getString("BuilderStrings", "no");
     }
 
     private function applyLocaleLayoutDirection(selectedLocale:String):void
