@@ -23,6 +23,31 @@ public class FileUtil
     private static const CRLF_LINE_ENDING:String = "\r\n";
     private static const LF_LINE_ENDING:String = "\n";
 
+    public static function ensureOSLineEndings(text:String):String
+    {
+        if (File.lineEnding == CRLF_LINE_ENDING)
+        {
+            return ensureCRLF(text);
+        }
+
+        if (File.lineEnding == LF_LINE_ENDING)
+        {
+            return ensureLF(text);
+        }
+
+        return text ? text : "";
+    }
+
+    private static function ensureCRLF(text:String):String
+    {
+        return text ? text.replace(/(?<!\r)\n/g, CRLF_LINE_ENDING) : "";
+    }
+
+    private static function ensureLF(text:String):String
+    {
+        return text ? text.replace(/\r\n/g, LF_LINE_ENDING) : "";
+    }
+
     public static function generateUniqueRelativePath(baseDirectory:File, relativeFilePath:String, relativePathBlackList:Array = null):String
     {
         var extensionIndex:int = relativeFilePath.lastIndexOf(".");
@@ -109,31 +134,6 @@ public class FileUtil
         }
 
         return matchingFile;
-    }
-
-    public static function ensureOSLineEndings(text:String):String
-    {
-        if (File.lineEnding == CRLF_LINE_ENDING)
-        {
-            return ensureCRLF(text);
-        }
-
-        if (File.lineEnding == LF_LINE_ENDING)
-        {
-            return ensureLF(text);
-        }
-
-        return text ? text : "";
-    }
-
-    private static function ensureCRLF(text:String):String
-    {
-        return text ? text.replace(/(?<!\r)\n/g, CRLF_LINE_ENDING) : "";
-    }
-
-    private static function ensureLF(text:String):String
-    {
-        return text ? text.replace(/\r\n/g, LF_LINE_ENDING) : "";
     }
 }
 }
