@@ -441,7 +441,8 @@
                      baseline="timeExtentRow2:0"
                      text="{resourceManager.getString('BuilderStrings', 'time.start')}"/>
 
-            <mx:DateField left="timeExtentColumn3:10"
+            <mx:DateField width="100"
+                          left="timeExtentColumn3:10"
                           baseline="timeExtentRow2:0"
                           labelFunction="dateFieldLabelFunction"
                           selectedDate="@{model.startTime}"/>
@@ -450,7 +451,8 @@
                      baseline="timeExtentRow3:0"
                      text="{resourceManager.getString('BuilderStrings', 'time.end')}"/>
 
-            <mx:DateField left="timeExtentColumn3:10"
+            <mx:DateField width="100"
+                          left="timeExtentColumn3:10"
                           baseline="timeExtentRow3:0"
                           labelFunction="dateFieldLabelFunction"
                           selectedDate="@{model.endTime}"/>
