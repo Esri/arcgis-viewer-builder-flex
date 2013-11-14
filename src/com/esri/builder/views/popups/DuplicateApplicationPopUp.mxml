@@ -18,7 +18,6 @@
 -->
 <s:SkinnableContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
                       xmlns:s="library://ns.adobe.com/flex/spark"
-                      xmlns:mx="library://ns.adobe.com/flex/mx"
                       creationComplete="this_creationCompleteHandler(event)"
                       minHeight="150"
                       minWidth="450">
