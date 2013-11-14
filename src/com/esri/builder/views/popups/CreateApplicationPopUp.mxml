@@ -141,7 +141,7 @@
                          change="validateAppName()"
                          enter="applicationNameTextInput_enterHandler(event)"
                          maxChars="100"
-                         restrict='\u0020-\u007E^/?\\&gt;&lt;:*|"”\^.#&apos;%;'/>
+                         restrict='\u0020-\u007E^/?\\&gt;&lt;:*|"”\^.#&apos;%;@=+'/>
 
             <s:helpContent>
                 <views:HelpButton id="applicationNameHelp"
