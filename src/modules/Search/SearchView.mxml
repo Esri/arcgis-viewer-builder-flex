@@ -426,12 +426,12 @@
             <s:layout>
                 <s:ConstraintLayout>
                     <s:constraintColumns>
-                        <s:ConstraintColumn id="editSearchColumn1" width="15%"/>
+                        <s:ConstraintColumn id="editSearchColumn1" width="20%"/>
                         <s:ConstraintColumn id="editSearchColumn2" width="20%"/>
-                        <s:ConstraintColumn id="editSearchColumn3" width="20%"/>
-                        <s:ConstraintColumn id="editSearchColumn4" width="10%"/>
+                        <s:ConstraintColumn id="editSearchColumn3" width="10%"/>
+                        <s:ConstraintColumn id="editSearchColumn4" width="20%"/>
                         <s:ConstraintColumn id="editSearchColumn5" width="20%"/>
-                        <s:ConstraintColumn id="editSearchColumn6" width="15%"/>
+                        <s:ConstraintColumn id="editSearchColumn6" width="10%"/>
                     </s:constraintColumns>
 
                     <s:constraintRows>
@@ -471,7 +471,7 @@
                          baseline="editSearchRow2:0"
                          text="@{searchLayerName}"/>
 
-            <s:Label left="editSearchColumn4:10"
+            <s:Label left="editSearchColumn4:10" right="editSearchColumn4:0"
                      baseline="editSearchRow2:0"
                      text="{resourceManager.getString('BuilderStrings', 'search.label')}"/>
 
@@ -501,11 +501,11 @@
                               helpText="{resourceManager.getString('BuilderStrings', 'search.expressionHelpContent', [ SEARCH_EXPRESSION_SAMPLE ])}"
                               title="{resourceManager.getString('BuilderStrings', 'search.expression')}"/>
 
-            <s:Label left="editSearchColumn4:10" right="editSearchColumn4:5"
+            <s:Label left="editSearchColumn4:10" right="editSearchColumn4:0"
                      baseline="editSearchRow3:0"
                      text="{resourceManager.getString('BuilderStrings', 'configLayerView.useProxy')}"/>
 
-            <s:HGroup left="editSearchColumn5:10"
+            <s:HGroup left="editSearchColumn5:10" right="editSearchColumn5:0"
                       baseline="editSearchRow3:0"
                       verticalAlign="middle">
                 <s:CheckBox id="useProxy" selected="@{searchLayerUseProxy}"/>
