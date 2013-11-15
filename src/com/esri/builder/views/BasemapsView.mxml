@@ -512,9 +512,9 @@
               skinClass="com.esri.builder.skins.GreenNextButtonSkin"/>
 
     <s:VGroup width="100%" height="60%"
-              left="550" right="10" top="64" bottom="10">
+              left="550" right="10" top="64" bottom="10"
+              clipAndEnableScrolling="true">
         <views:ConfigLayerListView id="activeBasemapsListView"
-                                   width="100%" height="100%"
                                    add="basemapsView_addHandler(event)"
                                    dataProvider="{Model.instance.configBasemapsList.configLayerList}"
                                    itemRenderer="com.esri.builder.renderers.BasemapConfigLayerRenderer"
@@ -522,10 +522,12 @@
                                    noLayerText="{resourceManager.getString('BuilderStrings', 'mapsView.basemapsView.noBasemapSelected')}"/>
 
         <s:CheckBox id="addArcGISBasemapsCheckBox"
+                    width="{activeBasemapsListView.width}"
                     change="updateAddArcGISBasemaps()"
                     fontSize="14"
                     label="{resourceManager.getString('BuilderStrings', 'mapsView.addArcGISBasemaps')}"
                     selected="{Model.instance.config.configMap.addArcGISBasemaps}"
+                    skinClass="com.esri.builder.skins.WrappableCheckBoxSkin"
                     styleName="boldText"/>
     </s:VGroup>
 </s:Group>
