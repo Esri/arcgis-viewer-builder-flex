@@ -52,9 +52,10 @@
                       color="0x000000"/>
     </fx:Declarations>
 
-    <s:CheckBox left="5"
+    <s:CheckBox left="5" right="30"
                 change="dispatchLayerListEvent()"
                 label="{data.alias}"
+                maxWidth="{width - 30}"
                 selected="@{data.isIncluded}"
                 verticalCenter="0"/>
 
