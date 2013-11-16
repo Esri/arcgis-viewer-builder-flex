@@ -150,7 +150,7 @@
                     </s:ConstraintLayout>
                 </s:layout>
 
-                <s:Label left="firstColumn:0"
+                <s:Label left="firstColumn:0" right="firstColumn:0"
                          baseline="topRow:0"
                          text="{resourceManager.getString('BuilderStrings', 'widgetsView.widgetLabel')}"/>
 
@@ -161,7 +161,7 @@
                              restrict='^&gt;&lt;'
                              text="@{widget.label}"/>
 
-                <s:Label left="firstColumn:0"
+                <s:Label left="firstColumn:0" right="firstColumn:0"
                          baseline="middleRow:0"
                          text="{resourceManager.getString('BuilderStrings', 'widgetsView.widgetIcon')}"/>
 
@@ -174,7 +174,7 @@
                                          skinClass="com.esri.builder.skins.IconImageBrowserSkin"
                                          toolTip="{resourceManager.getString('BuilderStrings', 'widgetsView.imageTooltip')}"/>
 
-                <s:Label left="firstColumn:0"
+                <s:Label left="firstColumn:0" right="firstColumn:0"
                          baseline="bottomRow:0"
                          text="{resourceManager.getString('BuilderStrings', 'widgetsView.preload')}"/>
 
