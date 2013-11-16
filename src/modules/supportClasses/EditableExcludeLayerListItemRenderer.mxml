@@ -25,17 +25,12 @@
         <![CDATA[
             import com.esri.builder.components.ModifyItemEvent;
 
-
             private function dispatchLayerListEvent():void
             {
-                if (data.isIncluded)
-                {
-                    owner.dispatchEvent(new ExcludeLayerListEvent(ExcludeLayerListEvent.LAYER_INCLUDED, data.name));
-                }
-                else
-                {
-                    owner.dispatchEvent(new ExcludeLayerListEvent(ExcludeLayerListEvent.LAYER_EXCLUDED, data.name));
-                }
+                var exclusionEventType:String = data.isIncluded ?
+                    ExcludeLayerListEvent.LAYER_INCLUDED : ExcludeLayerListEvent.LAYER_EXCLUDED;
+
+                owner.dispatchEvent(new ExcludeLayerListEvent(exclusionEventType, data.name));
             }
 
             protected function editButton_clickHandler(event:MouseEvent):void
@@ -52,9 +47,10 @@
                       color="0x000000"/>
     </fx:Declarations>
 
-    <s:CheckBox left="5"
+    <s:CheckBox left="5" right="30"
                 change="dispatchLayerListEvent()"
                 label="{data.alias}"
+                maxWidth="{width - 30}"
                 selected="@{data.isIncluded}"
                 verticalCenter="0"/>
 
