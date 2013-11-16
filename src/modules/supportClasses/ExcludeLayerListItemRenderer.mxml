@@ -24,14 +24,10 @@
         <![CDATA[
             private function dispatchLayerListEvent():void
             {
-                if (data.isIncluded)
-                {
-                    owner.dispatchEvent(new ExcludeLayerListEvent(ExcludeLayerListEvent.LAYER_INCLUDED, data.name));
-                }
-                else
-                {
-                    owner.dispatchEvent(new ExcludeLayerListEvent(ExcludeLayerListEvent.LAYER_EXCLUDED, data.name));
-                }
+                var exclusionEventType:String = data.isIncluded ?
+                    ExcludeLayerListEvent.LAYER_INCLUDED : ExcludeLayerListEvent.LAYER_EXCLUDED;
+
+                owner.dispatchEvent(new ExcludeLayerListEvent(exclusionEventType, data.name));
             }
         ]]>
     </fx:Script>
