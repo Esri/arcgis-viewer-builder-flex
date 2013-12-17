@@ -31,7 +31,6 @@ import com.esri.builder.supportClasses.URLUtil;
 import flash.net.URLVariables;
 
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.resources.ResourceManager;
 import mx.rpc.AsyncResponder;
 import mx.rpc.Fault;
@@ -58,10 +57,7 @@ public final class AddConfigLayerController
 
     private function addLayerServer(layerServer:ServiceDirectoryNode, configLayerStore:ConfigLayerStore):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Adding layer server");
-        }
+        LOG.info("Adding layer server");
 
         const configLayer:ConfigLayer = new ConfigLayer();
         configLayer.type = ConfigLayer.FEATURE;
@@ -83,17 +79,11 @@ public final class AddConfigLayerController
 
         function serviceMetadataRequest_resultHandler(serviceMetadata:Object, configLayer:ConfigLayer):void
         {
-            if (Log.isDebug())
-            {
-                LOG.debug("Layer server metadata success");
-            }
+            LOG.debug("Layer server metadata success");
 
             if (serviceMetadata.fields && serviceMetadata.fields.length > 0)
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug("Layer server has fields");
-                }
+                LOG.debug("Layer server has fields");
 
                 configLayerStore.addLayer(configLayer);
                 assignAdditionalFeatureLayerProperties(configLayer);
@@ -109,10 +99,7 @@ public final class AddConfigLayerController
 
         function serviceMetadataRequest_faultHandler(fault:Fault, configLayer:ConfigLayer):void
         {
-            if (Log.isDebug())
-            {
-                LOG.debug("Layer server metadata fault");
-            }
+            LOG.debug("Layer server metadata fault");
 
             const errorMessage:String = ResourceManager.getInstance().getString('BuilderStrings',
                                                                                 'mapsView.couldNotAddLayer',
@@ -123,10 +110,7 @@ public final class AddConfigLayerController
 
     private function assignAdditionalFeatureLayerProperties(configLayer:ConfigLayer):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Fetching additional feature layer properties");
-        }
+        LOG.debug("Fetching additional feature layer properties");
 
         const featureLayer:FeatureLayer = configLayer.createLayer() as FeatureLayer;
         featureLayer.addEventListener(LayerEvent.LOAD, featureLayer_loadHandler);
@@ -134,10 +118,7 @@ public final class AddConfigLayerController
 
         function featureLayer_loadHandler(event:LayerEvent):void
         {
-            if (Log.isDebug())
-            {
-                LOG.debug("Feature layer load");
-            }
+            LOG.debug("Feature layer load");
 
             removeFeatureLayerListeners();
 
@@ -147,24 +128,15 @@ public final class AddConfigLayerController
 
             configLayer.useAMF = useAMF;
             AppEvent.dispatch(AppEvent.LAYER_SERVICE_ADDED);
-            if (Log.isDebug())
-            {
-                LOG.debug("Service layer added");
-            }
+            LOG.debug("Service layer added");
         }
 
         function featureLayer_loadErrorHandler(event:LayerEvent):void
         {
-            if (Log.isDebug())
-            {
-                LOG.debug("Feature layer load error");
-            }
+            LOG.debug("Feature layer load error");
 
             removeFeatureLayerListeners();
-            if (Log.isDebug())
-            {
-                LOG.debug("Service layer added");
-            }
+            LOG.debug("Service layer added");
 
             AppEvent.dispatch(AppEvent.LAYER_SERVICE_ADDED);
         }
@@ -178,26 +150,17 @@ public final class AddConfigLayerController
 
     private function addMapServer(mapServer:ServiceDirectoryNode, configLayerStore:ConfigLayerStore):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Adding map server");
-        }
+        LOG.info("Adding map server");
 
         if (mapServer.metadata)
         {
-            if (Log.isDebug())
-            {
-                LOG.debug("Creating map server from metadata");
-            }
+            LOG.debug("Creating map server from metadata");
 
             createAndAddMapServiceConfigLayer(mapServer, configLayerStore);
         }
         else
         {
-            if (Log.isDebug())
-            {
-                LOG.debug("Fetching map server metadata");
-            }
+            LOG.debug("Fetching map server metadata");
 
             const urlVars:URLVariables = new URLVariables();
             urlVars.f = 'json';
@@ -210,10 +173,7 @@ public final class AddConfigLayerController
 
             function serviceMetadataRequest_resultHandler(serviceMetadata:Object, token:Object = null):void
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug("Fetch map server metadata success");
-                }
+                LOG.debug("Fetch map server metadata success");
 
                 mapServer.metadata = serviceMetadata;
                 createAndAddMapServiceConfigLayer(mapServer, configLayerStore);
@@ -221,10 +181,7 @@ public final class AddConfigLayerController
 
             function serviceMetadataRequest_faultHandler(fault:Fault, token:Object = null):void
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug("Fetch map server metadata fault");
-                }
+                LOG.debug("Fetch map server metadata fault");
 
                 const errorMessage:String = ResourceManager.getInstance().getString('BuilderStrings',
                                                                                     'mapsView.couldNotAddLayer',
@@ -238,13 +195,13 @@ public final class AddConfigLayerController
     {
         const configLayer:ConfigLayer = new ConfigLayer();
 
-        if (mapServer.metadata.bandCount)
-        {
-            configLayer.type = ConfigLayer.IMAGE;
-        }
-        else if (mapServer.metadata.singleFusedMapCache)
+        if (mapServer.metadata.singleFusedMapCache)
         {
             configLayer.type = ConfigLayer.TILED;
+        }
+        else if (mapServer.metadata.bandCount)
+        {
+            configLayer.type = ConfigLayer.IMAGE;
         }
         else
         {
@@ -256,10 +213,7 @@ public final class AddConfigLayerController
         configLayer.visible = true;
         configLayer.alpha = 1.0;
 
-        if (Log.isDebug())
-        {
-            LOG.debug("Add config layer - label: {0}, type: {1}, url: {2}", configLayer.label, configLayer.type, configLayer.url);
-        }
+        LOG.debug("Add config layer - label: {0}, type: {1}, url: {2}", configLayer.label, configLayer.type, configLayer.url);
 
         configLayerStore.addLayer(configLayer);
         AppEvent.dispatch(AppEvent.MAP_SERVICE_ADDED);

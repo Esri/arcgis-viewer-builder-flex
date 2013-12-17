@@ -18,7 +18,6 @@
 -->
 <s:SkinnablePopUpContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
                            xmlns:s="library://ns.adobe.com/flex/spark"
-                           xmlns:mx="library://ns.adobe.com/flex/mx"
                            xmlns:components="com.esri.builder.components.*"
                            width="600"
                            minHeight="400">
@@ -150,7 +149,7 @@
                     </s:ConstraintLayout>
                 </s:layout>
 
-                <s:Label left="firstColumn:0"
+                <s:Label left="firstColumn:0" right="firstColumn:0"
                          baseline="topRow:0"
                          text="{resourceManager.getString('BuilderStrings', 'widgetsView.widgetLabel')}"/>
 
@@ -161,7 +160,7 @@
                              restrict='^&gt;&lt;'
                              text="@{widget.label}"/>
 
-                <s:Label left="firstColumn:0"
+                <s:Label left="firstColumn:0" right="firstColumn:0"
                          baseline="middleRow:0"
                          text="{resourceManager.getString('BuilderStrings', 'widgetsView.widgetIcon')}"/>
 
@@ -174,7 +173,7 @@
                                          skinClass="com.esri.builder.skins.IconImageBrowserSkin"
                                          toolTip="{resourceManager.getString('BuilderStrings', 'widgetsView.imageTooltip')}"/>
 
-                <s:Label left="firstColumn:0"
+                <s:Label left="firstColumn:0" right="firstColumn:0"
                          baseline="bottomRow:0"
                          text="{resourceManager.getString('BuilderStrings', 'widgetsView.preload')}"/>
 

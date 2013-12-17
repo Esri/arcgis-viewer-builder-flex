@@ -23,7 +23,6 @@ import com.esri.builder.supportClasses.LogUtil;
 import com.esri.builder.views.BuilderAlert;
 
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.resources.ResourceManager;
 
 public final class LoadAppController
@@ -41,28 +40,19 @@ public final class LoadAppController
 
         if (viewerApp.version == Model.SUPPORTED_VIEWER_VERSION)
         {
-            if (Log.isInfo())
-            {
-                LOG.info("Loading app for editing");
-            }
+            LOG.info("Loading app for editing");
 
             AppEvent.dispatch(AppEvent.EDIT_APP, viewerApp);
         }
         else if (viewerApp.version < Model.SUPPORTED_VIEWER_VERSION)
         {
-            if (Log.isInfo())
-            {
-                LOG.info("Loading app outdated app");
-            }
+            LOG.info("Loading app outdated app");
 
             AppEvent.dispatch(AppEvent.UPGRADE_APP_SELECTED, viewerApp);
         }
         else
         {
-            if (Log.isInfo())
-            {
-                LOG.info("Attempted to load unsupported app");
-            }
+            LOG.info("Attempted to load unsupported app");
 
             showUnsupportedViewerMessage(viewerApp);
         }

@@ -18,7 +18,6 @@
 -->
 <s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
          xmlns:s="library://ns.adobe.com/flex/spark"
-         xmlns:mx="library://ns.adobe.com/flex/mx"
          xmlns:components="com.esri.builder.components.*"
          xmlns:esri="http://www.esri.com/2008/ags"
          width="100%" height="100%"
@@ -43,6 +42,7 @@
             import mx.events.FlexEvent;
             import mx.rpc.AsyncResponder;
             import mx.rpc.AsyncToken;
+            import mx.rpc.Fault;
             import mx.utils.StringUtil;
 
             private var portal:Portal = PortalModel.getInstance().portal;
@@ -81,7 +81,7 @@
                 }
             }
 
-            private function items_faultHandler(queryResult:PortalQueryResult, asyncToken:AsyncToken):void
+            private function items_faultHandler(fault:Fault, asyncToken:AsyncToken):void
             {
                 responder.lastResult = null;
                 currentState = "nomaps";

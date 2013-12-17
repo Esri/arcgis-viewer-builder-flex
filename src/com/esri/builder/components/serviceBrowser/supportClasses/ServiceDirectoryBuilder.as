@@ -35,7 +35,6 @@ import flash.events.EventDispatcher;
 import flash.net.URLVariables;
 
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.resources.ResourceManager;
 import mx.rpc.Fault;
 import mx.rpc.Responder;
@@ -61,10 +60,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
 
     public function buildServiceDirectory(serviceDirectoryBuildRequest:ServiceDirectoryBuildRequest):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Building service directory");
-        }
+        LOG.info("Building service directory");
 
         this.serviceDirectoryBuildRequest = serviceDirectoryBuildRequest;
 
@@ -80,10 +76,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
 
     private function checkCrossDomainBeforeBuildingDirectory():void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Checking service URL crossdomain.xml");
-        }
+        LOG.debug("Checking service URL crossdomain.xml");
 
         crossDomainRequest = new HTTPService();
         crossDomainRequest.url = extractCrossDomainPolicyFileURL(serviceDirectoryBuildRequest.url);
@@ -94,10 +87,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
 
         function crossDomainRequest_resultHandler(event:ResultEvent):void
         {
-            if (Log.isDebug())
-            {
-                LOG.debug("Found service crossdomain.xml");
-            }
+            LOG.debug("Found service crossdomain.xml");
 
             crossDomainRequest.removeEventListener(ResultEvent.RESULT, crossDomainRequest_resultHandler);
             crossDomainRequest.removeEventListener(FaultEvent.FAULT, crossDomainRequest_faultHandler);
@@ -109,10 +99,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
 
         function crossDomainRequest_faultHandler(event:FaultEvent):void
         {
-            if (Log.isDebug())
-            {
-                LOG.debug("Could not find service crossdomain.xml");
-            }
+            LOG.debug("Could not find service crossdomain.xml");
 
             crossDomainRequest.removeEventListener(ResultEvent.RESULT, crossDomainRequest_resultHandler);
             crossDomainRequest.removeEventListener(FaultEvent.FAULT, crossDomainRequest_faultHandler);
@@ -183,10 +170,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
 
     private function checkIfServiceIsSecure(serverInfo:Object):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Checking if service is secure");
-        }
+        LOG.info("Checking if service is secure");
 
         if (serverInfo)
         {
@@ -197,15 +181,8 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
 
             if (isServiceSecured)
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug("Service is secure");
-                }
-
-                if (Log.isDebug())
-                {
-                    LOG.debug("Checking token service crossdomain.xml");
-                }
+                LOG.debug("Service is secure");
+                LOG.debug("Checking token service crossdomain.xml");
 
                 const tokenServiceCrossDomainRequest:HTTPService = new HTTPService();
                 const tokenServiceURL:String = serverInfo.authInfo.tokenServicesUrl || serverInfo.authInfo.tokenServiceUrl;
@@ -217,10 +194,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
 
                 function tokenServiceSecurityRequest_resultHandler(event:ResultEvent):void
                 {
-                    if (Log.isDebug())
-                    {
-                        LOG.debug("Found token service crossdomain.xml");
-                    }
+                    LOG.debug("Found token service crossdomain.xml");
 
                     tokenServiceCrossDomainRequest.removeEventListener(ResultEvent.RESULT, tokenServiceSecurityRequest_resultHandler);
                     tokenServiceCrossDomainRequest.removeEventListener(FaultEvent.FAULT, tokenServiceSecurityRequest_faultHandler);
@@ -243,10 +217,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
 
                 function tokenServiceSecurityRequest_faultHandler(event:FaultEvent):void
                 {
-                    if (Log.isDebug())
-                    {
-                        LOG.debug("Could not find token service crossdomain.xml");
-                    }
+                    LOG.debug("Could not find token service crossdomain.xml");
 
                     tokenServiceCrossDomainRequest.removeEventListener(ResultEvent.RESULT, tokenServiceSecurityRequest_resultHandler);
                     tokenServiceCrossDomainRequest.removeEventListener(FaultEvent.FAULT, tokenServiceSecurityRequest_faultHandler);
@@ -271,10 +242,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
 
     private function startBuildingDirectory():void
     {
-        if (Log.isInfo())
-        {
-            LOG.info('Building serviced directory {0}', serviceDirectoryBuildRequest.url);
-        }
+        LOG.info('Building serviced directory {0}', serviceDirectoryBuildRequest.url);
 
         const servicesDirectoryURL:RegExp = /.+\/rest\/services\/?/;
         const serviceURLRootMatch:Array = servicesDirectoryURL.exec(serviceDirectoryBuildRequest.url);
@@ -326,10 +294,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
 
     private function rootNode_completeHandler(event:URLNodeTraversalEvent):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Finished building service directory");
-        }
+        LOG.info("Finished building service directory");
 
         dispatchEvent(
             new ServiceDirectoryBuilderEvent(ServiceDirectoryBuilderEvent.COMPLETE,
@@ -344,10 +309,7 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
 
     protected function rootNode_faultHandler(event:FaultEvent):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Could not build service directory");
-        }
+        LOG.info("Could not build service directory");
 
         dispatchEvent(event);
     }

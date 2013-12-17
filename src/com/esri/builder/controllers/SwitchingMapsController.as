@@ -25,12 +25,16 @@ import com.esri.ags.layers.Layer;
 import com.esri.ags.layers.WebTiledLayer;
 import com.esri.ags.layers.supportClasses.TileInfo;
 import com.esri.ags.portal.WebMapUtil;
+import com.esri.ags.portal.supportClasses.PortalItem;
 import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.model.ConfigLayer;
 import com.esri.builder.model.ConfigMap;
 import com.esri.builder.model.Model;
+import com.esri.builder.model.PortalLayer;
 import com.esri.builder.model.PortalModel;
+import com.esri.builder.supportClasses.IconFetchEvent;
 import com.esri.builder.supportClasses.LogUtil;
+import com.esri.builder.supportClasses.PortalLayerIconFetcher;
 import com.esri.builder.views.popups.NoticePopUp;
 
 import flash.display.DisplayObject;
@@ -40,16 +44,16 @@ import mx.collections.ArrayCollection;
 import mx.core.FlexGlobals;
 import mx.events.CloseEvent;
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.managers.PopUpManager;
 import mx.resources.ResourceManager;
+import mx.rpc.Fault;
+import mx.rpc.Responder;
 import mx.utils.ObjectUtil;
 
 public final class SwitchingMapsController
 {
     private static const LOG:ILogger = LogUtil.createLogger(SwitchingMapsController);
 
-    private var doNotShowLayerNotAddedPopUp:Boolean;
     private var isCreatingLayersFromWebMap:Boolean;
     private var webMapUtil:WebMapUtil;
     private var mapConfigXML:XML;
@@ -130,10 +134,7 @@ public final class SwitchingMapsController
 
     private function createBasemapsAndOperationalLayersFromWebMap():void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("creating basemap & op layers from web map");
-        }
+        LOG.info("creating basemap & op layers from web map");
 
         var webMapId:String = Model.instance.config.configMap.itemId;
 
@@ -148,23 +149,21 @@ public final class SwitchingMapsController
 
         var map:Map = event.map;
 
-        var unsupportedLayers:Array = []
+        var unsupportedLayers:Array = [];
 
-        var title:String = event.item.title;
-
-        var initialextent:String;
+        var initialExtent:String;
         var extent:Extent = map.extent;
         if (extent)
         {
             var extentArr:Array = [ extent.xmin, extent.ymin, extent.xmax, extent.ymax ];
-            initialextent = extentArr.join(" ");
+            initialExtent = extentArr.join(" ");
         }
 
         XML.ignoreComments = false;
         XML.ignoreWhitespace = false;
         XML.prettyIndent = 4;
 
-        mapConfigXML = <map initialextent={initialextent} top="40" wraparound180="true"/>
+        mapConfigXML = <map initialextent={initialExtent} top="40" wraparound180="true" addarcgisbasemaps={Model.instance.config.configMap.addArcGISBasemaps}/>;
         if (!extent)
         {
             delete mapConfigXML.map.@initialextent;
@@ -261,15 +260,82 @@ public final class SwitchingMapsController
         {
             mapConfigXML.appendChild(opLayers);
         }
-        if (unsupportedLayers.length)
+
+        assignBasemapIcon(event.itemData, mapConfigXML, proceedToSaveConfig);
+
+        function proceedToSaveConfig():void
         {
-            noticePopUp.isWaiting = false;
-            showLayerNotAddedPopUp(unsupportedLayers);
+            if (unsupportedLayers.length)
+            {
+                noticePopUp.isWaiting = false;
+                showLayerNotAddedPopUp(unsupportedLayers);
+            }
+            else
+            {
+                saveNewMapConfig();
+            }
+        }
+    }
+
+    private function assignBasemapIcon(itemData:Object, mapConfigXML:XML, afterFunction:Function):void
+    {
+        var basemapItemId:String = findBasemapLayerItemId(itemData);
+        if (basemapItemId)
+        {
+            PortalModel.getInstance()
+                .portal.getItem(basemapItemId, new Responder(getItem_resultHandler,
+                                                             getItem_faultHandler));
+
+            function getItem_resultHandler(item:PortalItem):void
+            {
+                LOG.debug("fetched basemap item: {0}", basemapItemId);
+                var iconFetcher:PortalLayerIconFetcher = new PortalLayerIconFetcher();
+                iconFetcher.addEventListener(IconFetchEvent.FETCH_COMPLETE, iconFetcher_fetchCompleteHandler);
+                iconFetcher.fetchIconURL(new PortalLayer(item));
+
+                function iconFetcher_fetchCompleteHandler(event:IconFetchEvent):void
+                {
+                    iconFetcher.removeEventListener(IconFetchEvent.FETCH_COMPLETE, iconFetcher_fetchCompleteHandler);
+
+                    if (mapConfigXML.basemaps.children().length() > 0 && event.iconPath)
+                    {
+                        mapConfigXML.basemaps.child(0).@icon = event.iconPath;
+                    }
+
+                    afterFunction();
+                }
+            }
+
+            function getItem_faultHandler(fault:Fault):void
+            {
+                LOG.debug("could not fetch basemap item: {0}", fault.toString());
+                afterFunction();
+            }
         }
         else
         {
-            saveNewMapConfig();
+            afterFunction();
         }
+    }
+
+    private function findBasemapLayerItemId(itemData:Object):String
+    {
+        var basemapLayerItemId:String;
+
+        if (itemData.baseMap)
+        {
+            var layersObjects:Array = itemData.baseMap.baseMapLayers;
+            for each (var layerObject:Object in layersObjects)
+            {
+                if (layerObject.itemId && !layerObject.isReference)
+                {
+                    basemapLayerItemId = layerObject.itemId;
+                    break;
+                }
+            }
+        }
+
+        return basemapLayerItemId;
     }
 
     private function showLayerNotAddedPopUp(layerNames:Array):void
@@ -318,10 +384,7 @@ public final class SwitchingMapsController
 
     private function saveNewMapConfig2():void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("converting map XML {0}", mapConfigXML.toXMLString());
-        }
+        LOG.debug("converting map XML {0}", mapConfigXML.toXMLString());
 
         Model.instance.config.configMap = ConfigMap.decodeXML(mapConfigXML);
         Model.instance.configBasemapsList.importLayers(Model.instance.config.configMap.basemaps.getAllLayers());

@@ -26,14 +26,17 @@ import spark.components.List;
 [Exclude(kind="property", name="dataProvider")]
 [Event(name="layerIncluded", type="modules.supportClasses.ExcludeLayerListEvent")]
 [Event(name="layerExcluded", type="modules.supportClasses.ExcludeLayerListEvent")]
+
 public class ExcludeLayerList extends List
 {
     private var internalDataProvider:ArrayList = new ArrayList();
 
     public function ExcludeLayerList()
     {
-        dataProvider = internalDataProvider
+        dataProvider = internalDataProvider;
     }
+
+    private var layerListItemsChanged:Boolean;
 
     public function set layerListItems(value:Array):void
     {
@@ -47,7 +50,6 @@ public class ExcludeLayerList extends List
 
     private var _excludedLayerNames:IList;
     private var excludedLayerNamesChanged:Boolean;
-    private var layerListItemsChanged:Boolean;
 
     [Bindable]
     public function get excludedLayerNames():IList
@@ -67,41 +69,35 @@ public class ExcludeLayerList extends List
 
     override protected function commitProperties():void
     {
-        if (excludedLayerNamesChanged)
+        if (excludedLayerNamesChanged || layerListItemsChanged)
         {
-            preselectIncludedLayers();
+            selectIncludedLayers();
             excludedLayerNamesChanged = false;
-        }
-
-        if (layerListItemsChanged)
-        {
-            preselectIncludedLayers();
             layerListItemsChanged = false;
         }
 
         super.commitProperties();
     }
 
-    private function preselectIncludedLayers():void
+    private function selectIncludedLayers():void
     {
-        var layersInLayerList:Array = dataProvider.toArray();
-        var totalLayerItems:int = layersInLayerList.length;
-        var layerListItemIndex:int;
-        var layerListItem:ExcludeLayerListItem;
-        for (var i:int = 0; i < totalLayerItems; i++)
+        var availableLayerListItems:Array = dataProvider.toArray();
+        var availableExcludedLayerNames:Array = excludedLayerNames.toArray();
+        var optionInclusion:Boolean;
+
+        for each (var layerListItem:ExcludeLayerListItem in availableLayerListItems)
         {
-            layerListItem = layersInLayerList[i];
-            layerListItem.isIncluded = true;
-            for each (var layerName:String in excludedLayerNames.toArray())
+            optionInclusion = true;
+            for each (var layerName:String in availableExcludedLayerNames)
             {
                 if (layerName == layerListItem.name)
                 {
-                    layerListItem.isIncluded = false;
+                    optionInclusion = false;
                     break;
                 }
             }
+            layerListItem.isIncluded = optionInclusion;
         }
-        invalidateDisplayList();
     }
 
     public static function configLayersToLayerListItems(configLayers:Array):Array

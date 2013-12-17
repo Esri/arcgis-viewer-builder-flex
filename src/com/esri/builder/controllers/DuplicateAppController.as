@@ -19,6 +19,7 @@ package com.esri.builder.controllers
 import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.model.Model;
 import com.esri.builder.model.ViewerApp;
+import com.esri.builder.supportClasses.LogUtil;
 import com.esri.builder.views.BuilderAlert;
 import com.esri.builder.views.popups.DuplicateApplicationPopUp;
 
@@ -29,13 +30,12 @@ import mx.controls.Alert;
 import mx.core.FlexGlobals;
 import mx.events.CloseEvent;
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.managers.PopUpManager;
 import mx.resources.ResourceManager;
 
 public final class DuplicateAppController
 {
-    private const LOG:ILogger = Log.getLogger('com.esri.builder.controllers.DuplicateAppController');
+    private const LOG:ILogger = LogUtil.createLogger(DuplicateAppController);
 
     private var duplicateAppPopUp:DuplicateApplicationPopUp;
     private var appToDuplicate:ViewerApp;
@@ -79,10 +79,7 @@ public final class DuplicateAppController
 
     private function duplicateAppIfPossible(duplicateAppName:String):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info('duplicateExecute::projectName={0}, duplicateName={1}', appToDuplicate.label, duplicateAppName);
-        }
+        LOG.info('duplicateExecute::projectName={0}, duplicateName={1}', appToDuplicate.label, duplicateAppName);
 
         var duplicateAppFile:File = appToDuplicate.directory.parent.resolvePath(duplicateAppName);
         if (duplicateAppFile.isDirectory)
@@ -122,10 +119,7 @@ public final class DuplicateAppController
         }
         catch (e:Error)
         {
-            if (Log.isError())
-            {
-                LOG.error('Problem copying directory: {0}', e.message);
-            }
+            LOG.error('Problem copying directory: {0}', e.message);
             Model.instance.status = e.message.toString();
             BuilderAlert.show(e.message.toString(), ResourceManager.getInstance().getString('BuilderStrings', 'error'));
         }

@@ -24,7 +24,6 @@ import com.esri.builder.model.Model;
 import com.esri.builder.supportClasses.LogUtil;
 
 import mx.logging.ILogger;
-import mx.logging.Log;
 
 public class BreadcrumbController
 {
@@ -45,10 +44,7 @@ public class BreadcrumbController
     {
         var appState:String = event.data as String;
 
-        if (Log.isDebug())
-        {
-            LOG.debug("App state changed: {0}", appState);
-        }
+        LOG.debug("App state changed: {0}", appState);
 
         //TODO: extract app states to constants
         switch (appState)
@@ -107,10 +103,7 @@ public class BreadcrumbController
 
     private function changeAppState():void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Change app state: {0}", selectedBreadcrumb.stateName);
-        }
+        LOG.debug("Change app state: {0}", selectedBreadcrumb.stateName);
 
         // check for breadcrumb label
         if (selectedBreadcrumb.stateName == "home" && Model.instance.config.isDirty)

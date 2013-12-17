@@ -21,6 +21,7 @@ import com.esri.ags.portal.Portal;
 import com.esri.builder.supportClasses.PortalUtil;
 import com.esri.builder.supportClasses.URLUtil;
 
+import mx.rpc.Fault;
 import mx.rpc.events.FaultEvent;
 import mx.utils.URLUtil;
 
@@ -65,13 +66,21 @@ public class PortalURLInputChecker extends URLInputCheckerBase
 
     override protected function triggerURLChecker():void
     {
+        super.triggerURLChecker();
         portal.load();
+    }
+
+    override protected function cancelURLValidationInProgress():void
+    {
+        removeURLCheckerListeners();
+        resetURLAdjusting();
+        super.cancelURLValidationInProgress();
     }
 
     override protected function prepareURLChecker(url:String):void
     {
         portal.url = com.esri.builder.supportClasses.URLUtil.ensureValidKeyValuePairs(
-                com.esri.builder.supportClasses.URLUtil.removeToken(url));
+            com.esri.builder.supportClasses.URLUtil.removeToken(url));
     }
 
     override protected function addURLCheckerListeners():void
@@ -97,7 +106,7 @@ public class PortalURLInputChecker extends URLInputCheckerBase
         }
         else
         {
-            displayInvalidURL();
+            displayInvalidURL(fallbackErrorMessage);
         }
     }
 
@@ -122,11 +131,23 @@ public class PortalURLInputChecker extends URLInputCheckerBase
     {
         removeURLCheckerListeners();
 
+        var fault:Fault = event.fault;
+
+        var isPortalErrorResponse:Boolean = fault.content
+            && fault.content.hasOwnProperty("code")
+            && fault.content.hasOwnProperty("message");
+        if (isPortalErrorResponse)
+        {
+            resetURLAdjusting();
+            displayInvalidURL(getInvalidMessage(fault));
+            return;
+        }
+
         if (isAdjustingURL && hasTriedExistingInstanceEndPoint
             && hasTriedDefaultInstanceEndPoint && hasTriedPortalEndPoint)
         {
             resetURLAdjusting();
-            displayInvalidURL();
+            displayInvalidURL(getInvalidMessage(fault));
             return;
         }
         else
@@ -178,7 +199,7 @@ public class PortalURLInputChecker extends URLInputCheckerBase
             }
 
             resetURLAdjusting();
-            displayInvalidURL();
+            displayInvalidURL(getInvalidMessage(fault));
         }
     }
 
@@ -207,4 +228,5 @@ public class PortalURLInputChecker extends URLInputCheckerBase
         super.text = value;
     }
 }
+
 }

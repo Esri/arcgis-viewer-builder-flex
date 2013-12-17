@@ -173,7 +173,10 @@
             <s:FormLayout gap="-10"/>
         </s:layout>
 
-        <s:FormHeading label="{StringUtil.substitute(resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.contentTitle'), layerName)}" styleName="boldText"/>
+        <s:FormHeading label="{StringUtil.substitute(resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.contentTitle'), layerName)}"
+                       maxWidth="600"
+                       skinClass="com.esri.builder.skins.PopUpConfigFormHeadingSkin"
+                       styleName="boldText"/>
 
         <s:FormItem label="{resourceManager.getString('BuilderStrings', 'popUpConfigPopUp.popUpTitle')}">
             <s:HGroup width="100%" verticalAlign="middle">

@@ -31,7 +31,7 @@
             import mx.core.FlexVersion;
 
             /* Define the skin elements that should not be colorized.
-            For list, the skin itself is colorized but the individual parts are not. */
+             For list, the skin itself is colorized but the individual parts are not. */
             static private const exclusions:Array = [ "scroller", "background", "border" ];
 
             /* exclusions before Flex 4.5 for backwards-compatibility purposes */
@@ -129,16 +129,16 @@
     </fx:Declarations>
 
     <s:Group id="border"
-             left="0" right="0" top="0" bottom="0">
+             left="0" right="0" top="15" bottom="0">
         <!--left border line-->
-        <s:Line left="0" top="10" bottom="0">
+        <s:Line left="0" top="0" bottom="0">
             <s:stroke>
                 <s:SolidColorStroke id="leftBorderStroke"/>
             </s:stroke>
         </s:Line>
 
         <!--right border line-->
-        <s:Line right="0" top="10" bottom="0">
+        <s:Line right="0" top="0" bottom="0">
             <s:stroke>
                 <s:SolidColorStroke id="rightBorderStroke"/>
             </s:stroke>
@@ -152,14 +152,14 @@
         </s:Line>
 
         <!--top left border line-->
-        <s:Line left="0" right="{width - titleLabel.x}" top="10">
+        <s:Line left="0" right="{width - titleLabel.x}" top="0">
             <s:stroke>
                 <s:SolidColorStroke id="topLeftBorderStroke"/>
             </s:stroke>
         </s:Line>
 
         <!--top right border line-->
-        <s:Line left="{titleLabel.x + titleLabel.width}" right="0" top="10">
+        <s:Line left="{titleLabel.x + titleLabel.width}" right="0" top="0">
             <s:stroke>
                 <s:SolidColorStroke id="topRightBorderStroke"/>
             </s:stroke>
@@ -167,14 +167,18 @@
     </s:Group>
 
     <s:Label id="titleLabel"
-             left="15" top="5"
+             height="30"
+             left="15" top="0"
              fontSize="14"
+             maxDisplayedLines="2"
              maxWidth="{width - 24}"
              paddingLeft="3"
              paddingRight="3"
+             showTruncationTip="true"
              styleName="boldText"
-             text="{hostComponent.title}"/>
+             text="{hostComponent.title}"
+             verticalAlign="middle"/>
 
     <s:Group id="contentGroup"
-             left="1" right="1" top="20" bottom="20"/>
+             left="1" right="1" top="30" bottom="20"/>
 </s:SparkSkin>

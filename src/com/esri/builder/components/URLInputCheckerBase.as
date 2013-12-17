@@ -16,11 +16,14 @@
 package com.esri.builder.components
 {
 
+import com.esri.builder.supportClasses.ErrorMessageUtil;
 import com.esri.builder.supportClasses.URLUtil;
 
 import flash.events.Event;
 import flash.events.TimerEvent;
 import flash.utils.Timer;
+
+import mx.rpc.Fault;
 
 import spark.components.TextInput;
 import spark.events.TextOperationEvent;
@@ -46,6 +49,7 @@ public class URLInputCheckerBase extends TextInput
     private var proxyURLChanged:Boolean;
     private var validationDelayChanged:Boolean;
     private var isURLValidationPending:Boolean;
+    private var isURLValidationInProgress:Boolean;
 
     protected var requestTimeoutChanged:Boolean;
     protected var url:String;
@@ -61,6 +65,20 @@ public class URLInputCheckerBase extends TextInput
         return _isURLValid;
     }
 
+    private var _invalidMessage:String;
+
+    [Bindable(event="invalidMessageChanged")]
+    public function get invalidMessage():String
+    {
+        return _invalidMessage;
+    }
+
+    protected function setInvalidMessageInternally(message:String = ""):void
+    {
+        _invalidMessage = message ? message : "";
+        dispatchEvent(new Event("invalidMessageChanged"));
+    }
+
     [Bindable("change")]
     [Bindable("textChanged")]
     [CollapseWhiteSpace]
@@ -72,6 +90,11 @@ public class URLInputCheckerBase extends TextInput
             setTextInternally(value);
             invalidateProperties();
         }
+    }
+
+    protected function cancelURLValidationInProgress():void
+    {
+        isURLValidationInProgress = false;
     }
 
     protected function setTextInternally(value:String):void
@@ -178,6 +201,8 @@ public class URLInputCheckerBase extends TextInput
     {
         if (enabled)
         {
+            cancelURLValidationInProgress();
+            setInvalidMessageInternally();
             isURLValidationPending = true;
             validationTimer.reset();
             validationTimer.start();
@@ -221,7 +246,7 @@ public class URLInputCheckerBase extends TextInput
         if (!URLUtil.isValidURL(url))
         {
             isURLValidationPending = false;
-            displayInvalidURL();
+            displayInvalidURL(invalidURLErrorMessage);
             return;
         }
 
@@ -238,12 +263,14 @@ public class URLInputCheckerBase extends TextInput
         catch (error:Error)
         {
             removeURLCheckerListeners()
-            displayInvalidURL();
+            displayInvalidURL(error.toString());
         }
     }
 
-    protected function displayInvalidURL():void
+    protected function displayInvalidURL(message:String = ""):void
     {
+        setInvalidMessageInternally(message);
+        isURLValidationInProgress = false;
         isURLValidationPending = false;
         setValidURLInternal(false);
         dispatchEvent(new Event("invalidURL"));
@@ -267,6 +294,7 @@ public class URLInputCheckerBase extends TextInput
 
     protected function triggerURLChecker():void
     {
+        isURLValidationInProgress = true;
         //subclasses must implement
     }
 
@@ -277,6 +305,7 @@ public class URLInputCheckerBase extends TextInput
 
     protected function displayValidURL():void
     {
+        isURLValidationInProgress = false;
         isURLValidationPending = false;
         setValidURLInternal(true);
         dispatchEvent(new Event("validURL"));
@@ -301,9 +330,13 @@ public class URLInputCheckerBase extends TextInput
 
         if (text)
         {
-            if (isURLValidationPending)
+            if (isURLValidationInProgress)
             {
                 return "busy";
+            }
+            else if (isURLValidationPending)
+            {
+                return "normal";
             }
             else
             {
@@ -314,6 +347,21 @@ public class URLInputCheckerBase extends TextInput
         {
             return prompt ? "normalWithPrompt" : "normal";
         }
+    }
+
+    protected function getInvalidMessage(fault:Fault):String
+    {
+        return ErrorMessageUtil.getKnownErrorCauseMessage(fault, fallbackErrorMessage);
+    }
+
+    protected function get fallbackErrorMessage():String
+    {
+        return resourceManager.getString("BuilderStrings", "couldNotValidateURL");
+    }
+
+    protected function get invalidURLErrorMessage():String
+    {
+        return resourceManager.getString("BuilderStrings", "invalidURL");
     }
 }
 }

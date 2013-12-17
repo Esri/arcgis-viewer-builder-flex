@@ -62,10 +62,7 @@ public class PortalController
 
     private function loadPortal(url:String, cultureCode:String):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Loading Portal");
-        }
+        LOG.info("Loading Portal");
 
         if (url)
         {
@@ -73,10 +70,7 @@ public class PortalController
             var hasCultureCodeChanged:Boolean = (lastUsedCultureCode != cultureCode);
             if (hasPortalURLChanged || hasCultureCodeChanged)
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug("Reloading Portal - URL: {0}, culture code: {1}", url, cultureCode);
-                }
+                LOG.debug("Reloading Portal - URL: {0}, culture code: {1}", url, cultureCode);
 
                 if (hasPortalURLChanged)
                 {
@@ -120,10 +114,7 @@ public class PortalController
 
     private function portal_loadHandler(event:PortalEvent):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Portal load success");
-        }
+        LOG.debug("Portal load success");
 
         //do nothing, load successful
         portal.removeEventListener(PortalEvent.LOAD, portal_loadHandler);
@@ -134,10 +125,7 @@ public class PortalController
 
     private function portal_faultHandler(event:FaultEvent):void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Portal load fault");
-        }
+        LOG.debug("Portal load fault");
 
         portal.removeEventListener(PortalEvent.LOAD, portal_loadHandler);
         portal.removeEventListener(FaultEvent.FAULT, portal_faultHandler);
@@ -163,10 +151,7 @@ public class PortalController
 
     private function unloadPortal():void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug("Unloading Portal");
-        }
+        LOG.debug("Unloading Portal");
 
         portal.url = null;
         portal.unload();
@@ -196,10 +181,7 @@ public class PortalController
 
     private function portalSignOutHandler(event:AppEvent):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Portal sign out requested");
-        }
+        LOG.info("Portal sign out requested");
 
         AppEvent.removeListener(AppEvent.PORTAL_SIGN_OUT, portalSignOutHandler);
         IdentityManager.instance.removeEventListener(IdentityManagerEvent.SIGN_IN, identityManager_signInHandler);
@@ -210,12 +192,10 @@ public class PortalController
 
     private function portalSignInHandler(event:AppEvent):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Portal sign in requested");
-        }
+        LOG.info("Portal sign in requested");
 
         signIntoPortalInternally();
     }
 }
+
 }

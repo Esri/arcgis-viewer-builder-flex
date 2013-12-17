@@ -42,7 +42,7 @@ public final class Model extends EventDispatcher
 
     public static const instance:Model = new Model();
 
-    public static const SUPPORTED_VIEWER_VERSION:Number = 3.5;
+    public static const SUPPORTED_VIEWER_VERSION:Number = 3.6;
 
     [Bindable]
     public var config:Config = new Config();

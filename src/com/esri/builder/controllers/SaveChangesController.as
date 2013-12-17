@@ -26,7 +26,6 @@ import flash.display.DisplayObjectContainer;
 
 import mx.core.FlexGlobals;
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.resources.ResourceManager;
 
 import spark.events.PopUpEvent;
@@ -50,15 +49,8 @@ public final class SaveChangesController
     {
         _saveChangesOrigin = String(event.data);
 
-        if (Log.isInfo())
-        {
-            LOG.info("Unsaved changes");
-        }
-
-        if (Log.isDebug())
-        {
-            LOG.debug("Unsaved changes origin {0}", _saveChangesOrigin);
-        }
+        LOG.info("Unsaved changes");
+        LOG.debug("Unsaved changes origin {0}", _saveChangesOrigin);
 
         var saveChangesPopUp:SaveChangesPopUp = new SaveChangesPopUp();
         saveChangesPopUp.addEventListener(PopUpEvent.CLOSE, saveChangesPopUp_closeHandler, false, 0, true);
@@ -72,27 +64,18 @@ public final class SaveChangesController
 
         if (event.commit)
         {
-            if (Log.isInfo())
-            {
-                LOG.info("Saving changes");
-            }
+            LOG.info("Saving changes");
             _saveConfigAndChangeView = true;
             AppEvent.dispatch(AppEvent.SAVE_CONFIG_XML);
         }
         else
         {
-            if (Log.isInfo())
-            {
-                LOG.info("Reverting unsaved changes");
-            }
+            LOG.info("Reverting unsaved changes");
 
             // revert the changes
             if (!Model.instance.config.readConfigXML())
             {
-                if (Log.isError())
-                {
-                    LOG.error("Could not read config XML");
-                }
+                LOG.error("Could not read config XML");
 
                 const text:String = ResourceManager.getInstance().getString('BuilderStrings', 'createApp.noConfigXMLText');
                 const title:String = ResourceManager.getInstance().getString('BuilderStrings', 'createApp.noConfigXMLTitle');
@@ -101,10 +84,7 @@ public final class SaveChangesController
             }
             else
             {
-                if (Log.isInfo())
-                {
-                    LOG.info("Reverted changes");
-                }
+                LOG.info("Reverted changes");
 
                 loadWidgetConfigurations.loadWidgetConfigurations();
                 Model.instance.config.isDirty = false;

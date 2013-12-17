@@ -22,7 +22,6 @@ import com.esri.builder.model.Model;
 import com.esri.builder.supportClasses.LogUtil;
 
 import mx.logging.ILogger;
-import mx.logging.Log;
 
 public final class EditConfigLayerController
 {
@@ -40,10 +39,7 @@ public final class EditConfigLayerController
 
     private function editConfigLayer(configLayer:ConfigLayer):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Preparing to edit layer {0} ({1})", configLayer.label, configLayer.type);
-        }
+        LOG.info("Preparing to edit layer {0} ({1})", configLayer.label, configLayer.type);
 
         Model.instance.configLayer = configLayer;
         Model.instance.layersState = 'editor';

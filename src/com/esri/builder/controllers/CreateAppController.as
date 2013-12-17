@@ -32,7 +32,6 @@ import mx.controls.Alert;
 import mx.core.FlexGlobals;
 import mx.events.CloseEvent;
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.managers.PopUpManager;
 import mx.resources.ResourceManager;
 import mx.utils.StringUtil;
@@ -83,10 +82,7 @@ public final class CreateAppController
     private function createExecute(appName:String):void
     {
         const appDir:File = Model.instance.baseDir.resolvePath(appName);
-        if (Log.isInfo())
-        {
-            LOG.info('Creating application directory {0}', appDir.nativePath);
-        }
+        LOG.info('Creating application directory {0}', appDir.nativePath);
 
         if (appDir.exists)
         {
@@ -122,20 +118,14 @@ public final class CreateAppController
         }
         catch (e:Error)
         {
-            if (Log.isError())
-            {
-                LOG.error('Cannot create directory: {0}', e.message);
-            }
+            LOG.error('Cannot create directory: {0}', e.message);
             BuilderAlert.show(e.message.toString(), ResourceManager.getInstance().getString('BuilderStrings', 'error'));
         }
     }
 
     private function copyFlexViewer():void
     {
-        if (Log.isDebug())
-        {
-            LOG.debug('Copying flex viewer to {0}', Model.instance.appDir.nativePath);
-        }
+        LOG.debug('Copying flex viewer to {0}', Model.instance.appDir.nativePath);
         Model.instance.status = ResourceManager.getInstance().getString('BuilderStrings', 'settings.creatingFlexViewer');
         m_doLaterCounter = 5;
 
@@ -195,13 +185,10 @@ public final class CreateAppController
         if (localizedConfigFile.exists)
         {
             const originalConfigFile:File = Model.instance.appDir.resolvePath('config.xml');
-            if (Log.isDebug())
-            {
-                LOG.debug('Overriding {0}', originalConfigFile.nativePath);
-            }
+            LOG.debug('Overriding {0}', originalConfigFile.nativePath);
             localizedConfigFile.copyTo(originalConfigFile, true);
         }
-        else if (Log.isWarn())
+        else
         {
             LOG.warn('Cannot resolve {0}', localizedConfigFile.nativePath);
         }

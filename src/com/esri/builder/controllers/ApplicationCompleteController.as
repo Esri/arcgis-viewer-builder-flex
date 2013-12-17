@@ -41,7 +41,6 @@ import flash.system.Capabilities;
 
 import mx.core.FlexGlobals;
 import mx.logging.ILogger;
-import mx.logging.Log;
 import mx.managers.ToolTipManager;
 import mx.resources.ResourceManager;
 import mx.rpc.AsyncResponder;
@@ -70,10 +69,7 @@ public final class ApplicationCompleteController
 
     private function applicationComplete(app:WindowedApplication):void
     {
-        if (Log.isInfo())
-        {
-            LOG.info('Starting up application.');
-        }
+        LOG.info('Starting up application.');
 
         exportDependenciesToAppStorage();
         loadUserPreferences();
@@ -100,10 +96,7 @@ public final class ApplicationCompleteController
     {
         try
         {
-            if (Log.isInfo())
-            {
-                LOG.info('Creating required folders.');
-            }
+            LOG.info('Creating required folders.');
 
             WellKnownDirectories.getInstance().customFlexViewer.createDirectory();
             WellKnownDirectories.getInstance().customModules.createDirectory();
@@ -116,10 +109,7 @@ public final class ApplicationCompleteController
 
     private function loadUserPreferences():void
     {
-        if (Log.isInfo())
-        {
-            LOG.info('Loading user preferences...');
-        }
+        LOG.info('Loading user preferences...');
 
         migratePreviousSettingsFolder();
         const so:SharedObject = SharedObject.getLocal(Model.USER_PREF);
@@ -209,10 +199,7 @@ public final class ApplicationCompleteController
             return;
         }
 
-        if (Log.isInfo())
-        {
-            LOG.info('Transferring previous settings folder');
-        }
+        LOG.info('Transferring previous settings folder');
 
         var currentBuilderSettingsFolder:File =
             File.applicationStorageDirectory.resolvePath("#SharedObjects/Builder.swf/");
@@ -221,21 +208,15 @@ public final class ApplicationCompleteController
         {
             for each (var fileOrFolder:File in filesOrFolders)
             {
-                if (Log.isInfo())
-                {
-                    LOG.info('Transferring {0}', fileOrFolder.name);
-                }
+                LOG.info('Transferring {0}', fileOrFolder.name);
                 fileOrFolder.moveTo(currentBuilderSettingsFolder.resolvePath(fileOrFolder.name),
                                     true);
             }
         }
         catch (error:Error)
         {
-            if (Log.isInfo())
-            {
-                LOG.info('Could not transfer previous settings folder: {0} - {1}',
-                         error.errorID, error.toString());
-            }
+            LOG.info('Could not transfer previous settings folder: {0} - {1}',
+                     error.errorID, error.toString());
         }
     }
 
@@ -286,10 +267,7 @@ public final class ApplicationCompleteController
 
     private function loadWebMapSearchHistory():void
     {
-        if (Log.isInfo())
-        {
-            LOG.info("Loading web map search history");
-        }
+        LOG.info("Loading web map search history");
 
         const so:SharedObject = SharedObject.getLocal(Model.USER_PREF);
         var historyString:String = so.data.webMapSearchHistory;
@@ -304,12 +282,9 @@ public final class ApplicationCompleteController
     {
         event.preventDefault();
 
-        if (Log.isFatal())
+        if (event.error is Error) //could be ErrorEvent
         {
-            if (event.error is Error) //could be ErrorEvent
-            {
-                LOG.fatal('Uncaught error: {0}', event.error.getStackTrace());
-            }
+            LOG.fatal('Uncaught error: {0}', event.error.getStackTrace());
         }
 
         const logFile:File = File.applicationStorageDirectory.resolvePath(LogFileTarget.LOG_FILE_NAME);

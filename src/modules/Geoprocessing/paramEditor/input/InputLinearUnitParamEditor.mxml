@@ -62,11 +62,19 @@
             private function setUnitOptions():void
             {
                 var unitOptions:Array = [];
-                unitOptions.push(new UnitItem("Feet", Units.FEET));
-                unitOptions.push(new UnitItem("Miles", Units.MILES));
-                unitOptions.push(new UnitItem("Nautical Miles", Units.NAUTICAL_MILES));
-                unitOptions.push(new UnitItem("Meters", Units.METERS));
-                unitOptions.push(new UnitItem("Kilometers", Units.KILOMETERS));
+
+                var feetLabel:String = resourceManager.getString("BuilderStrings", "units.feet");
+                var milesLabel:String = resourceManager.getString("BuilderStrings", "units.miles");
+                var nauticalMilesLabel:String = resourceManager.getString("BuilderStrings", "geoprocessing.nauticalMiles");
+                var metersLabel:String = resourceManager.getString("BuilderStrings", "units.meters");
+                var kilometersLabel:String = resourceManager.getString("BuilderStrings", "units.kilometers");
+
+                unitOptions.push(new UnitItem(feetLabel, Units.FEET));
+                unitOptions.push(new UnitItem(milesLabel, Units.MILES));
+                unitOptions.push(new UnitItem(nauticalMilesLabel, Units.NAUTICAL_MILES));
+                unitOptions.push(new UnitItem(metersLabel, Units.METERS));
+                unitOptions.push(new UnitItem(kilometersLabel, Units.KILOMETERS));
+
                 unitDropDown.dataProvider = new ArrayList(unitOptions);
                 unitDropDown.typicalItem = getLongestUnitItemLabel(unitOptions);
             }

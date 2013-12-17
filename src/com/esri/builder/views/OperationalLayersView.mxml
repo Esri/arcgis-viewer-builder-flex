@@ -43,7 +43,6 @@
             import mx.collections.ArrayList;
             import mx.events.FlexEvent;
             import mx.logging.ILogger;
-            import mx.logging.Log;
             import mx.rpc.Fault;
             import mx.rpc.Responder;
 
@@ -75,38 +74,26 @@
 
             private function includeLayer():void
             {
-                if (Log.isInfo())
-                {
-                    LOG.info("Include layer");
-                }
+                LOG.info("Include layer");
 
                 if (operationalLayersSearch.currentState == 'portal')
                 {
                     if (operationalLayersSearch.portalLayersView.portalLayerList && operationalLayersSearch.portalLayersView.portalLayerList.selectedItem)
                     {
-                        if (Log.isDebug())
-                        {
-                            LOG.debug("Include Portal search layer");
-                        }
+                        LOG.debug("Include Portal search layer");
 
                         getPortalLayer(operationalLayersSearch.portalLayersView.portalLayerList, PortalLayer(operationalLayersSearch.portalLayersView.portalLayerList.selectedItem).itemType);
                     }
                     else if (operationalLayersSearch.portalLayersView.portalLayersMyContentView.list && operationalLayersSearch.portalLayersView.portalLayersMyContentView.list.selectedItem)
                     {
-                        if (Log.isDebug())
-                        {
-                            LOG.debug("Include My Content layer");
-                        }
+                        LOG.debug("Include My Content layer");
 
                         getPortalLayer(operationalLayersSearch.portalLayersView.portalLayersMyContentView.list, PortalLayer(operationalLayersSearch.portalLayersView.portalLayersMyContentView.list.selectedItem).itemType);
                     }
                 }
                 else if (operationalLayersSearch.currentState == "mapserver")
                 {
-                    if (Log.isDebug())
-                    {
-                        LOG.debug("Include service browser layer");
-                    }
+                    LOG.debug("Include service browser layer");
 
                     processServiceSelection(Model.instance.configOpsLayerList);
 
@@ -119,10 +106,7 @@
 
                     function resultHandler(configLayerFromWeb:ConfigLayer):void
                     {
-                        if (Log.isDebug())
-                        {
-                            LOG.debug("Include layer from Web");
-                        }
+                        LOG.debug("Include layer from Web");
 
                         Model.instance.configOpsLayerList.addLayer(configLayerFromWeb);
                         syncConfigMap();
@@ -131,10 +115,7 @@
 
                     function faultHandler(message:String):void
                     {
-                        if (Log.isDebug())
-                        {
-                            LOG.debug(message);
-                        }
+                        LOG.debug(message);
 
                         AppEvent.dispatch(AppEvent.SHOW_ERROR, message);
                     }
@@ -143,10 +124,7 @@
 
             private function getPortalLayer(portalLayerList:List, type:String):void
             {
-                if (Log.isInfo())
-                {
-                    LOG.info("Fetching Portal layer item");
-                }
+                LOG.info("Fetching Portal layer item");
 
                 const layer:PortalLayer = portalLayerList.selectedItem as PortalLayer;
 
@@ -159,10 +137,7 @@
                     configLayer1.url = layer.serviceURL;
                     if (type == PortalItem.TYPE_MAP_SERVICE)
                     {
-                        if (Log.isDebug())
-                        {
-                            LOG.debug("Fetching map service item");
-                        }
+                        LOG.debug("Fetching map service item");
 
                         // wait for the response to add config layer
                         const param:URLVariables = new URLVariables();
@@ -174,18 +149,15 @@
                         jsonTask.execute(param, new mx.rpc.Responder(jsonTask_resultHandler, jsonTask_faultHandler));
                         function jsonTask_resultHandler(resultObject:Object):void
                         {
-                            if (Log.isDebug())
-                            {
-                                LOG.debug("Map service fetch success");
-                            }
+                            LOG.debug("Map service fetch success");
 
-                            if (resultObject.bandCount)
-                            {
-                                configLayer1.type = ConfigLayer.IMAGE;
-                            }
-                            else if (resultObject.singleFusedMapCache)
+                            if (resultObject.singleFusedMapCache)
                             {
                                 configLayer1.type = ConfigLayer.TILED;
+                            }
+                            else if (resultObject.bandCount)
+                            {
+                                configLayer1.type = ConfigLayer.IMAGE;
                             }
                             else
                             {
@@ -199,10 +171,7 @@
                                 }
                             }
 
-                            if (Log.isDebug())
-                            {
-                                LOG.debug("Add portal config layer - type: {0}, url: {1}", configLayer1.type, configLayer1.url);
-                            }
+                            LOG.debug("Add portal config layer - type: {0}, url: {1}", configLayer1.type, configLayer1.url);
 
                             Model.instance.configOpsLayerList.addLayer(configLayer1);
                             updateConfigLayerList();
@@ -212,10 +181,7 @@
                         {
                             if (fault.faultString != "Sign in aborted")
                             {
-                                if (Log.isDebug())
-                                {
-                                    LOG.debug("Map service fetch fault");
-                                }
+                                LOG.debug("Map service fetch fault");
 
                                 const errorMessage:String = resourceManager.getString('BuilderStrings',
                                                                                       'mapsView.couldNotAddLayer',
@@ -224,10 +190,7 @@
                             }
                             else
                             {
-                                if (Log.isDebug())
-                                {
-                                    LOG.debug("Sign in aborted for layer ", layer.title);
-                                }
+                                LOG.debug("Sign in aborted for layer ", layer.title);
                             }
                         }
                     }
@@ -240,10 +203,7 @@
                             {
                                 if (pointsToLayer(layer.serviceURL))
                                 {
-                                    if (Log.isDebug())
-                                    {
-                                        LOG.debug("Add portal config layer - type: {0}, url: {1}", configLayer1.type, configLayer1.url);
-                                    }
+                                    LOG.debug("Add portal config layer - type: {0}, url: {1}", configLayer1.type, configLayer1.url);
 
                                     configLayer1.url = layer.serviceURL;
                                     Model.instance.configOpsLayerList.addLayer(configLayer1);
@@ -251,10 +211,7 @@
                                 }
                                 else
                                 {
-                                    if (Log.isDebug())
-                                    {
-                                        LOG.debug("Fetching feature service item");
-                                    }
+                                    LOG.debug("Fetching feature service item");
 
                                     const param1:URLVariables = new URLVariables();
                                     param1.f = "json";
@@ -265,10 +222,7 @@
                                     jsonTask1.execute(param1, new mx.rpc.Responder(jsonTask1_resultHandler, jsonTask1_faultHandler));
                                     function jsonTask1_resultHandler(resultObject:Object):void
                                     {
-                                        if (Log.isDebug())
-                                        {
-                                            LOG.debug("Feature service item fetch success");
-                                        }
+                                        LOG.debug("Feature service item fetch success");
 
                                         const layers:Array = resultObject.layers;
                                         if (layers && layers.length)
@@ -292,14 +246,8 @@
                                     {
                                         if (fault.faultString != "Sign in aborted")
                                         {
-                                            if (Log.isDebug())
-                                            {
-                                                LOG.debug("Add portal config layer - type: {0}, url: {1}", configLayer1.type, configLayer1.url);
-                                            }
-                                            if (Log.isDebug())
-                                            {
-                                                LOG.debug("Feature service item fetch fault");
-                                            }
+                                            LOG.debug("Add portal config layer - type: {0}, url: {1}", configLayer1.type, configLayer1.url);
+                                            LOG.debug("Feature service item fetch fault");
 
                                             const errorMessage:String = resourceManager.getString('BuilderStrings',
                                                                                                   'mapsView.couldNotAddLayer',
@@ -308,20 +256,14 @@
                                         }
                                         else
                                         {
-                                            if (Log.isDebug())
-                                            {
-                                                LOG.debug("Sign in aborted for layer ", layer.title);
-                                            }
+                                            LOG.debug("Sign in aborted for layer ", layer.title);
                                         }
                                     }
                                 }
                             }
                             else
                             {
-                                if (Log.isDebug())
-                                {
-                                    LOG.debug("Add portal config layer - type: {0}, url: {1}", configLayer1.type, configLayer1.url);
-                                }
+                                LOG.debug("Add portal config layer - type: {0}, url: {1}", configLayer1.type, configLayer1.url);
 
                                 configLayer1.url = layer.serviceURL;
                                 Model.instance.configOpsLayerList.addLayer(configLayer1);
@@ -401,10 +343,7 @@
 
             private function processServiceSelection(configLayerStore:ConfigLayerStore):void
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug("Processing service browser layer");
-                }
+                LOG.debug("Processing service browser layer");
 
                 var serviceSelection:ArrayList = operationalLayersSearch.mapServerView.serviceSelection;
                 var totalServices:int = serviceSelection.length;
@@ -416,20 +355,14 @@
 
                     if (selectedNode is MapServerNode || selectedNode is FeatureServerNode || selectedNode is ImageServerNode)
                     {
-                        if (Log.isDebug())
-                        {
-                            LOG.debug("Adding map server node");
-                        }
+                        LOG.debug("Adding map server node");
 
                         AppEvent.addListener(AppEvent.MAP_SERVICE_ADDED, layerAdded);
                         AppEvent.dispatch(AppEvent.ADD_MAP_SERVICE, { mapServer: selectedNode, configLayerStore: configLayerStore });
                     }
                     else if (selectedNode is LayerNode)
                     {
-                        if (Log.isDebug())
-                        {
-                            LOG.debug("Adding layer node");
-                        }
+                        LOG.debug("Adding layer node");
 
                         AppEvent.addListener(AppEvent.LAYER_SERVICE_ADDED, layerAdded);
                         AppEvent.dispatch(AppEvent.ADD_LAYER_SERVICE, { layerServer: selectedNode, configLayerStore: configLayerStore });
@@ -444,10 +377,7 @@
 
             private function syncConfigMap():void
             {
-                if (Log.isDebug())
-                {
-                    LOG.debug("Syncing basemaps");
-                }
+                LOG.debug("Syncing basemaps");
 
                 Model.instance.config.configMap.operationalLayers.importLayers(Model.instance.configOpsLayerList.getAllLayers());
             }
@@ -474,12 +404,14 @@
               label="{resourceManager.getString('BuilderStrings', 'include')}"
               skinClass="com.esri.builder.skins.GreenNextButtonSkin"/>
 
-    <views:ConfigLayerListView id="activeOperationalLayersListView"
-                               width="100%" height="60%"
-                               left="550" right="10" top="64" bottom="10"
-                               add="activeOperationalLayersListView_addHandler(event)"
-                               dataProvider="{Model.instance.configOpsLayerList.configLayerList}"
-                               itemRenderer="com.esri.builder.renderers.OperationalConfigLayerRenderer"
-                               listTitle="{resourceManager.getString('BuilderStrings', 'mapsView.operationalLayersView.listTitle')}"
-                               noLayerText="{resourceManager.getString('BuilderStrings', 'mapsView.operationalLayersView.noOperationalLayerSelected')}"/>
+    <s:Group width="100%" height="60%"
+             left="550" right="10" top="64" bottom="10"
+             clipAndEnableScrolling="true">
+        <views:ConfigLayerListView id="activeOperationalLayersListView"
+                                   add="activeOperationalLayersListView_addHandler(event)"
+                                   dataProvider="{Model.instance.configOpsLayerList.configLayerList}"
+                                   itemRenderer="com.esri.builder.renderers.OperationalConfigLayerRenderer"
+                                   listTitle="{resourceManager.getString('BuilderStrings', 'mapsView.operationalLayersView.listTitle')}"
+                                   noLayerText="{resourceManager.getString('BuilderStrings', 'mapsView.operationalLayersView.noOperationalLayerSelected')}"/>
+    </s:Group>
 </s:Group>
