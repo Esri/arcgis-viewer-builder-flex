@@ -26,9 +26,13 @@
             import com.esri.builder.eventbus.AppEvent;
             import com.esri.builder.model.Model;
 
+            import flashx.textLayout.operations.FlowTextOperation;
+
             import mx.events.CloseEvent;
             import mx.events.FlexEvent;
             import mx.utils.StringUtil;
+
+            import spark.events.TextOperationEvent;
 
             private var originalAppName:String;
             [Bindable]
@@ -90,6 +94,28 @@
                     dispatchCloseAndDuplicateExecute();
                 }
             }
+
+            private function applicationNameTextInput_changeHandler(event:TextOperationEvent):void
+            {
+                var operation:FlowTextOperation = event.operation as FlowTextOperation;
+                if (operation && operation.hasOwnProperty("text"))
+                {
+                    var currentText:String = applicationNameTextInput.text;
+                    var leading:String = currentText.slice(0, operation.absoluteStart);
+                    var trailing:String = currentText.slice(operation.absoluteEnd);
+                    var textPreview:String = leading + operation["text"] + trailing;
+
+                    //periods at the start/end, consecutive
+                    //illegal filename characters
+                    //non-basic Latin Unicode character range
+                    var illegalEntries:RegExp = /(?: ^\. | \.$ | \.{2} | [<>:"\/\\|?*#%;@=+] | [^\u0020-\u007F] )/ix;
+                    if (illegalEntries.test(textPreview))
+                    {
+                        event.stopImmediatePropagation();
+                        event.preventDefault();
+                    }
+                }
+            }
         ]]>
     </fx:Script>
 
@@ -146,9 +172,9 @@
             <s:TextInput id="applicationNameTextInput"
                          width="200"
                          change="validateApplicationNames()"
+                         changing="applicationNameTextInput_changeHandler(event)"
                          enter="applicationNameTextInput_enterHandler(event)"
-                         maxChars="100"
-                         restrict='\u0020-\u007E^/?\\&gt;&lt;:*|"”\^.#&apos;%;@=+'/>
+                         maxChars="100"/>
         </s:FormItem>
     </s:Form>
 
