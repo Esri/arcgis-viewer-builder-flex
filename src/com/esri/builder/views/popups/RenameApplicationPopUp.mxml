@@ -175,8 +175,7 @@
                          change="validateApplicationNames()"
                          changing="applicationNameTextInput_changingHandler(event)"
                          enter="applicationNameTextInput_enterHandler(event)"
-                         maxChars="100"
-                         restrict='\u0020-\u007E^/?\\&gt;&lt;:*|"”\^.#&apos;%;@=+'/>
+                         maxChars="100"/>
         </s:FormItem>
     </s:Form>
 
