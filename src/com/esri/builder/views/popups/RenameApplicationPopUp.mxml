@@ -55,8 +55,14 @@
 
             private function validateApplicationNames():void
             {
+                var periodsAtStartOrEndOrConsecutivelyPlaced:RegExp = /(?: ^\. | \.$ | \.{2} )/ix;
+
                 newApplicationName = StringUtil.trim(applicationNameTextInput.text);
-                hasValidApplicationName = newApplicationName.length && (newApplicationName != originalAppName);
+
+                hasValidApplicationName =
+                    newApplicationName.length &&
+                    newApplicationName != originalAppName &&
+                    !periodsAtStartOrEndOrConsecutivelyPlaced.test(newApplicationName);
             }
 
             private function applicationNameTextInput_enterHandler(event:FlexEvent):void
@@ -106,11 +112,10 @@
                     var trailing:String = currentText.slice(operation.absoluteEnd);
                     var textPreview:String = leading + operation["text"] + trailing;
 
-                    //periods at the start/end, consecutive
                     //illegal filename characters
                     //non-basic Latin Unicode character range
-                    var illegalEntries:RegExp = /(?: ^\. | \.$ | \.{2} | [<>:"\/\\|?*#%;@=+] | [^\u0020-\u007F] )/ix;
-                    if (illegalEntries.test(textPreview))
+                    var illegalChars:RegExp = /(?: [<>:"\/\\|?*#%;@=+] | [^\u0020-\u007F] )/ix;
+                    if (illegalChars.test(textPreview))
                     {
                         event.stopImmediatePropagation();
                         event.preventDefault();
@@ -175,8 +180,7 @@
                          change="validateApplicationNames()"
                          changing="applicationNameTextInput_changingHandler(event)"
                          enter="applicationNameTextInput_enterHandler(event)"
-                         maxChars="100"
-                         restrict='\u0020-\u007E^/?\\&gt;&lt;:*|"”\^.#&apos;%;@=+'/>
+                         maxChars="100"/>
         </s:FormItem>
     </s:Form>
 
