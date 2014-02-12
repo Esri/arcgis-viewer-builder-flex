@@ -48,8 +48,14 @@
 
             private function validateApplicationNames():void
             {
+                var periodsAtStartOrEndOrConsecutivelyPlaced:RegExp = /(?: ^\. | \.$ | \.{2} )/ix;
+
                 duplicateApplicationName = StringUtil.trim(applicationNameTextInput.text);
-                hasValidApplicationName = duplicateApplicationName.length && (duplicateApplicationName != originalAppName);
+
+                hasValidApplicationName =
+                    duplicateApplicationName.length > 0 &&
+                    duplicateApplicationName != originalAppName &&
+                    !periodsAtStartOrEndOrConsecutivelyPlaced.test(duplicateApplicationName);
             }
 
             private function cancelButton_clickHandler(event:MouseEvent):void
@@ -105,11 +111,10 @@
                     var trailing:String = currentText.slice(operation.absoluteEnd);
                     var textPreview:String = leading + operation["text"] + trailing;
 
-                    //periods at the start/end, consecutive
                     //illegal filename characters
                     //non-basic Latin Unicode character range
-                    var illegalEntries:RegExp = /(?: ^\. | \.$ | \.{2} | [<>:"\/\\|?*#%;@=+] | [^\u0020-\u007F] )/ix;
-                    if (illegalEntries.test(textPreview))
+                    var illegalChars:RegExp = /(?: [<>:"\/\\|?*#%;@=+] | [^\u0020-\u007F] )/ix;
+                    if (illegalChars.test(textPreview))
                     {
                         event.stopImmediatePropagation();
                         event.preventDefault();
