@@ -45,6 +45,7 @@
             import com.esri.builder.model.PortalModel;
             import com.esri.builder.model.RecentlyUsedURLsModel;
             import com.esri.builder.supportClasses.LogUtil;
+            import com.esri.builder.supportClasses.URLUtil;
 
             import flashx.textLayout.conversion.TextConverter;
 
@@ -52,7 +53,6 @@
             import mx.collections.ArrayList;
             import mx.events.FlexEvent;
             import mx.logging.ILogger;
-            import mx.logging.Log;
             import mx.rpc.Fault;
             import mx.rpc.events.FaultEvent;
             import mx.utils.StringUtil;
@@ -127,7 +127,7 @@
 
             private var _searchType:String;
 
-            [Inspectable(enumeration="maplayers,querylayers,geoprocessingtasks,printtasks,locators,routeservices,mapservers", defaultValue="maplayers")]
+            [Inspectable(enumeration="maplayers,querylayers,querytables,geoprocessingtasks,printtasks,locators,routeservices,mapservers", defaultValue="maplayers")]
             public function set searchType(value:String):void
             {
                 _searchType = value;
@@ -160,18 +160,17 @@
                     serviceDirectoryBuilder.removeEventListener(FaultEvent.FAULT, serviceDirectoryBuilder_faultHandler);
                 }
 
-                lastUsedURL = appendMissingServicesDirectoryEndPoints(normalizeURL(serviceURL));
+                var queryString:String = URLUtil.extractQueryString(serviceURL);
+                lastUsedURL = appendMissingServicesDirectoryEndPoints(normalizeURL(URLUtil.removeQueryString(serviceURL)));
                 if (_searchType == "printtasks")
                 {
                     lastUsedURL = appendMissingDefaultPrintTaskEndPoint(lastUsedURL);
                 }
+                lastUsedURL += queryString;
 
                 if (lastUsedURL)
                 {
-                    if (Log.isInfo())
-                    {
-                        LOG.info("Browsing service - url: {0}, search type: {1}", lastUsedURL, serviceDirectoryBuilderSearchType);
-                    }
+                    LOG.info("Browsing service - url: {0}, search type: {1}", lastUsedURL, serviceDirectoryBuilderSearchType);
 
                     hasValidSelection = false;
                     currentState = "loading";
@@ -215,6 +214,11 @@
                         serviceDirBuilderSearchType = ServiceDirectoryBuildRequest.MAP_SERVER_SEARCH;
                         break;
                     }
+					case "querytables":
+					{
+						serviceDirBuilderSearchType = ServiceDirectoryBuildRequest.QUERYABLE_TABLE_SEARCH;
+						break;
+					}
                     case "querylayers":
                     default:
                     {
@@ -304,10 +308,7 @@
 
             private function serviceDirectoryBuilder_browseCompleteHandler(event:ServiceDirectoryBuilderEvent):void
             {
-                if (Log.isInfo())
-                {
-                    LOG.info("Service browse complete");
-                }
+                LOG.info("Service browse complete");
 
                 serviceDirectoryBuilder.removeEventListener(ServiceDirectoryBuilderEvent.COMPLETE, serviceDirectoryBuilder_browseCompleteHandler);
                 serviceDirectoryBuilder.removeEventListener(FaultEvent.FAULT, serviceDirectoryBuilder_faultHandler);
@@ -421,10 +422,7 @@
 
                 function getCredentialsSuccessHandler(credential:Credential):void
                 {
-                    if (Log.isDebug())
-                    {
-                        LOG.debug("Signing into {0}", credential.server);
-                    }
+                    LOG.debug("Signing into {0}", credential.server);
 
                     //Signing into a server that shares origin with the Portal
                     //will refresh by itself. Otherwise, we need to explicitly refresh it.
@@ -442,10 +440,7 @@
 
             private function refreshServiceBrowse():void
             {
-                if (Log.isInfo())
-                {
-                    LOG.info("Refreshing service");
-                }
+                LOG.info("Refreshing service");
 
                 if (serviceURL != lastUsedURL)
                 {
@@ -499,10 +494,7 @@
             //TODO: show specific error message when root URL faults
             protected function serviceDirectoryBuilder_faultHandler(event:FaultEvent):void
             {
-                if (Log.isWarn())
-                {
-                    LOG.warn("Service browse failed");
-                }
+                LOG.warn("Service browse failed");
 
                 serviceDirectoryBuilder.removeEventListener(ServiceDirectoryBuilderEvent.COMPLETE, serviceDirectoryBuilder_browseCompleteHandler);
                 serviceDirectoryBuilder.removeEventListener(FaultEvent.FAULT, serviceDirectoryBuilder_faultHandler);

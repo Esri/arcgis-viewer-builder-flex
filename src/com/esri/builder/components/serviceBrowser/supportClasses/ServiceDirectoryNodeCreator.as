@@ -25,9 +25,10 @@ import com.esri.builder.components.serviceBrowser.nodes.ImageServerNode;
 import com.esri.builder.components.serviceBrowser.nodes.LayerNode;
 import com.esri.builder.components.serviceBrowser.nodes.MapServerNode;
 import com.esri.builder.components.serviceBrowser.nodes.NAServerNode;
+import com.esri.builder.components.serviceBrowser.nodes.RouteLayerNode;
 import com.esri.builder.components.serviceBrowser.nodes.ServerNode;
 import com.esri.builder.components.serviceBrowser.nodes.ServiceDirectoryNode;
-import com.esri.builder.components.serviceBrowser.nodes.RouteLayerNode;
+import com.esri.builder.components.serviceBrowser.nodes.TableNode;
 
 public class ServiceDirectoryNodeCreator
 {
@@ -95,6 +96,19 @@ public class ServiceDirectoryNodeCreator
 
         return layerNode;
     }
+	
+	public static function createTableNode(parent:ServiceDirectoryNode, tableMetadata:Object):TableNode
+	{
+		var tableNode:TableNode;
+		
+		const isGroupLayer:Boolean = tableMetadata.subLayerIds != null;
+		if (!isGroupLayer)
+		{
+			tableNode = new TableNode(parent, tableMetadata.name, tableMetadata.id);
+		}
+		
+		return tableNode;
+	}
 
     public static function createRouteNode(parent:ServiceDirectoryNode, routeName:String):RouteLayerNode
     {
