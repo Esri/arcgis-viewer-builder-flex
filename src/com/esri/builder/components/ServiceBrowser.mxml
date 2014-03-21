@@ -45,7 +45,6 @@
             import com.esri.builder.model.PortalModel;
             import com.esri.builder.model.RecentlyUsedURLsModel;
             import com.esri.builder.supportClasses.LogUtil;
-            import com.esri.builder.supportClasses.URLUtil;
 
             import flashx.textLayout.conversion.TextConverter;
 
@@ -171,7 +170,7 @@
                 {
                     if (Log.isInfo())
                     {
-                      LOG.info("Browsing service - url: {0}, search type: {1}", lastUsedURL, serviceDirectoryBuilderSearchType);
+                        LOG.info("Browsing service - url: {0}, search type: {1}", lastUsedURL, serviceDirectoryBuilderSearchType);
                     }
 
                     hasValidSelection = false;
@@ -312,7 +311,7 @@
             {
                 if (Log.isInfo())
                 {
-                  LOG.info("Service browse complete");
+                    LOG.info("Service browse complete");
                 }
 
                 serviceDirectoryBuilder.removeEventListener(ServiceDirectoryBuilderEvent.COMPLETE, serviceDirectoryBuilder_browseCompleteHandler);
@@ -429,7 +428,7 @@
                 {
                     if (Log.isDebug())
                     {
-                      LOG.debug("Signing into {0}", credential.server);
+                        LOG.debug("Signing into {0}", credential.server);
                     }
 
                     //Signing into a server that shares origin with the Portal
@@ -450,7 +449,7 @@
             {
                 if (Log.isInfo())
                 {
-                  LOG.info("Refreshing service");
+                    LOG.info("Refreshing service");
                 }
 
                 if (serviceURL != lastUsedURL)
@@ -507,7 +506,7 @@
             {
                 if (Log.isWarn())
                 {
-                  LOG.warn("Service browse failed");
+                    LOG.warn("Service browse failed");
                 }
 
                 serviceDirectoryBuilder.removeEventListener(ServiceDirectoryBuilderEvent.COMPLETE, serviceDirectoryBuilder_browseCompleteHandler);
