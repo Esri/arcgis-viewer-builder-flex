@@ -16,19 +16,7 @@
 package com.esri.builder.components.serviceBrowser.supportClasses
 {
 
-import com.esri.builder.components.serviceBrowser.nodes.FeatureServerNode;
-import com.esri.builder.components.serviceBrowser.nodes.FolderNode;
-import com.esri.builder.components.serviceBrowser.nodes.GPServerNode;
-import com.esri.builder.components.serviceBrowser.nodes.GPTaskNode;
-import com.esri.builder.components.serviceBrowser.nodes.GeocodeServerNode;
-import com.esri.builder.components.serviceBrowser.nodes.ImageServerNode;
-import com.esri.builder.components.serviceBrowser.nodes.LayerNode;
-import com.esri.builder.components.serviceBrowser.nodes.MapServerNode;
-import com.esri.builder.components.serviceBrowser.nodes.NAServerNode;
-import com.esri.builder.components.serviceBrowser.nodes.RouteLayerNode;
-import com.esri.builder.components.serviceBrowser.nodes.ServerNode;
-import com.esri.builder.components.serviceBrowser.nodes.ServiceDirectoryNode;
-import com.esri.builder.components.serviceBrowser.nodes.TableNode;
+import com.esri.builder.components.serviceBrowser.nodes.*;
 
 public class ServiceDirectoryNodeCreator
 {

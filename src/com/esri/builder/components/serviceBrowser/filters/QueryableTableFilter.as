@@ -18,7 +18,6 @@ package com.esri.builder.components.serviceBrowser.filters
 
 import com.esri.builder.components.serviceBrowser.nodes.FeatureServerNode;
 import com.esri.builder.components.serviceBrowser.nodes.FolderNode;
-import com.esri.builder.components.serviceBrowser.nodes.LayerNode;
 import com.esri.builder.components.serviceBrowser.nodes.MapServerNode;
 import com.esri.builder.components.serviceBrowser.nodes.ServiceDirectoryNode;
 import com.esri.builder.components.serviceBrowser.nodes.TableNode;
