@@ -127,7 +127,7 @@
 
             private var _searchType:String;
 
-            [Inspectable(enumeration="maplayers,querylayers,geoprocessingtasks,printtasks,locators,routeservices,mapservers", defaultValue="maplayers")]
+            [Inspectable(enumeration="maplayers,querylayers,querytables,geoprocessingtasks,printtasks,locators,routeservices,mapservers", defaultValue="maplayers")]
             public function set searchType(value:String):void
             {
                 _searchType = value;
@@ -212,6 +212,11 @@
                     case "mapservers":
                     {
                         serviceDirBuilderSearchType = ServiceDirectoryBuildRequest.MAP_SERVER_SEARCH;
+                        break;
+                    }
+                    case "querytables":
+                    {
+                        serviceDirBuilderSearchType = ServiceDirectoryBuildRequest.QUERYABLE_TABLE_SEARCH;
                         break;
                     }
                     case "querylayers":
