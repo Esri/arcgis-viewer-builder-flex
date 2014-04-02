@@ -15,12 +15,39 @@
 ////////////////////////////////////////////////////////////////////////////////
 package com.esri.builder.components.serviceBrowser.nodes
 {
-
-public class TableNode extends QueryableNode
+public class QueryableNode extends ServiceDirectoryNode
 {
-    public function TableNode(parent:ServiceDirectoryNode, name:String, id:int)
+    protected var id:int;
+
+    public function get isQueryable():Boolean
     {
-        super(parent, name, id);
+        return metadata && metadata.fields && metadata.fields.length > 0;
+    }
+
+    public function QueryableNode(parent:ServiceDirectoryNode, name:String, id:int)
+    {
+        this.id = id;
+        super(parent, name);
+    }
+
+    override public function get path():String
+    {
+        return id.toString();
+    }
+
+    override public function get baseURL():String
+    {
+        return parent.baseURL + '/' + id;
+    }
+
+    override public function get hasChildren():Boolean
+    {
+        return false;
+    }
+
+    override public function get isBranch():Boolean
+    {
+        return false;
     }
 }
 }

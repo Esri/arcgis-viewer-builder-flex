@@ -16,36 +16,14 @@
 package com.esri.builder.components.serviceBrowser.filters
 {
 
-import com.esri.builder.components.serviceBrowser.nodes.FeatureServerNode;
-import com.esri.builder.components.serviceBrowser.nodes.FolderNode;
 import com.esri.builder.components.serviceBrowser.nodes.LayerNode;
-import com.esri.builder.components.serviceBrowser.nodes.MapServerNode;
 import com.esri.builder.components.serviceBrowser.nodes.ServiceDirectoryNode;
 
-public class QueryableLayerFilter implements INodeFilter
+public class QueryableLayerFilter extends QueryableNodeFilter
 {
-    public function isApplicable(node:ServiceDirectoryNode):Boolean
+    override protected function isNodeQueryable(node:ServiceDirectoryNode):Boolean
     {
-        return node is FolderNode
-            || node is FeatureServerNode
-            || node is MapServerNode
-            || isNodeQueryable(node);
-    }
-
-    private function isNodeQueryable(node:ServiceDirectoryNode):Boolean
-    {
-        const layerNode:LayerNode = node as LayerNode;
-        return layerNode && layerNode.isQueryable;
-    }
-
-    public function isSelectable(node:ServiceDirectoryNode):Boolean
-    {
-        return isNodeQueryable(node);
-    }
-
-    public function get serverChildrenAllowed():Boolean
-    {
-        return true;
+        return node as LayerNode && super.isNodeQueryable(node);
     }
 }
 }
