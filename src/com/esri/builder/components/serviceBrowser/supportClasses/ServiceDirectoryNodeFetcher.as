@@ -21,6 +21,7 @@ import com.esri.builder.components.serviceBrowser.filters.INodeFilter;
 import com.esri.builder.components.serviceBrowser.nodes.FolderNode;
 import com.esri.builder.components.serviceBrowser.nodes.GPTaskNode;
 import com.esri.builder.components.serviceBrowser.nodes.LayerNode;
+import com.esri.builder.components.serviceBrowser.nodes.QueryableNode;
 import com.esri.builder.components.serviceBrowser.nodes.RouteLayerNode;
 import com.esri.builder.components.serviceBrowser.nodes.ServerNode;
 import com.esri.builder.components.serviceBrowser.nodes.ServiceDirectoryNode;
@@ -42,13 +43,10 @@ public class ServiceDirectoryNodeFetcher extends EventDispatcher
 
     private var nodes:Array;
     private var nodeFilter:INodeFilter;
-    private var totalLayerNodesToLoad:int;
-    private var layerNodesToLoad:Array;
-    private var totalTableNodesToLoad:int;
-    private var tableNodesToLoad:Array;
+    private var totalNodesToLoad:int;
+    private var nodesToLoad:Array;
 
-    private var allLayersProcessed:Boolean = true;
-    private var allTablesProcessed:Boolean = true;
+    private var allNodesProcessed:Boolean = true;
 
     public function fetch(url:String, nodeFilter:INodeFilter, parent:ServiceDirectoryNode):void
     {
@@ -121,7 +119,7 @@ public class ServiceDirectoryNodeFetcher extends EventDispatcher
             }
         }
 
-        layerNodesToLoad = [];
+        nodesToLoad = [];
         for each (var layer:Object in metadata.layers)
         {
             const layerNode:LayerNode =
@@ -129,11 +127,10 @@ public class ServiceDirectoryNodeFetcher extends EventDispatcher
             if (layerNode)
             {
                 layerNode.token = token;
-                layerNodesToLoad.push(layerNode);
+                nodesToLoad.push(layerNode);
             }
         }
 
-        tableNodesToLoad = [];
         for each (var table:Object in metadata.tables)
         {
             const tableNode:TableNode =
@@ -141,120 +138,66 @@ public class ServiceDirectoryNodeFetcher extends EventDispatcher
             if (tableNode)
             {
                 tableNode.token = token;
-                tableNodesToLoad.push(tableNode);
+                nodesToLoad.push(tableNode);
             }
         }
 
-        if (layerNodesToLoad.length > 0)
+        if (nodesToLoad.length > 0)
         {
-            allLayersProcessed = false;
-            fetchLayerNodeInfo();
-        }
-        if (tableNodesToLoad.length > 0)
-        {
-            allTablesProcessed = false;
-            fetchTableNodeInfo();
+            allNodesProcessed = false;
+            fetchQueryableNodeInfo();
         }
 
-        if (layerNodesToLoad.length == 0 && tableNodesToLoad.length == 0)
+        if (nodesToLoad.length == 0)
         {
             dispatchNodeFetchComplete();
         }
     }
 
-    private function fetchLayerNodeInfo():void
+    private function fetchQueryableNodeInfo():void
     {
-        totalLayerNodesToLoad = layerNodesToLoad.length;
+        totalNodesToLoad = nodesToLoad.length;
         var urlVars:URLVariables;
         var layerInfoRequest:JSONTask;
-        for each (var layerNode:LayerNode in layerNodesToLoad)
+        for each (var queryableNode:QueryableNode in nodesToLoad)
         {
             urlVars = new URLVariables();
             urlVars.f = "json";
-            layerInfoRequest = new JSONTask(layerNode.internalURL);
+            layerInfoRequest = new JSONTask(queryableNode.internalURL);
             layerInfoRequest.requestTimeout = getValidRequestTimeout();
             layerInfoRequest.token = token;
             layerInfoRequest.execute(urlVars,
-                                     new AsyncResponder(layerInfoRequest_resultHandler,
-                                                        layerNodeInfoRequest_faultHandler,
-                                                        layerNode));
+                                     new AsyncResponder(queryableNodeInfoRequest_resultHandler,
+                                                        queryableNodeInfoRequest_faultHandler,
+                                                        queryableNode));
         }
     }
 
-    private function fetchTableNodeInfo():void
+    private function queryableNodeInfoRequest_faultHandler(fault:Fault, token:Object = null):void
     {
-        totalTableNodesToLoad = tableNodesToLoad.length;
-        var urlVars:URLVariables;
-        var tableInfoRequest:JSONTask;
-        for each (var tableNode:TableNode in tableNodesToLoad)
+        nodeProcessed();
+    }
+
+    private function nodeProcessed():void
+    {
+        totalNodesToLoad--;
+        if (totalNodesToLoad == 0)
         {
-            urlVars = new URLVariables();
-            urlVars.f = "json";
-            tableInfoRequest = new JSONTask(tableNode.internalURL);
-            tableInfoRequest.requestTimeout = getValidRequestTimeout();
-            tableInfoRequest.token = token;
-            tableInfoRequest.execute(urlVars,
-                                     new AsyncResponder(tableInfoRequest_resultHandler,
-                                                        tableNodeInfoRequest_faultHandler,
-                                                        tableNode));
+            addProcessedNodesAndDispatchFetchComplete();
         }
     }
 
-    private function layerNodeInfoRequest_faultHandler(fault:Fault, token:Object = null):void
+    private function addProcessedNodesAndDispatchFetchComplete():void
     {
-        layerProcessed();
-    }
-
-    private function tableNodeInfoRequest_faultHandler(fault:Fault, token:Object = null):void
-    {
-        tableProcessed();
-    }
-
-    private function layerProcessed():void
-    {
-        totalLayerNodesToLoad--;
-        if (totalLayerNodesToLoad == 0)
+        for each (var queryableNode:QueryableNode in nodesToLoad)
         {
-            addProcessedLayerNodesAndDispatchFetchComplete();
-        }
-    }
-
-    private function tableProcessed():void
-    {
-        totalTableNodesToLoad--;
-        if (totalTableNodesToLoad == 0)
-        {
-            addProcessedTableNodesAndDispatchFetchComplete();
-        }
-    }
-
-    private function addProcessedLayerNodesAndDispatchFetchComplete():void
-    {
-        for each (var layerNode:LayerNode in layerNodesToLoad)
-        {
-            if (nodeFilter.isApplicable(layerNode))
+            if (nodeFilter.isApplicable(queryableNode))
             {
-                nodes.push(layerNode);
+                nodes.push(queryableNode);
             }
         }
-        allLayersProcessed = true;
-        if (allLayersProcessed && allTablesProcessed)
-        {
-            dispatchNodeFetchComplete();
-        }
-    }
-
-    private function addProcessedTableNodesAndDispatchFetchComplete():void
-    {
-        for each (var tableNode:TableNode in tableNodesToLoad)
-        {
-            if (nodeFilter.isApplicable(tableNode))
-            {
-                nodes.push(tableNode);
-            }
-        }
-        allTablesProcessed = true;
-        if (allLayersProcessed && allTablesProcessed)
+        allNodesProcessed = true;
+        if (allNodesProcessed)
         {
             dispatchNodeFetchComplete();
         }
@@ -267,16 +210,10 @@ public class ServiceDirectoryNodeFetcher extends EventDispatcher
                                                nodes));
     }
 
-    private function layerInfoRequest_resultHandler(metadata:Object, layerNode:LayerNode):void
+    private function queryableNodeInfoRequest_resultHandler(metadata:Object, queryableNode:QueryableNode):void
     {
-        layerNode.metadata = metadata;
-        layerProcessed();
-    }
-
-    private function tableInfoRequest_resultHandler(metadata:Object, tableNode:TableNode):void
-    {
-        tableNode.metadata = metadata;
-        tableProcessed();
+        queryableNode.metadata = metadata;
+        nodeProcessed();
     }
 
     private function nodeInfoRequest_faultHandler(fault:Fault, token:Object = null):void
