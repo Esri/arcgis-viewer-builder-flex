@@ -34,8 +34,8 @@ public class QueryableTableFilter implements INodeFilter
 
     private function isNodeQueryable(node:ServiceDirectoryNode):Boolean
     {
-		const tableNode:TableNode = node as TableNode;
-		return tableNode && tableNode.isQueryable;
+        const tableNode:TableNode = node as TableNode;
+        return tableNode && tableNode.isQueryable;
     }
 
     public function isSelectable(node:ServiceDirectoryNode):Boolean

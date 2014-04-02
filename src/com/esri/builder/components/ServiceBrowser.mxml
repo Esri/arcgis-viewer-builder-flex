@@ -216,8 +216,8 @@
                     }
                     case "querytables":
                     {
-                      serviceDirBuilderSearchType = ServiceDirectoryBuildRequest.QUERYABLE_TABLE_SEARCH;
-                      break;
+                        serviceDirBuilderSearchType = ServiceDirectoryBuildRequest.QUERYABLE_TABLE_SEARCH;
+                        break;
                     }
                     case "querylayers":
                     default:

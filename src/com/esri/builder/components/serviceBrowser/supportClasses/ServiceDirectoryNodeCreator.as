@@ -84,19 +84,19 @@ public class ServiceDirectoryNodeCreator
 
         return layerNode;
     }
-	
-	public static function createTableNode(parent:ServiceDirectoryNode, tableMetadata:Object):TableNode
-	{
-		var tableNode:TableNode;
-		
-		const isGroupLayer:Boolean = tableMetadata.subLayerIds != null;
-		if (!isGroupLayer)
-		{
-			tableNode = new TableNode(parent, tableMetadata.name, tableMetadata.id);
-		}
-		
-		return tableNode;
-	}
+
+    public static function createTableNode(parent:ServiceDirectoryNode, tableMetadata:Object):TableNode
+    {
+        var tableNode:TableNode;
+
+        const isGroupLayer:Boolean = tableMetadata.subLayerIds != null;
+        if (!isGroupLayer)
+        {
+            tableNode = new TableNode(parent, tableMetadata.name, tableMetadata.id);
+        }
+
+        return tableNode;
+    }
 
     public static function createRouteNode(parent:ServiceDirectoryNode, routeName:String):RouteLayerNode
     {
