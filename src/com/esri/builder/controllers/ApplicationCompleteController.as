@@ -18,6 +18,9 @@ package com.esri.builder.controllers
 
 import com.esri.ags.components.IdentityManager;
 import com.esri.ags.events.IdentityManagerEvent;
+import com.esri.ags.events.PortalEvent;
+import com.esri.ags.portal.Portal;
+import com.esri.ags.portal.supportClasses.PortalInfo;
 import com.esri.builder.components.LogFileTarget;
 import com.esri.builder.components.ToolTip;
 import com.esri.builder.controllers.supportClasses.MachineDisplayName;
@@ -46,6 +49,7 @@ import mx.managers.ToolTipManager;
 import mx.resources.ResourceManager;
 import mx.rpc.AsyncResponder;
 import mx.rpc.Responder;
+import mx.rpc.events.FaultEvent;
 
 import spark.components.WindowedApplication;
 
@@ -304,13 +308,53 @@ public final class ApplicationCompleteController
 
     private function initIdentityManager():void
     {
-        var portalURL:String = PortalModel.getInstance().portalURL;
         var idManager:IdentityManager = IdentityManager.instance;
 
         idManager.enabled = true;
+        attemptSilentOAuthSignIn();
+        validateSettings();
 
-        if (PortalModel.getInstance().isAGO(portalURL))
+        idManager.addEventListener(IdentityManagerEvent.SHOW_OAUTH_WEB_VIEW, showOAuthWebViewHandler);
+    }
+
+    private function attemptSilentOAuthSignIn():void
+    {
+        var portalModel:PortalModel = PortalModel.getInstance();
+        var portal:Portal = portalModel.portal;
+        var portalURL:String = portalModel.portalURL;
+
+        if (portal.loaded)
         {
+            attemptSilentOAuthSignInInternally(portalURL, portal.info);
+        }
+        else
+        {
+            portal.addEventListener(PortalEvent.LOAD, portalLoadHandler);
+            portal.addEventListener(FaultEvent.FAULT, portal_faultHandler);
+
+            function portalLoadHandler(event:PortalEvent):void
+            {
+                attemptSilentOAuthSignInInternally(portalURL, portal.info);
+                portal.removeEventListener(PortalEvent.LOAD, portalLoadHandler);
+                portal.removeEventListener(FaultEvent.FAULT, portal_faultHandler);
+            }
+
+            function portal_faultHandler(event:FaultEvent):void
+            {
+                portal.removeEventListener(PortalEvent.LOAD, portalLoadHandler);
+                portal.removeEventListener(FaultEvent.FAULT, portal_faultHandler);
+            }
+        }
+
+        function attemptSilentOAuthSignInInternally(portalURL:String, portalInfo:PortalInfo):void
+        {
+            if (!portalInfo.supportsOAuth)
+            {
+                return;
+            }
+
+            var idManager:IdentityManager = IdentityManager.instance;
+
             idManager.addEventListener(IdentityManagerEvent.SHOW_OAUTH_WEB_VIEW, startup_showOAuthWebViewHandler);
             PortalModel.getInstance().registerOAuthPortal(portalURL, Model.instance.cultureCode);
             idManager.getCredential(portalURL, false, new Responder(getCredentialOutcomeHandler,
@@ -319,7 +363,6 @@ public final class ApplicationCompleteController
             function getCredentialOutcomeHandler(outcome:Object):void
             {
                 idManager.removeEventListener(IdentityManagerEvent.SHOW_OAUTH_WEB_VIEW, startup_showOAuthWebViewHandler);
-                validateSettings();
             }
 
             function startup_showOAuthWebViewHandler(event:IdentityManagerEvent):void
@@ -327,15 +370,8 @@ public final class ApplicationCompleteController
                 idManager.removeEventListener(IdentityManagerEvent.SHOW_OAUTH_WEB_VIEW, startup_showOAuthWebViewHandler);
                 event.preventDefault();
                 idManager.setCredentialForCurrentSignIn(null);
-                validateSettings();
             }
         }
-        else
-        {
-            validateSettings();
-        }
-
-        idManager.addEventListener(IdentityManagerEvent.SHOW_OAUTH_WEB_VIEW, showOAuthWebViewHandler);
     }
 
     private function validateSettings():void
