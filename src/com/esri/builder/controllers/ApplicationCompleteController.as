@@ -41,6 +41,7 @@ import flash.system.Capabilities;
 
 import mx.core.FlexGlobals;
 import mx.logging.ILogger;
+import mx.managers.CursorManager;
 import mx.managers.ToolTipManager;
 import mx.resources.ResourceManager;
 import mx.rpc.AsyncResponder;
@@ -310,20 +311,20 @@ public final class ApplicationCompleteController
 
         if (PortalModel.getInstance().isAGO(portalURL))
         {
-            idManager.addEventListener(IdentityManagerEvent.SHOW_OAUTH_WEB_VIEW, showOAuthWebViewHandler);
+            idManager.addEventListener(IdentityManagerEvent.SHOW_OAUTH_WEB_VIEW, startup_showOAuthWebViewHandler);
             PortalModel.getInstance().registerOAuthPortal(portalURL, Model.instance.cultureCode);
             idManager.getCredential(portalURL, false, new Responder(getCredentialOutcomeHandler,
                                                                     getCredentialOutcomeHandler));
 
             function getCredentialOutcomeHandler(outcome:Object):void
             {
-                idManager.removeEventListener(IdentityManagerEvent.SHOW_OAUTH_WEB_VIEW, showOAuthWebViewHandler);
+                idManager.removeEventListener(IdentityManagerEvent.SHOW_OAUTH_WEB_VIEW, startup_showOAuthWebViewHandler);
                 validateSettings();
             }
 
-            function showOAuthWebViewHandler(event:IdentityManagerEvent):void
+            function startup_showOAuthWebViewHandler(event:IdentityManagerEvent):void
             {
-                idManager.removeEventListener(IdentityManagerEvent.SHOW_OAUTH_WEB_VIEW, showOAuthWebViewHandler);
+                idManager.removeEventListener(IdentityManagerEvent.SHOW_OAUTH_WEB_VIEW, startup_showOAuthWebViewHandler);
                 event.preventDefault();
                 idManager.setCredentialForCurrentSignIn(null);
                 validateSettings();
@@ -333,11 +334,18 @@ public final class ApplicationCompleteController
         {
             validateSettings();
         }
+
+        idManager.addEventListener(IdentityManagerEvent.SHOW_OAUTH_WEB_VIEW, showOAuthWebViewHandler);
     }
 
     private function validateSettings():void
     {
         AppEvent.dispatch(AppEvent.SAVE_SETTINGS, Model.instance.exportSettings());
+    }
+
+    private function showOAuthWebViewHandler(event:IdentityManagerEvent):void
+    {
+        CursorManager.removeAllCursors();   // ensure cursor is visible
     }
 }
 }
