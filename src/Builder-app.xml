@@ -24,7 +24,7 @@
     <description>
         <text xml:lang="en">The ArcGIS Viewer for Flex application builder makes it easy to create and manage ArcGIS Viewer for Flex web mapping applications.</text>
     </description>
-    <copyright>Copyright (c) 2013 Esri</copyright>
+    <copyright>Copyright (c) 2014 Esri</copyright>
     <initialWindow>
         <content>[This value will be overwritten by Flash Builder in the output app.xml]</content>
         <width>1024</width>
