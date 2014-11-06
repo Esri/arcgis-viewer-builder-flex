@@ -428,12 +428,12 @@
             <components:PortalURLInputChecker id="portalURLInput"
                                               width="400"
                                               direction="ltr"
-                                              validationDelay="1.3"
                                               invalidURL="portalURLInput_invalidURLHandler(event)"
                                               processValidPortalFunction="processValidatedPortalFunction"
                                               requestTimeout="10"
                                               restrict="^ "
-                                              text="@{settings.portalURL}"/>
+                                              text="@{settings.portalURL}"
+                                              validationDelay="1.3"/>
 
             <s:Label x="{portalURLInput.x}" y="{portalURLInput.y + portalURLInput.height}" width="{portalURLInput.width}" height="{portalURLInput.height}"
                      includeInLayout="false"

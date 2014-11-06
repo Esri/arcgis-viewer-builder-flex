@@ -381,7 +381,7 @@ public final class ApplicationCompleteController
 
     private function showOAuthWebViewHandler(event:IdentityManagerEvent):void
     {
-        CursorManager.removeAllCursors();   // ensure cursor is visible
+        CursorManager.removeAllCursors(); // ensure cursor is visible
     }
 }
 }

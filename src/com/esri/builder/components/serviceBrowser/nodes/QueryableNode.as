@@ -15,6 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 package com.esri.builder.components.serviceBrowser.nodes
 {
+
 public class QueryableNode extends ServiceDirectoryNode
 {
     protected var id:int;
