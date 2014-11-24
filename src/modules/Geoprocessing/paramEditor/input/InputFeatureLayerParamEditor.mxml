@@ -112,7 +112,7 @@
         <s:Scroller left="0" right="0" top="0" bottom="0"
                     focusEnabled="true">
             <s:Group>
-                <supportClasses:RendererEditor includeIn="renderer" param="{param}"/>
+                <supportClasses:SimpleRendererEditor includeIn="renderer" param="{param}"/>
 
                 <s:VGroup left="25" top="25"
                           includeIn="selectionMode">

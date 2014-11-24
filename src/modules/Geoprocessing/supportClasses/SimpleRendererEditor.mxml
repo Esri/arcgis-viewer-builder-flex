@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  //////////////////////////////////////////////////////////////////
+  // Copyright (c) 2008-2013 Esri. All Rights Reserved.
+  //
+  // Licensed under the Apache License, Version 2.0 (the "License");
+  // you may not use this file except in compliance with the License.
+  // You may obtain a copy of the License at
+  //
+  //    http://www.apache.org/licenses/LICENSE-2.0
+  //
+  // Unless required by applicable law or agreed to in writing, software
+  // distributed under the License is distributed on an "AS IS" BASIS,
+  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  // See the License for the specific language governing permissions and
+  // limitations under the License.
+  ////////////////////////////////////////////////////////////////
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:supportClasses="modules.Geoprocessing.supportClasses.*">
+    <fx:Script>
+        <![CDATA[
+            import com.esri.ags.renderers.IRenderer;
+            import com.esri.ags.renderers.SimpleRenderer;
+
+            import modules.Geoprocessing.parameters.BaseParameter;
+            import modules.Geoprocessing.parameters.FeatureLayerParameter;
+
+            [Bindable]
+            private var renderer:IRenderer;
+
+            private var simpleRenderer:SimpleRenderer;
+            private var featureParam:FeatureLayerParameter;
+
+            private var _param:BaseParameter;
+
+            [Bindable]
+            public function get param():BaseParameter
+            {
+                return _param;
+            }
+
+            public function set param(value:BaseParameter):void
+            {
+                featureParam = value as FeatureLayerParameter;
+                if (featureParam)
+                {
+                    _param = value;
+                    if (featureParam.renderer)
+                    {
+                        renderer = featureParam.renderer;
+                        callLater(setupRenderer);
+                    }
+                    else
+                    {
+                        currentState = 'cannotEditRenderer';
+                    }
+                }
+            }
+
+            private function setupRenderer():void
+            {
+                simpleRenderer = renderer as SimpleRenderer || new SimpleRenderer();
+                currentState = "editingSimpleRenderer"
+                symbolEditor.symbol = simpleRenderer.symbol;
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="editingSimpleRenderer"/>
+        <s:State name="cannotEditRenderer"/>
+    </s:states>
+
+    <s:layout>
+        <s:ConstraintLayout>
+            <s:constraintColumns>
+                <s:ConstraintColumn id="column1" width="10"/>
+                <s:ConstraintColumn id="column2"/>
+                <s:ConstraintColumn id="column3" width="10"/>
+                <s:ConstraintColumn id="column4"/>
+            </s:constraintColumns>
+
+            <s:constraintRows>
+                <s:ConstraintRow id="row1" height="10"/>
+                <s:ConstraintRow id="row2"/>
+                <s:ConstraintRow id="row3" height="10"/>
+                <s:ConstraintRow id="row4"/>
+                <s:ConstraintRow id="row5" height="10"/>
+                <s:ConstraintRow id="row6"/>
+                <s:ConstraintRow id="row7" height="10"/>
+                <s:ConstraintRow id="row8"/>
+            </s:constraintRows>
+        </s:ConstraintLayout>
+    </s:layout>
+
+    <s:Label left="column2:0" right="column2:0"
+             baseline="row2:0"
+             excludeFrom="cannotEditRenderer"
+             styleName="boldText"
+             text="{resourceManager.getString('BuilderStrings', 'geoprocessing.type')}"/>
+
+    <s:Group left="column4:0" right="column4:0"
+             baseline="row2:0">
+        <s:Label width="150"
+                 excludeFrom="cannotEditRenderer"
+                 text="{resourceManager.getString('BuilderStrings', 'geoprocessing.simpleRenderer')}"/>
+    </s:Group>
+
+    <s:Label left="column4:0" right="column4:0"
+             baseline="row2:0"
+             includeIn="cannotEditRenderer"
+             styleName="boldText"
+             text="{resourceManager.getString('BuilderStrings', 'geoprocessing.cannotEditRendererProperties')}"/>
+
+    <s:Label left="column2:0" right="column2:0"
+             baseline="row6:0"
+             excludeFrom="cannotEditRenderer"
+             paddingTop="6"
+             styleName="boldText"
+             text="{resourceManager.getString('BuilderStrings', 'georss.symbol')}"/>
+
+    <supportClasses:SymbolEditor id="symbolEditor"
+                                 left="column4:0" right="column4:0"
+                                 baseline="row6:0"
+                                 excludeFrom="cannotEditRenderer"
+                                 symbolOwner="{renderer}"/>
+</s:Group>

@@ -13,17 +13,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////
-package com.esri.builder.components.serviceBrowser.filters
+package com.esri.builder.components.serviceBrowser.nodes
 {
 
-import com.esri.builder.components.serviceBrowser.nodes.LayerNode;
-import com.esri.builder.components.serviceBrowser.nodes.ServiceDirectoryNode;
-
-public class QueryableLayerFilter extends QueryableNodeFilter
+public class QueryableNode extends ServiceDirectoryNode
 {
-    override protected function isNodeQueryable(node:ServiceDirectoryNode):Boolean
+    protected var id:int;
+
+    public function get isQueryable():Boolean
     {
-        return node as LayerNode && super.isNodeQueryable(node);
+        return metadata && metadata.fields && metadata.fields.length > 0;
+    }
+
+    public function QueryableNode(parent:ServiceDirectoryNode, name:String, id:int)
+    {
+        this.id = id;
+        super(parent, name);
+    }
+
+    override public function get path():String
+    {
+        return id.toString();
+    }
+
+    override public function get baseURL():String
+    {
+        return parent.baseURL + '/' + id;
+    }
+
+    override public function get hasChildren():Boolean
+    {
+        return false;
+    }
+
+    override public function get isBranch():Boolean
+    {
+        return false;
     }
 }
 }

@@ -255,6 +255,7 @@
                 }
 
                 configLayerToEdit.label = editedConfigLayerLabel;
+                configLayerToEdit.copyright = copyrightText.text;
                 configLayerToEdit.visible = visibleCheckBox.selected;
                 configLayerToEdit.alpha = (100 - alphaSlider.value) / 100;
                 configLayerToEdit.autoRefresh = Number(autoRefreshText.text);
@@ -534,6 +535,12 @@
                              width="200"
                              maxChars="40"
                              text="{configLayerToEdit.label}"/>
+            </s:FormItem>
+
+            <s:FormItem label="{resourceManager.getString('BuilderStrings', 'print.copyright')}">
+                <s:TextInput id="copyrightText"
+                             width="200"
+                             text="{configLayerToEdit.copyright}"/>
             </s:FormItem>
 
             <s:FormItem includeInLayout="{!(configLayerToEdit.type == ConfigLayer.KML  

@@ -16,14 +16,15 @@
 package com.esri.builder.components.serviceBrowser.filters
 {
 
-import com.esri.builder.components.serviceBrowser.nodes.LayerNode;
 import com.esri.builder.components.serviceBrowser.nodes.ServiceDirectoryNode;
+import com.esri.builder.components.serviceBrowser.nodes.TableNode;
 
-public class QueryableLayerFilter extends QueryableNodeFilter
+public class QueryableTableFilter extends QueryableNodeFilter
 {
     override protected function isNodeQueryable(node:ServiceDirectoryNode):Boolean
     {
-        return node as LayerNode && super.isNodeQueryable(node);
+        return node as TableNode && super.isNodeQueryable(node);
     }
 }
 }
+

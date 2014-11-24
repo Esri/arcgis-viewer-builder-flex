@@ -48,14 +48,9 @@ public class PortalController
 
     private function settingsChangeHandler(event:AppEvent):void
     {
-        //optimization: AGO uses OAuth, so we register the OAuth info upfront
         var portalModel:PortalModel = PortalModel.getInstance();
         var portalURL:String = portalModel.portalURL;
         var cultureCode:String = Model.instance.cultureCode;
-        if (portalModel.isAGO(portalURL))
-        {
-            portalModel.registerOAuthPortal(portalURL, cultureCode);
-        }
 
         loadPortal(portalURL, cultureCode);
     }
@@ -115,6 +110,15 @@ public class PortalController
     private function portal_loadHandler(event:PortalEvent):void
     {
         LOG.debug("Portal load success");
+
+        if (portal.info.supportsOAuth)
+        {
+            var portalModel:PortalModel = PortalModel.getInstance();
+            var portalURL:String = portalModel.portalURL;
+            var cultureCode:String = Model.instance.cultureCode;
+
+            portalModel.registerOAuthPortal(portalURL, cultureCode);
+        }
 
         //do nothing, load successful
         portal.removeEventListener(PortalEvent.LOAD, portal_loadHandler);

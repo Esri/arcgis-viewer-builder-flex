@@ -19,12 +19,12 @@
 <application xmlns="http://ns.adobe.com/air/application/3.5">
     <id>com.esri.ags.AppBuilder3.0</id>
     <filename>ArcGIS Viewer for Flex</filename>
-    <versionNumber>3.6</versionNumber>
-    <versionLabel>3.6</versionLabel>
+    <versionNumber>3.7</versionNumber>
+    <versionLabel>3.7</versionLabel>
     <description>
         <text xml:lang="en">The ArcGIS Viewer for Flex application builder makes it easy to create and manage ArcGIS Viewer for Flex web mapping applications.</text>
     </description>
-    <copyright>Copyright (c) 2013 Esri</copyright>
+    <copyright>Copyright (c) 2014 Esri</copyright>
     <initialWindow>
         <content>[This value will be overwritten by Flash Builder in the output app.xml]</content>
         <width>1024</width>

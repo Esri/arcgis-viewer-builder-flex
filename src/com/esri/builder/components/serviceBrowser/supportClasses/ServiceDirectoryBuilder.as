@@ -25,6 +25,7 @@ import com.esri.builder.components.serviceBrowser.filters.INodeFilter;
 import com.esri.builder.components.serviceBrowser.filters.MapLayerFilter;
 import com.esri.builder.components.serviceBrowser.filters.MapServerFilter;
 import com.esri.builder.components.serviceBrowser.filters.QueryableLayerFilter;
+import com.esri.builder.components.serviceBrowser.filters.QueryableTableFilter;
 import com.esri.builder.components.serviceBrowser.filters.RouteLayerFilter;
 import com.esri.builder.components.serviceBrowser.nodes.ServiceDirectoryRootNode;
 import com.esri.builder.model.Model;
@@ -269,6 +270,10 @@ public final class ServiceDirectoryBuilder extends EventDispatcher
         if (searchType == ServiceDirectoryBuildRequest.QUERYABLE_LAYER_SEARCH)
         {
             return new QueryableLayerFilter();
+        }
+        else if (searchType == ServiceDirectoryBuildRequest.QUERYABLE_TABLE_SEARCH)
+        {
+            return new QueryableTableFilter();
         }
         else if (searchType == ServiceDirectoryBuildRequest.GEOPROCESSING_TASK_SEARCH)
         {

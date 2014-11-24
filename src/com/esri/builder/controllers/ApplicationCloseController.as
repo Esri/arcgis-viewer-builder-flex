@@ -16,6 +16,7 @@
 package com.esri.builder.controllers
 {
 
+import com.esri.ags.components.IdentityManager;
 import com.esri.builder.eventbus.AppEvent;
 import com.esri.builder.model.Model;
 import com.esri.builder.supportClasses.ApplicationCloseWarningEvent;
@@ -52,6 +53,9 @@ public final class ApplicationCloseController
         if (Model.instance.config.isDirty)
         {
             LOG.debug("Preventing application close");
+
+            //close possibly open OAuth sign-in window
+            IdentityManager.instance.setCredentialForCurrentSignIn(null);
 
             event.preventDefault();
             if (closeApplicationConfirmPopUp)

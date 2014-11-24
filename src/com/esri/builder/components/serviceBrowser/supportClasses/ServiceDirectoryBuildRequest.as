@@ -21,6 +21,7 @@ public class ServiceDirectoryBuildRequest
     public static const MAP_LAYER_SEARCH:String = "mapLayerSearch";
     public static const GEOPROCESSING_TASK_SEARCH:String = "geoprocessingTaskSearch";
     public static const QUERYABLE_LAYER_SEARCH:String = "queryLayerSearch";
+    public static const QUERYABLE_TABLE_SEARCH:String = "queryTableSearch";
     public static const GEOCODER_SEARCH:String = "geocoderSearch";
     public static const ROUTE_LAYER_SEARCH:String = "routeLayerSearch";
     public static const MAP_SERVER_SEARCH:String = "mapServerSearch";

@@ -13,17 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////
-package com.esri.builder.components.serviceBrowser.filters
+package com.esri.builder.components.serviceBrowser.nodes
 {
 
-import com.esri.builder.components.serviceBrowser.nodes.LayerNode;
-import com.esri.builder.components.serviceBrowser.nodes.ServiceDirectoryNode;
-
-public class QueryableLayerFilter extends QueryableNodeFilter
+public class TableNode extends QueryableNode
 {
-    override protected function isNodeQueryable(node:ServiceDirectoryNode):Boolean
+    public function TableNode(parent:ServiceDirectoryNode, name:String, id:int)
     {
-        return node as LayerNode && super.isNodeQueryable(node);
+        super(parent, name, id);
     }
 }
 }

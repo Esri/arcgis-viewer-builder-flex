@@ -46,7 +46,7 @@
         <text xml:lang="sv">@APPDESC_sv_SE@</text>
         <text xml:lang="zh">@APPDESC_zh_CN@</text>
     </description>
-    <copyright>Copyright (c) 2013 Esri</copyright>
+    <copyright>Copyright (c) 2014 Esri</copyright>
     <initialWindow>
         <content>@APPNAME@.swf</content>
         <width>1024</width>
