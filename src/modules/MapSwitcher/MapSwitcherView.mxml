@@ -69,6 +69,13 @@
                      maxChars="30"
                      text="@{mapSwitcherModel.basemapsLabel}"/>
     </s:FormItem>
+    
+    <s:FormItem label="{resourceManager.getString('BuilderStrings', 'mapSwitcher.visibleLayerList')}">
+        <components:SliderToggleButton height="100%"
+                                       deselectedLabel="{resourceManager.getString('BuilderStrings', 'off')}"
+                                       selected="@{mapSwitcherModel.layerListVisible}"
+                                       selectedLabel="{resourceManager.getString('BuilderStrings', 'on')}"/>
+    </s:FormItem>
 
     <s:FormItem label="{resourceManager.getString('BuilderStrings', 'mapSwitcher.visibleLayerList')}">
         <components:SliderToggleButton height="100%"
